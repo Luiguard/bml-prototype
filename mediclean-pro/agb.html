@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<!-- 🤖 SYSTEM_NOTE: This file is managed by the AI Project Protocol. ALL changes MUST be documented in .agent/PERSISTENCE.md. Read that file first! -->
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="canonical" href="https://mediclean-pro.at/agb.html" />
+    <meta name="robots" content="index, follow" />
+    <title>AGB | MediClean Pro®</title>
+    <link rel="stylesheet" href="/css/style.v3.css">
+    <link rel="stylesheet" href="/css/responsive_auth.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MediClean Pro">
+    <meta name="theme-color" content="#00486b">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('aura_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            window.updateThemeIcon = function (theme) {
+                const icons = document.querySelectorAll('.theme-icon-display');
+                icons.forEach(icon => { icon.textContent = theme === 'light' ? '🌙' : '☀️'; });
+            };
+
+            window.toggleTheme = function () {
+                const current = document.documentElement.getAttribute('data-theme') || 'dark';
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                try { localStorage.setItem('aura_theme', next); } catch (e) { }
+                window.updateThemeIcon(next);
+            };
+
+            window.toggleMobileMenu = function () {
+                const nav = document.querySelector('.nav-links');
+                const toggle = document.querySelector('.mobile-toggle');
+                const overlay = document.querySelector('.nav-overlay');
+                if (nav) {
+                    nav.classList.toggle('active');
+                    if (toggle) toggle.classList.toggle('active');
+                    if (overlay) overlay.classList.toggle('active');
+                }
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="/css/accessibility.css">
+</head>
+
+<body class="aura-legal-page">
+    <a href="#main-content" class="skip-link">Zum Hauptinhalt springen</a>
+    <script src="/js/security.js"></script>
+    <header role="banner">
+        <div class="nav-flex">
+            <a href="index.html" class="logo" aria-label="MediClean Pro Homepage">
+                <img src="/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png" alt="Logo">
+            </a>
+            <nav class="nav-links" aria-label="Hauptnavigation">
+                <div class="nav-item has-dropdown">
+                    <a href="index.html#services">Leistungen</a>
+                    <div class="dropdown-content">
+                        <a href="service.html?type=ordination">Ordinationsreinigung</a>
+                        <a href="service.html?type=buero">Büro & Kanzlei</a>
+                        <a href="service.html?type=grund">Grundreinigung</a>
+                        <a href="service.html?type=fenster">Glas & Fassade</a>
+                        <a href="service.html?type=stiegenhaus">Hausbetreuung</a>
+                        <a href="service.html?type=haushalt">Privathaushalt</a>
+                    </div>
+                </div>
+                <div class="nav-item has-dropdown">
+                    <a href="index.html#consulting">Consulting</a>
+                    <div class="dropdown-content">
+                        <a href="consulting.html?type=hygiene">Hygiene & AEMP-Expertise</a>
+                        <a href="consulting.html?type=qualitaet">QM & Audit</a>
+                        <a href="consulting.html?type=datenschutz">Datenschutz-Consulting</a>
+                    </div>
+                </div>
+                <div class="nav-item"><a href="nachhaltigkeit.html">Nachhaltigkeit</a></div>
+                <div class="nav-item"><a href="termin.html">Termin</a></div>
+                <div class="nav-item"><a href="ueber-uns.html">Über uns</a></div>
+            </nav>
+            <div class="nav-right" style="display:flex; align-items:center;">
+                <div id="auth-action"></div>
+                <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Dark Mode umschalten">
+                    <span class="theme-icon-display" aria-hidden="true">🌙</span>
+                </button>
+                <button class="mobile-toggle" onclick="toggleMobileMenu()" aria-label="Menü öffnen"
+                    aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <!-- Hero Section Small -->
+        <section class="hero-small" style="padding: 120px 0 60px; background: var(--bg-surface-subtle);">
+            <div class="container text-center reveal active">
+                <span class="tagline">Rechtliches</span>
+                <h1 style="font-size: 3rem; margin-bottom: 1rem;">Allgemeine Geschäftsbedingungen</h1>
+                <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto;">MediClean Pro® (Stand: 2026).
+                    Verbindliche Grundlagen unserer Zusammenarbeit.</p>
+            </div>
+        </section>
+
+        <section style="padding: 60px 0 120px;">
+            <div class="container">
+                <div
+                    style="line-height: 1.8; color: var(--text-secondary); display: grid; gap: 3rem; max-width: 900px; margin: 0 auto;">
+
+                    <section class="reveal active">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">1. Allgemeines
+                        </h3>
+                        <p>1.1. Unsere Angebote, Lieferungen, Leistungen und Einkäufe erfolgen ausschließlich aufgrund
+                            dieser Allgemeinen Geschäftsbedingungen (= kurz: AGB). Ein Abweichen von diesen Bedingungen
+                            ist für wir nur dann rechtsverbindlich, wenn wir dem im Einzelfall ausdrücklich und
+                            schriftlich im Vorhinein zustimmen. Es ist für uns, sofern wir nicht ausdrücklich etwas
+                            anderes schriftlich kundtun, die Einhaltung unserer AGB eine wesentliche, grundlegende und
+                            unabdingbare Voraussetzung für den Abschluss eines Rechtsgeschäfts mit uns.</p>
+                        <p style="margin-top: 1rem;">1.2. Diese AGB sind auch dann wirksam, wenn wir uns – im Rahmen
+                            einer laufenden Geschäftsverbindung – bei späteren Verträgen nicht ausdrücklich auf sie
+                            berufen, sofern nicht im Einzelfall ausdrücklich und schriftlich und im Vorhinein etwas
+                            anderes vereinbart wurde.</p>
+                        <p style="margin-top: 1rem;">1.3. Unseren AGB entgegenstehende oder abweichende Bedingungen
+                            werden für uns – auch dann, wenn wir ihnen nicht ausdrücklich widersprochen haben –
+                            ausnahmslos nur dann Vertragsbestandteil, wenn wir dem zuvor ausdrücklich und schriftlich
+                            zugestimmt haben.</p>
+                        <p style="margin-top: 1rem;">1.4. Im Falle einer Änderung / Anpassung dieser AGB wird unser
+                            Vertragspartner schriftlich darüber informiert. Unserem Vertragspartner wird ab dem Tag der
+                            Zustellung eine Frist von vier Wochen eingeräumt, um den neuen AGB als Vertragsgrundlage zu
+                            widersprechen bzw. Teilen davon zu widersprechen. Lässt unser Vertragspartner diese Frist
+                            verstreichen, akzeptiert er die neuen AGB stillschweigend und unterwirft sich diesen.</p>
+                        <p style="margin-top: 1rem;">1.5. Für Geschäfte mit Konsumenten gelten die Bestimmungen des
+                            Konsumentenschutzgesetzes nur insoweit, als sie als zwingendes Recht von unseren AGB
+                            abweichen oder als zwingendes Recht darüberhinausgehende Bestimmungen beinhalten.</p>
+                    </section>
+
+                    <section class="reveal active">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">2. Angebote
+                        </h3>
+                        <p>2.1. Unsere Angebote und Kostenvoranschläge sind, sofern nicht im Einzelfall ausdrücklich,
+                            schriftlich und im Vorhinein etwas anderes vereinbart wurde, stets freibleibend und
+                            unverbindlich.</p>
+                        <p style="margin-top: 1rem;">2.2. Nachträgliche Änderungen und/oder Ergänzungen eines uns
+                            erteilten Auftrags gelten nur dann als für uns verbindlich, wenn wir dies ausdrücklich und
+                            schriftlich bestätigen.</p>
+                        <p style="margin-top: 1rem;">2.3. Abweichungen unserer Auftragsbestätigungen von einem Angebot
+                            oder einer Bestellung hat unser Vertragspartner unverzüglich und schriftlich uns gegenüber
+                            zu beanstanden, da ansonsten der Inhalt unserer Auftragsbestätigung als maßgeblicher
+                            Vertragsinhalt gilt.</p>
+                        <p style="margin-top: 1rem;">2.4. Firmenkunden und Gewerbetreibende erklären sich durch die
+                            Beauftragung damit einverstanden, dass wir ab der Angebotsannahme und der Auftragserteilung
+                            sowie für die Dauer von zehn Jahren nach Auftragsbeendigung ihren Firmennamen in Wort und
+                            Bild sowie vorhandene Marken des Unternehmens in unsere Referenzliste aufnehmen.</p>
+                    </section>
+
+                    <section class="reveal active">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">3. Preise</h3>
+                        <p>3.1. Alle von uns genannten Preise sind, sofern nichts anderes ausdrücklich vermerkt ist,
+                            stets exklusive Umsatzsteuer zu verstehen. Sollten sich die Lohnkosten auf Grund
+                            kollektivvertraglicher Regelungen in der Branche verändern, oder sollten sich andere, für
+                            die Kalkulation relevante Kostenstellen oder zur Leistungserbringung notwendige Kosten
+                            verändern, so sind wir berechtigt, die Preise entsprechend zu erhöhen oder zu ermäßigen.
+                            Alle Preise sind nach den Ergebnisprotokollen der unabhängigen Schiedskommission beim
+                            Bundesministerium für Arbeit und Wirtschaft wertgesichert. Sollten von Seiten der
+                            Schiedskommission keine Beschlüsse gefasst werden, sind unsere Preise nach dem Index der
+                            Verbraucherpreise, die das österreichisch statische Zentralamt verlautbart, wertgesichert.
+                        </p>
+                    </section>
+
+                    <section class="reveal active">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">4.
+                            Zahlungsbedingungen / Aufrechnungsverbot</h3>
+                        <p>4.1. Die von uns gelegten Rechnungen sind, sofern nichts anderes schriftlich vereinbart ist,
+                            grundsätzlich innerhalb von sieben Tagen ab Zugang und ohne Abzug zur Zahlung fällig. Die
+                            Rechnungsadresse ist stets die uns zuletzt schriftlich von unserem Vertragspartner
+                            bekanntgegebene Adresse.</p>
+                        <p style="margin-top: 1rem;">4.2. Bei Überschreitung des vereinbarten Zahlungstermins sind wir
+                            berechtigt, Verzugszinsen in Höhe von 8% über dem jeweiligen Basiszinssatz der Europäischen
+                            Zentralbank sowie Mahn- und Inkassospesen sowie insbesondere Rechtsanwaltskosten, soweit sie
+                            zur zweckentsprechenden Rechtsverfolgung notwendig sind, zu verrechnen.</p>
+                        <p style="margin-top: 1rem;">4.3. Unser Vertragspartner ist nicht berechtigt, aufgrund
+                            irgendwelcher Ansprüche, auch wenn sie aufgrund von Leistungsmängeln erhoben werden, mit
+                            Zahlungen innezuhalten oder Zahlungen zu verweigern. Auch kann mit etwaigen Gegenforderungen
+                            uns gegenüber nicht aufgerechnet werden, es sei denn, wir hätten derartige Gegenforderungen
+                            ausdrücklich und schriftlich anerkannt oder es wurden derartige Gegenforderungen
+                            rechtskräftig und vollstreckbar gerichtlich festgestellt.</p>
+                    </section>
+
+                    <section class="reveal active">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">5.
+                            Leistungserbringung / Leistungsverweigerung / Vertragsstrafe</h3>
+                        <p>5.1. Wir erbringen unsere Leistungen stets nur aufgrund uns erteilter und von uns
+                            angenommener Beauftragungen. Wir sind berechtigt, uns zur Erbringung unserer Leistungen
+                            entsprechender fachkompetenter Subunternehmer zu bedienen.</p>
+                        <p style="margin-top: 1rem;">5.2. Unser Vertragspartner ist verpflichtet, die Erbringung der von
+                            uns übernommenen Leistungen auf den von uns dafür vorgelegten
+                            Leistungsnachweisen/Arbeitsbestätigungen zu bestätigen. Allfällige Bemängelungen unserer
+                            Leistungen sind darauf von unserem Vertragspartner zu vermerken.</p>
+                        <p style="margin-top: 1rem;">5.3. Wir sind berechtigt, mit der Erbringung unserer Leistungen
+                            innezuhalten, wenn und solange für unsere Leistungen Rechnungen nicht bei Fälligkeit bezahlt
+                            werden.</p>
+                        <p style="margin-top: 1rem;">5.4. Wir behalten uns vor, von dem mit unserem Vertragspartner
+                            geschlossenen Vertrag zurückzutreten oder mit der Erbringung unserer Leistungen
+                            innezuhalten, wenn uns nach Auftragsbestätigung und vor oder während der Leistungserbringung
+                            Umstände in den wirtschaftlichen Verhältnissen unseres Vertragspartners bekannt werden,
+                            durch welche unsere Entgeltforderungen nicht mehr ausreichend gesichert erscheinen.</p>
+                        <p style="margin-top: 1rem;">5.5. Bei Nichterfüllung des Vertrages durch unseren Vertragspartner
+                            sind wir berechtigt, den erlittenen Schaden und den entgangenen Gewinn zu fordern.</p>
+                    </section>
+
+                    <section class="reveal active">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">6. Liefer- und
+                            Leistungsfristen</h3>
+                        <p>6.1. Liefer- und Leistungsfristen sind unverbindlich, sofern sie nicht zwischen den
+                            Vertragsparteien ausdrücklich schriftlich im Vorhinein vereinbart wurden.</p>
+                        <p style="margin-top: 1rem;">6.2. Für den Fall, dass es nach der Auftragserteilung, aus welchen
+                            Gründen auch immer, zu einer Abänderung oder Ergänzung des Auftrags kommt, verlängert sich
+                            die vereinbarte Liefer- oder Leistungsfrist um einen angemessenen Zeitraum.</p>
+                        <p style="margin-top: 1rem;">6.3. Erforderliche Bewilligungen für die Ausübung von Leistungen
+                            sowie Meldungen bei den Behörden oder Bewilligungen durch Behörden sind vom Kunden auf seine
+                            Kosten zu veranlassen.</p>
+                    </section>
+
+                    <section class="reveal active">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">7.
+                            Gewährleistung / Schadenersatz / Begrenzung / Ausschluss</h3>
+                        <p>7.1. Wir haften dafür, dass wir die uns erteilten Aufträge mit der Sorgfalt eines
+                            ordentlichen Unternehmers erfüllen. Sofern wir nicht im Einzelfall gegenteiliges
+                            ausdrücklich und schriftlich zugesichert haben, lehnen wir jede Haftung für den Eintritt
+                            eines bestimmten Erfolges ab. Wir können insbesondere keinerlei Haftung für die Verhinderung
+                            oder Beeinträchtigung unserer Leistung durch höhere Gewalt oder behördliche Anordnung
+                            übernehmen.</p>
+                        <p style="margin-top: 1rem;">7.2. Gewährleistungsansprüche, Schadenersatzansprüche und sonstige
+                            Haftungsansprüche uns gegenüber verfallen ausnahmslos und zur Gänze, wenn sie nicht uns
+                            gegenüber innerhalb von längstens drei Tagen ab dem Tag der beanstandeten Leistung bzw. dem
+                            Tag des dieses auslösenden Ereignisses schriftlich und einlangend bei uns bekannt gegeben
+                            werden. Die Vermutungsregelung des § 924 ABGB wird ausgeschlossen. Das Vorliegen eines
+                            Mangels zum Zeitpunkt der Leistungserbringung ist stets von unserem Vertragspartner zu
+                            beweisen.</p>
+                        <p style="margin-top: 1rem;">7.3. Ein Anspruch auf Wandlung oder Minderung besteht nicht.</p>
+                        <p style="margin-top: 1rem;">7.4. Schadenersatzansprüche und sonstige Haftungsansprüche uns
+                            gegenüber sind in Fällen leichter Fahrlässigkeit jedenfalls und zur Gänze ausgeschlossen.
+                            Das Vorliegen grober Fahrlässigkeit oder eines darüber hinausgehenden Verschuldensgrades hat
+                            der Geschädigte stets zu beweisen.</p>
+                        <p style="margin-top: 1rem;">7.5. Sämtliche Schadenersatzansprüche und sonstige
+                            Haftungsansprüche uns gegenüber verjähren jedenfalls nach Ablauf von drei Monaten ab dem Tag
+                            nach der beanstandeten Leistung bzw. dem Tag des dieses Ansprüche auslösenden Ereignisses.
+                        </p>
+                        <p style="margin-top: 1rem;">7.6. Sofern nicht zwingende gesetzliche Bestimmungen
+                            entgegenstehen, sind allfällige Gewährleistungsansprüche und/oder Schadensersatzansprüche
+                            und/oder sonstige Haftungsansprüche uns gegenüber in jedem Fall der Höhe nach mit dem
+                            doppelten Netto-Fakturenwert der beanstandeten Leistung bzw. der Leistung, im Zuge derer das
+                            den Anspruch auslösende Ereignis stattfand, begrenzt. Für Schäden, die durch unser eigenes
+                            Verschulden oder das Verschulden unserer Erfüllungsgehilfen entstehen, haften wir immer nur
+                            im Rahmen des Deckungsumfangs unserer Haftpflichtversicherung. Eine Kopie der Police unserer
+                            Haftpflichtversicherung wird unserem Vertragspartner auf Verlangen ausgefolgt.</p>
+                        <p style="margin-top: 1rem;">7.7. Unsere Haftung ist ferner – gleichgültig, ob sie auf
+                            Gewährleistung, Schadenersatz oder einen sonstigen Rechtsgrund beruht – in jedem Fall nur
+                            auf bei Vertragsabschluss vorhersehbare typische Schäden begrenzt. Ferner wird von uns eine
+                            Haftung für entgangenen Gewinn, besseres Fortkommen, Folgeschäden, Drittschäden etc.
+                            ausgeschlossen.</p>
+                    </section>
+
+                    <section class="reveal active">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">8. Kündigung /
+                            fristlose Auflösung</h3>
+                        <p>8.1. Verträge, die auf bestimmte Dauer abgeschlossen sind, enden mit dem Ablauf der
+                            vereinbarten Zeit. Werden wir über die vereinbarte Dauer weiterhin beauftragt und wird auch
+                            kein neuer befristeter Vertrag geschlossen, ändert sich die Art der Beauftragung in eine
+                            unbefristete Beauftragung und es gelangen ausschließlich unsere AGB und deren
+                            Kündigungsfristen bei unbefristeten Beauftragungen als Vertragsgrundlage zur Geltung.</p>
+                        <p style="margin-top: 1rem;">8.2. Bei unbefristeten Beauftragungen gilt als vereinbart, dass
+                            diese seitens unseres Vertragspartners jeweils zum Quartal nur unter Einhaltung der
+                            folgenden, gestaffelten Fristen gekündigt werden können:</p>
+                        <ul style="list-style: none; margin: 1.5rem 0; padding-left: 0;">
+                            <li
+                                style="margin-bottom: 1rem; padding: 1.5rem; background: var(--bg-surface-subtle); border-radius: 16px; border-left: 4px solid var(--text-accent);">
+                                <strong>Dauer bis zu 3 Monaten:</strong> 3 Monate Kündigungsfrist
+                            </li>
+                            <li
+                                style="margin-bottom: 1rem; padding: 1.5rem; background: var(--bg-surface-subtle); border-radius: 16px; border-left: 4px solid var(--text-accent);">
+                                <strong>Dauer bis zu 18 Monaten:</strong> 6 Monate Kündigungsfrist
+                            </li>
+                            <li
+                                style="margin-bottom: 1rem; padding: 1.5rem; background: var(--bg-surface-subtle); border-radius: 16px; border-left: 4px solid var(--text-accent);">
+                                <strong>Dauer über 18 Monaten:</strong> 12 Monate Kündigungsfrist
+                            </li>
+                        </ul>
+                        <p style="margin-top: 1rem;">Die Kündigung hat schriftlich zu erfolgen. Für die Rechtzeitigkeit
+                            ist der Postaufgabestempel maßgeblich. Das Ausmaß der Beauftragung hat während der gesamten
+                            Kündigungsfrist mindestens der durchschnittlichen Auftragshöhe jener der Kündigung
+                            vorangegangenen drei Auftragsmonate zu entsprechen. Wünscht der Vertragspartner das
+                            Einstellen unserer Leistungen noch vor Ablauf der Kündigungsfrist, sind wir berechtigt, ein
+                            Pönale in Rechnung zu stellen, welches der Höhe des Betrags entspricht, der uns zustünde,
+                            wenn wir bis zum Ende der Kündigungsfrist unsere Leistungen, mindestens im Umfang des
+                            Durchschnitts der vorangegangenen drei Monate, hätten erbringen dürfen. Dieses Pönale ergeht
+                            in Form einer Rechnung an unseren Vertragspartner und ist sofort fällig.</p>
+                        <p style="margin-top: 1rem;">8.3. Ist unser Vertragspartner mit mindestens zwei von uns gelegten
+                            Rechnungen in Zahlungsverzug, können wir das Vertragsverhältnis sofort und ohne Einhaltung
+                            von Fristen und ohne jegliche Mitteilung auflösen und jegliche Leistungen einstellen.
+                            Darüber hinaus können wir die Zahlung der noch zu erwartenden Rechnungen, gemessen am
+                            Durchschnitt der vorangegangenen drei Monate bis zum Vertragsende samt Kündigungsfrist als
+                            Schadenersatz geltend machen.</p>
+                        <p style="margin-top: 1rem;">8.4. Wir sind berechtigt, jedes Vertragsverhältnis ohne Einhaltung
+                            gesonderter Fristen und durch bloße mündliche Erklärung mit sofortiger Wirkung für aufgelöst
+                            zu erklären, wenn über das Vermögen unseres Vertragspartners ein Insolvenzverfahren eröffnet
+                            wird oder die Eröffnung eines solchen Verfahrens mangels kostendeckenden Vermögens
+                            unterbleibt.</p>
+                    </section>
+
+                    <section class="reveal active">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.5rem;">Sonstiges</h3>
+                        <p>Diese Allgemeinen Geschäftsbedingungen gelten für diese Website und für Transaktionen im
+                            Zusammenhang mit unseren Produkten und Dienstleistungen. Zusätzlich können weitere Verträge
+                            deine Beziehung zu uns oder spezifische Produkte oder Dienstleistungen regeln, die du von
+                            uns erhältst. Im Falle von Konflikten zwischen den Bestimmungen dieser AGB und den
+                            Bestimmungen der zusätzlichen Verträge haben die Bestimmungen der zusätzlichen Verträge
+                            Vorrang.</p>
+                        <p style="margin-top: 1.5rem;"><strong>Verbindlichkeit:</strong> Durch die Registrierung, den
+                            Zugriff oder die anderweitige Nutzung dieser Website erklärst du dich hiermit einverstanden,
+                            an diese unten aufgeführten Allgemeinen Geschäftsbedingungen gebunden zu sein. Die bloße
+                            Nutzung dieser Website setzt die Kenntnis und Akzeptanz dieser Allgemeinen
+                            Geschäftsbedingungen voraus. In bestimmten Fällen können wir dich auch bitten, ausdrücklich
+                            zuzustimmen.</p>
+                        <p style="margin-top: 1.5rem;"><strong>Geistiges Eigentum:</strong> Wir oder unsere Lizenzgeber
+                            besitzen und kontrollieren alle Urheberrechte und sonstigen Rechte an geistigem Eigentum auf
+                            der Website sowie die Daten, Informationen und sonstigen Ressourcen, die auf der Website
+                            angezeigt werden oder auf der Website zugänglich sind.</p>
+                        <p style="margin-top: 1.5rem;"><strong>Alle Rechte vorbehalten:</strong> Sofern bestimmte
+                            Inhalte nichts anderes vorschreiben, wird dir keine Lizenz oder ein anderes Recht unter
+                            Urheber-, Marken-, Patent- oder anderen Rechten an geistigem Eigentum gewährt. Dies
+                            bedeutet, dass du keine Ressourcen auf dieser Website verwenden, kopieren, reproduzieren,
+                            ausführen, anzeigen, verteilen, in ein elektronisches Medium einbetten, ändern,
+                            zurückentwickeln, dekompilieren, übersetzen, herunterladen, übertragen, verkaufen,
+                            vermarkten oder kommerzialisieren darfst, es sei denn, dies ist durch zwingendes Recht (wie
+                            das Recht auf Zitat) anders festgelegt oder du hast dazu unsere vorherige schriftliche
+                            Genehmigung.</p>
+                        <p style="margin-top: 1.5rem;"><strong>Newsletter:</strong> Ungeachtet des Obigen kannst du
+                            unseren Newsletter in elektronischer Form an andere Personen weiterleiten, die
+                            möglicherweise an einem Besuch unserer Website interessiert sind.</p>
+                        <p style="margin-top: 1.5rem;"><strong>Eigentum Drittanbieter:</strong> Unsere Website kann
+                            Hyperlinks oder andere verweise auf Websites anderer Parties enthalten. Wir überwachen oder
+                            überprüfen nicht den Inhalt der Websites anderer Parteien, auf die von dieser Website aus
+                            verweisen wird. Produkte oder Dienstleistungen, die von anderen Websites angeboten werden,
+                            unterliegen den Allgemeinen Geschäftsbedingungen dieser Dritten. Auf diesen Websites
+                            geäußerte Meinungen oder Materialien werden von uns nicht unbedingt geteilt oder
+                            unterstützt. Wir sind nicht verantwortlich für Datenschutzpraktiken oder Inhalte dieser
+                            Websites.</p>
+                        <p style="margin-top: 1.5rem;"><strong>Verantwortungsbewusster Umgang:</strong> Durch den Besuch
+                            unserer Website erklärst du dich damit einverstanden, diese nur für die Zwecke zu verwenden,
+                            die durch diese Bedingungen, zusätzliche Verträge mit uns sowie geltende Gesetze,
+                            Vorschriften und allgemein anerkannte Online-Praktiken und Branchenrichtlinien beabsichtigt
+                            und gestattet sind. Du darfst unsere Website oder Dienste nicht verwenden, um Material zu
+                            verwenden, zu veröffentlichen oder zu verbreiten, das aus bösartiger Computersoftware
+                            besteht oder mit dieser verlinkt ist.</p>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div style="margin-bottom: 2rem;">
+                        <img src="/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png"
+                            alt="MediClean Pro®" style="height: 50px; display: block;">
+                    </div>
+                    <p>Qualität, die man sieht. Hygiene, die man spürt.<br><br>MC2P GmbH & Co KG<br>Handelskai 94-96,
+                        1200 Wien</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Kontakt & Hilfe</h4>
+                    <div class="footer-links">
+                        <a href="tel:+4366499533780">📞 +43 664 99533780</a>
+                        <a href="mailto:office@mediclean-pro.at">✉️ office@mediclean-pro.at</a>
+                        <a href="termin.html"
+                            style="margin-top: 1rem; color: var(--brand-light); font-weight: 600;">Termin vereinbaren
+                            &rarr;</a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Portal & App</h4>
+                    <div class="footer-links">
+                        <a href="customer_login.html">Kunden Login</a>
+                        <a href="customer_register.html">Registrierung</a>
+                        <a href="javascript:void(0)" onclick="window.triggerPWAInstall()">📲 App installieren</a>
+                        <a href="login.html">Mitarbeiter Login</a>
+                        iPhone-App: Tippe auf
+                        <img alt="iOS Share Icon"
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3Cpolyline points='16 6 12 2 8 6'/%3E%3Cline x1='12' y1='2' x2='12' y2='15'/%3E%3C/svg%3E"
+                            style="display: inline !important; height: 1.2rem; width: auto; vertical-align: middle; margin: 0 4px;">
+                        & "Zum Home-Bildschirm".
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            © 2026 MediClean Pro®. Engineered in Vienna. |
+            <a href="impressum.html">Impressum</a> |
+            <a href="datenschutz.html">Datenschutz</a> |
+            <a href="agb.html">AGB</a>
+            <p class="gender-disclaimer">* Aus Gründen der besseren Lesbarkeit wird auf die gleichzeitige Verwendung der
+                Sprachformen männlich, weiblich und divers (m/w/d) verzichtet. Sämtliche Personenbezeichnungen gelten
+                gleichermaßen für alle Geschlechter.</p>
+        </div>
+    </footer>
+
+    <script src="/js/consent.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/script.js"></script>
+    <script src="/js/pwa-handler.js?v=20"></script>
+    <script src="/js/accessibility.js"></script>
+</body>
+
+</html>

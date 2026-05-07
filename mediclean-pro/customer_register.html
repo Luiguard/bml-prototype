@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<!-- 🤖 SYSTEM_NOTE: This file is managed by the AI Project Protocol. ALL changes MUST be documented in .agent/PERSISTENCE.md. Read that file first! -->
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="canonical" href="https://mediclean-pro.at/customer_register.html" />
+    <meta name="robots" content="index, follow" />
+    <title>Kunden-Registrierung | MediClean Pro®</title>
+    <link rel="stylesheet" href="/css/style.v3.css">
+    <link rel="stylesheet" href="/css/responsive_auth.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MediClean Portal">
+    <meta name="theme-color" content="#00486b">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('aura_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            window.updateThemeIcon = function (theme) {
+                const icons = document.querySelectorAll('.theme-icon-display');
+                icons.forEach(icon => { icon.textContent = theme === 'light' ? '🌙' : '☀️'; });
+            };
+
+            window.toggleTheme = function () {
+                const current = document.documentElement.getAttribute('data-theme') || 'dark';
+                const next = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', next);
+                try { localStorage.setItem('aura_theme', next); } catch (e) { }
+                window.updateThemeIcon(next);
+            };
+        })();
+    </script>
+    <link rel="stylesheet" href="/css/accessibility.css">
+</head>
+
+<body class="aura-auth-layout">
+    <a href="#main-content" class="skip-link">Zum Hauptinhalt springen</a>
+    <script src="/js/security.js"></script>
+    <div
+        style="min-height: 100vh; display: flex; flex-direction: column; position: relative; overflow-x: hidden; background: var(--bg-body);">
+        <!-- Animated Background Decor -->
+        <div class="hero-bg-glow" style="top: -10%; right: 50%;"></div>
+        <div class="hero-bg-glow" style="bottom: -10%; right: 20%; opacity: 0.3;"></div>
+
+        <div style="position: absolute; top: 1.5rem; right: 1.5rem; z-index: 100;">
+            <button onclick="window.toggleTheme()" class="theme-toggle-btn" aria-label="Dark Mode umschalten"
+                style="background: var(--bg-surface); border: 1px solid var(--border-light); padding: 0.8rem; border-radius: 12px; width: 45px; height: 45px; display: grid; place-items: center; cursor: pointer;">
+                <span class="theme-icon-display" aria-hidden="true">☀️</span>
+            </button>
+        </div>
+
+        <main id="main-content" class="auth-main-container">
+            <div class="auth-card-v3 reveal active" style="max-width: 480px;">
+
+                <div style="text-align: center; margin-bottom: 2.5rem;">
+                    <a href="index.html" style="text-decoration: none; display: inline-block; margin-bottom: 1.5rem;">
+                        <img src="/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png"
+                            alt="MediClean Pro" style="height: 60px;">
+                    </a>
+                    <span class="tagline" style="margin-bottom: 0.5rem;">Kundenbereich</span>
+                    <h1 style="font-size: 2rem; margin-bottom: 0.5rem; letter-spacing: -0.5px;">Konto <span
+                            class="gradient-text">erstellen</span></h1>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Exklusiver Zugang zu Ihren Dokumenten
+                    </p>
+                </div>
+
+                <div id="message" class="error-message" role="alert" aria-live="polite"
+                    style="display:none; padding: 1rem; border-radius: 12px; font-size: 0.9rem; margin-bottom: 1.5rem; text-align: center; border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                </div>
+
+                <form id="registerForm">
+                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                        <label for="username"
+                            style="display: block; margin-bottom: 0.6rem; font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Firmenname
+                            / Benutzername</label>
+                        <input type="text" id="username" placeholder="Ihre Firma GmbH" required
+                            autocomplete="organization"
+                            style="width: 100%; padding: 0.9rem 1.1rem; min-height: 44px; border-radius: 14px; border: 1px solid var(--border-light); background: var(--bg-surface-subtle); color: var(--text-primary); font-size: 1rem; transition: all 0.2s;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                        <label for="email"
+                            style="display: block; margin-bottom: 0.6rem; font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">E-Mail
+                            Adresse</label>
+                        <input type="email" id="email" placeholder="office@firma.at" required autocomplete="email"
+                            style="width: 100%; padding: 0.9rem 1.1rem; min-height: 44px; border-radius: 14px; border: 1px solid var(--border-light); background: var(--bg-surface-subtle); color: var(--text-primary); font-size: 1rem; transition: all 0.2s;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label for="password"
+                            style="display: block; margin-bottom: 0.6rem; font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">Passwort</label>
+                        <input type="password" id="password" required placeholder="Mind. 8 Zeichen"
+                            autocomplete="new-password"
+                            style="width: 100%; padding: 0.9rem 1.1rem; min-height: 44px; border-radius: 14px; border: 1px solid var(--border-light); background: var(--bg-surface-subtle); color: var(--text-primary); font-size: 1rem; transition: all 0.2s;">
+                    </div>
+
+                    <div style="display:flex; gap:0.8rem; align-items:flex-start; margin: 1.5rem 0; font-size: 0.9rem;">
+                        <input type="checkbox" id="privacyAgree"
+                            style="width: 1.2rem; height: 1.2rem; margin-top: 0.2rem; cursor: pointer;" required>
+                        <label for="privacyAgree" style="line-height:1.4; color:var(--text-secondary); cursor:pointer;">
+                            Ich habe die <a href="datenschutz.html" target="_blank"
+                                style="color:var(--text-accent); text-decoration: none; font-weight: 600;">Datenschutzerklärung</a>
+                            gelesen und stimme zu. *
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"
+                        style="width: 100%; padding: 1rem; border-radius: 14px; font-weight: 700; font-size: 1.1rem; justify-content: center; box-shadow: var(--shadow-sm);">
+                        Konto erstellen
+                    </button>
+                </form>
+
+                <div
+                    style="margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border-light); text-align: center;">
+                    <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Bereits
+                        registriert?</p>
+                    <a href="customer_login.html"
+                        style="color: var(--text-accent); font-weight: 700; text-decoration: none; font-size: 1rem;">
+                        Hier anmelden &rarr;
+                    </a>
+                </div>
+
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <a href="index.html"
+                        style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; opacity: 0.7; transition: opacity 0.2s;"
+                        onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">← Zurück zur
+                        Startseite</a>
+                </div>
+            </div>
+        </main>
+
+        <footer id="contact" role="contentinfo">
+            <div class="container">
+                <div class="footer-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; padding: 4rem 0;">
+                    <div class="footer-brand">
+                        <div style="margin-bottom: 2rem;">
+                            <img src="/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png"
+                                alt="MediClean Pro® Logo" style="height: 50px; display: block;">
+                        </div>
+                        <p style="color: var(--text-secondary);">Qualität, die man sieht. Hygiene, die man
+                            spürt.<br><br>MC2P GmbH & Co KG<br>Handelskai
+                            94-96, 1200 Wien</p>
+                    </div>
+
+                    <div class="footer-col">
+                        <h4 id="footer-contact-title">Kontakt & Hilfe</h4>
+                        <div class="footer-links" role="list" aria-labelledby="footer-contact-title">
+                            <a href="tel:+4366499533780" role="listitem" aria-label="Telefon: +43 664 99533780"
+                                style="display: block; margin-bottom: 0.8rem; color: var(--text-secondary);">📞 +43 664
+                                99533780</a>
+                            <a href="mailto:office@mediclean-pro.at" role="listitem"
+                                aria-label="E-Mail: office@mediclean-pro.at"
+                                style="display: block; margin-bottom: 0.8rem; color: var(--text-secondary);">✉️
+                                office@mediclean-pro.at</a>
+                            <a href="termin.html" role="listitem"
+                                style="margin-top: 1rem; color: var(--brand-light); font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; text-decoration: none;">Termin
+                                vereinbaren &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom"
+                style="padding: 2rem 0; border-top: 1px solid var(--border-light); text-align: center;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">© 2026 MediClean Pro®. Engineered in Vienna.
+                    |
+                    <a href="impressum.html" style="color: inherit; text-decoration: none;">Impressum</a> |
+                    <a href="datenschutz.html" style="color: inherit; text-decoration: none;">Datenschutz</a> |
+                    <a href="agb.html" style="color: inherit; text-decoration: none;">AGB</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+    <script src="/js/auth.js"></script>
+    <script src="/js/filesystem.js"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/script.js"></script>
+    <script src="/js/pwa-handler.js?v=20"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userIn = document.getElementById('username').value;
+            const emailIn = document.getElementById('email').value;
+            const passIn = document.getElementById('password').value;
+            const msg = document.getElementById('message');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Wird erstellt...';
+
+            try {
+                const res = await AuthService.register(userIn, emailIn, passIn, 'customer');
+
+                if (res.success) {
+                    msg.textContent = '';
+                    msg.className = '';
+                    Toast.success('Ihr Konto wurde erfolgreich erstellt!', 'Registrierung erfolgreich');
+
+                    await AuthService.login(userIn, passIn);
+                    setTimeout(() => window.location.href = '/portal/customer_dashboard.html', 1500);
+                } else {
+                    msg.textContent = res.message;
+                    msg.style.display = 'block';
+                    Toast.error(res.message || 'Registrierung fehlgeschlagen', 'Fehler');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Konto erstellen';
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                msg.textContent = 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.';
+                msg.style.display = 'block';
+                Toast.error('Ein unerwarteter Fehler ist aufgetreten.', 'Fehler');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Konto erstellen';
+            }
+        });
+    </script>
+    <script src="/js/consent.js"></script>
+    <script src="/js/accessibility.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <!-- Original Logo Building Shape -->
+  <g transform="translate(4,4)">
+    <!-- Left Section (Blue) -->
+    <path d="M0 6 L8 2 L8 30 C8 30 7 26 5 26 C3 26 2 28 2 28 L0 28 Z" fill="#0069a3" />
+    
+    <!-- Middle Section (Grey) with Window -->
+    <path d="M8 2 L24 2 L24 32 C24 32 21 28 16 28 C11 28 8 32 8 32 Z" fill="#a6a6a6" />
+    <rect x="12" y="10" width="3" height="3" fill="white" />
+    <rect x="17" y="10" width="3" height="3" fill="white" />
+    <rect x="12" y="15" width="3" height="3" fill="white" />
+    <rect x="17" y="15" width="3" height="3" fill="white" />
+    
+    <!-- Right Section (Light Blue) -->
+    <path d="M24 2 L32 6 L32 28 C32 28 30 26 27 26 C24 26 24 30 24 30 Z" fill="#7abcdb" />
+    
+    <!-- Sparkles based on original logo -->
+    <path d="M12 -2 L13 0 L15 1 L13 2 L12 4 L11 2 L9 1 L11 0 Z" fill="#0069a3" opacity="0.8" />
+    <path d="M28 2 L30 4 L33 5 L30 6 L28 8 L26 6 L23 5 L26 4 Z" fill="#7abcdb" opacity="0.8" />
+  </g>
+</svg>

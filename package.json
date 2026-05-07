@@ -1,0 +1,16 @@
+{
+  "name": "benjamin-projects",
+  "version": "1.0.0",
+  "description": "Monorepo für verschiedene Tools und Projekte",
+  "private": true,
+  "workspaces": [
+    "converter-site"
+  ],
+  "scripts": {
+    "start:converter": "cd converter-site && python3 server.py",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

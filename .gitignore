@@ -1,0 +1,20 @@
+# Logs
+*.log
+
+# Converter temp files
+convertany/uploads/
+convertany/outputs/
+
+# FFmpeg archive (already extracted)
+ffmpeg-git-amd64-static.tar.xz
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Systemd service files (copies live in /etc/systemd/system/)
+*.service

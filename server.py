@@ -1,0 +1,146 @@
+import http.server
+import socketserver
+import os
+import cgi
+import subprocess
+import shutil
+import uuid
+import json
+import re
+from urllib.parse import urlparse
+
+PORT = 8001
+CONVERTER_DIR = "convertany"
+MAIN_SITE_DIR = "mediclean-pro"
+UPLOAD_DIR = "convertany/uploads"
+OUTPUT_DIR = "convertany/outputs"
+FFMPEG_PATH = "./ffmpeg"
+
+# Ensure directories exist
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        original_path = self.path
+        
+        # Redirect /convertany to /convertany/ for correct relative paths
+        if original_path == '/convertany':
+            self.send_response(301)
+            self.send_header('Location', '/convertany/')
+            self.end_headers()
+            return
+
+        # Handle Converter logic
+        if original_path.startswith('/convertany/'):
+            # Strip prefix
+            path_within_converter = original_path[len('/convertany'):]
+            if path_within_converter == '/' or path_within_converter == '': path_within_converter = '/index.html'
+            
+            # Serve from converter-site directory
+            self.path = CONVERTER_DIR + path_within_converter
+            return super().do_GET()
+        
+        # Handle Main Site logic
+        else:
+            if original_path == '/' or original_path == '': 
+                self.path = MAIN_SITE_DIR + '/index.html'
+            else:
+                self.path = MAIN_SITE_DIR + original_path
+            return super().do_GET()
+
+    def do_POST(self):
+        path = self.path
+        if path.startswith('/convertany'):
+            path = path[len('/convertany'):]
+            if not path.startswith('/'): path = '/' + path
+            
+        if path == '/convert' or path == 'convert':
+            self.handle_conversion()
+        elif path == '/magic-convert' or path == 'magic-convert':
+            self.handle_magic_conversion()
+        else:
+            self.send_error(404, "Not Found")
+
+    def handle_magic_conversion(self):
+        try:
+            form = cgi.FieldStorage(
+                fp=self.rfile,
+                headers=self.headers,
+                environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']}
+            )
+            file_item = form['file']
+            target_format = form['format'].value.lower() if 'format' in form else 'pdf'
+            style = form['style'].value.lower() if 'style' in form else 'modern'
+            job_id = str(uuid.uuid4())
+            input_ext = os.path.splitext(file_item.filename)[1].lower()
+            input_path = os.path.join(UPLOAD_DIR, job_id + input_ext)
+            with open(input_path, 'wb') as f: f.write(file_item.file.read())
+
+            # Text Extraction
+            text = ""
+            if input_ext == '.pdf':
+                subprocess.run(["pdftotext", input_path, input_path + ".txt"])
+                if os.path.exists(input_path + ".txt"):
+                    with open(input_path + ".txt", 'r') as f: text = f.read()
+            elif input_ext in ['.docx', '.doc', '.odt']:
+                subprocess.run(["libreoffice", "--headless", "--convert-to", "txt:Text", "--outdir", UPLOAD_DIR, input_path])
+                txt_path = os.path.join(UPLOAD_DIR, os.path.splitext(os.path.basename(input_path))[0] + ".txt")
+                if os.path.exists(txt_path):
+                    with open(txt_path, 'r') as f: text = f.read()
+            
+            # Template Filling
+            with open("resume_template.html", 'r') as f: html = f.read()
+            accent_color = "#2563eb"
+            if style == 'classic': accent_color = "#334155"
+            elif style == 'creative': accent_color = "#d946ef"
+            
+            name = re.search(r'^([A-Z][a-z]+ [A-Z][a-z]+)', text, re.M)
+            name = name.group(1) if name else "Max Mustermann"
+            html = html.replace("--primary: #2563eb;", f"--primary: {accent_color};").replace("{{NAME}}", name).replace("{{EMAIL}}", "email@beispiel.de").replace("{{PHONE}}", "+49 123 456789").replace("{{LOCATION}}", "Deutschland").replace("{{TITLE}}", "Bewerber").replace("{{SUMMARY}}", "Inhalt aus Dokument.").replace("{{SKILLS_LIST}}", "<li>Kommunikation</li>").replace("{{EXPERIENCE_ITEMS}}", "<div>Erfahrung</div>").replace("{{EDUCATION_ITEMS}}", "<div>Ausbildung</div>")
+
+            html_path = os.path.join(UPLOAD_DIR, job_id + ".html")
+            with open(html_path, 'w') as f: f.write(html)
+            subprocess.run(["libreoffice", "--headless", "--convert-to", target_format, "--outdir", OUTPUT_DIR, html_path])
+            output_path = os.path.join(OUTPUT_DIR, job_id + "." + target_format)
+            
+            if os.path.exists(output_path):
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/octet-stream')
+                self.send_header('Content-Disposition', f'attachment; filename="Optimiert.{target_format}"')
+                self.send_header('Content-Length', os.path.getsize(output_path))
+                self.end_headers()
+                with open(output_path, 'rb') as f: shutil.copyfileobj(f, self.wfile)
+            else: self.send_error(500, "Failed")
+        except Exception as e: self.send_error(500, str(e))
+
+    def handle_conversion(self):
+        try:
+            form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']})
+            file_item = form['file']
+            target_format = form['format'].value.lower()
+            job_id = str(uuid.uuid4())
+            input_ext = os.path.splitext(file_item.filename)[1]
+            input_path = os.path.join(UPLOAD_DIR, job_id + input_ext)
+            with open(input_path, 'wb') as f: f.write(file_item.file.read())
+            output_path = os.path.join(OUTPUT_DIR, f"{job_id}.{target_format}")
+
+            if input_ext.lower() in ['.docx', '.doc', '.odt', '.pdf', '.rtf', '.txt']:
+                subprocess.run(["libreoffice", "--headless", "--convert-to", target_format, "--outdir", OUTPUT_DIR, input_path])
+            else:
+                subprocess.run([FFMPEG_PATH, "-y", "-i", input_path, output_path])
+
+            if os.path.exists(output_path):
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/octet-stream')
+                self.send_header('Content-Disposition', f'attachment; filename="Converted.{target_format}"')
+                self.end_headers()
+                with open(output_path, 'rb') as f: shutil.copyfileobj(f, self.wfile)
+            else: self.send_error(500, "Failed")
+        except Exception as e: self.send_error(500, str(e))
+
+if __name__ == "__main__":
+    print(f"Multi-Project Server starting on port {PORT}...")
+    socketserver.TCPServer.allow_reuse_address = True
+    with socketserver.TCPServer(("", PORT), MultiProjectHandler) as httpd:
+        httpd.serve_forever()
