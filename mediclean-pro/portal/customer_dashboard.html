@@ -281,6 +281,56 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
+        /* Document UI */
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--v3-primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+        .upload-icon {
+            color: var(--v3-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .doc-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .doc-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            transition: transform 0.2s;
+        }
+        .doc-item:hover {
+            transform: translateX(5px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .doc-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .doc-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
         /* Input Area */
         .chat-input-wrapper {
             padding: 1.5rem;
@@ -488,7 +538,7 @@
                     <i data-lucide="user-cog" style="width: 20px; height: 20px;"></i>
                     Mein Profil
                 </button>
-                <button class="nav-btn" onclick="alert('Upload-Portal ist in Vorbereitung.')">
+                <button class="nav-btn" onclick="switchView('view-documents', this); loadDocuments();">
                     <i data-lucide="folder-open" style="width: 20px; height: 20px;"></i>
                     Meine Dokumente
                 </button>
@@ -588,6 +638,24 @@
                         </button>
                     </div>
                 </form>
+            </div>
+            <!-- Documents View -->
+            <div id="view-documents" class="view-section">
+                <h1 class="page-title">Meine Dokumente</h1>
+                <p class="page-subtitle">Hier finden Sie alle wichtigen Dokumente, Rechnungen und Verträge. Sie können auch Dokumente (z.B. Grundrisse) für uns hochladen.</p>
+
+                <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <i data-lucide="upload-cloud" style="width: 48px; height: 48px;" class="upload-icon"></i>
+                    <h3 style="margin-bottom: 0.5rem;">Dokument hochladen</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Klicken Sie hier oder ziehen Sie eine Datei (PDF, Bild) in dieses Feld.</p>
+                    <input type="file" id="file-input" style="display: none;" onchange="handleFileUpload(this.files)">
+                </div>
+
+                <h3 style="margin-bottom: 1.5rem; margin-top: 3rem;">Hinterlegte Dateien</h3>
+                <div id="doc-loading" style="color: var(--text-secondary); font-style: italic;">Dokumente werden geladen...</div>
+                <div class="doc-list" id="doc-list">
+                    <!-- Files will be injected here -->
+                </div>
             </div>
         </main>
     </div>
@@ -748,6 +816,104 @@
                 setTimeout(() => { msgBox.textContent = ''; }, 3000);
             }
         });
+
+        // Document Logic
+        async function loadDocuments() {
+            const list = document.getElementById('doc-list');
+            const loading = document.getElementById('doc-loading');
+            list.innerHTML = '';
+            loading.style.display = 'block';
+
+            try {
+                const res = await fetch('/api/list_documents', {
+                    headers: { 'X-API-KEY': user.apiKey }
+                });
+                const data = await res.json();
+                
+                loading.style.display = 'none';
+                if (data.success) {
+                    if (data.files.length === 0) {
+                        list.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">Keine Dokumente gefunden.</div>';
+                        return;
+                    }
+                    data.files.forEach(f => {
+                        const date = new Date(f.date * 1000).toLocaleDateString('de-AT');
+                        const size = (f.size / 1024).toFixed(1) + ' KB';
+                        list.innerHTML += `
+                            <div class="doc-item">
+                                <div class="doc-info">
+                                    <div style="background: rgba(255,255,255,0.1); padding: 0.8rem; border-radius: 10px; color: var(--text-secondary);">
+                                        <i data-lucide="file-text" style="width: 24px; height: 24px;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; margin-bottom: 0.2rem;">${f.name}</div>
+                                        <div class="doc-meta">${date} • ${size}</div>
+                                    </div>
+                                </div>
+                                <button class="btn-outline" style="border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="alert('Download-Link folgt in Kürze')">
+                                    <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                loading.textContent = 'Fehler beim Laden der Dokumente.';
+            }
+        }
+
+        async function handleFileUpload(files) {
+            if (!files || files.length === 0) return;
+            const file = files[0];
+            
+            const dropZone = document.getElementById('drop-zone');
+            dropZone.innerHTML = `<div style="color: var(--v3-primary); font-weight: bold;">Lade "${file.name}" hoch...</div>`;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/upload_document', {
+                    method: 'POST',
+                    headers: { 'X-API-KEY': user.apiKey },
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('Erfolgreich hochgeladen!');
+                    loadDocuments();
+                } else {
+                    alert('Fehler: ' + data.message);
+                }
+            } catch (err) {
+                alert('Netzwerkfehler beim Upload.');
+            } finally {
+                // Reset drop zone UI
+                dropZone.innerHTML = `
+                    <i data-lucide="upload-cloud" style="width: 48px; height: 48px;" class="upload-icon"></i>
+                    <h3 style="margin-bottom: 0.5rem;">Dokument hochladen</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Klicken Sie hier oder ziehen Sie eine Datei (PDF, Bild) in dieses Feld.</p>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        // Drag and drop events
+        const dropZone = document.getElementById('drop-zone');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                handleFileUpload(e.dataTransfer.files);
+            });
+        }
     </script>
 </body>
 </html>

@@ -19,6 +19,7 @@ CONVERTER_DIR = "convertany"
 MAIN_SITE_DIR = "mediclean-pro"
 UPLOAD_DIR = "convertany/uploads"
 OUTPUT_DIR = "convertany/outputs"
+DOCS_DIR = "mediclean-pro/docs"
 FFMPEG_PATH = "./ffmpeg"
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 CLEANUP_AGE_SECONDS = 3600  # 1 hour
@@ -26,6 +27,7 @@ CLEANUP_AGE_SECONDS = 3600  # 1 hour
 # Ensure directories exist
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(DOCS_DIR, exist_ok=True)
 
 # --- Auto-Cleanup Thread ---
 def cleanup_old_files():
@@ -86,6 +88,28 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(db.get_all_users(api_key))
             elif action == 'get_roles':
                 self.send_json(db.get_all_roles())
+            elif action == 'list_documents':
+                user = db.get_user_by_api_key(api_key)
+                if not user:
+                    self.send_json({"success": False, "message": "Unauthorized"}, 401)
+                    return
+                
+                # Admins see all docs (not implemented yet), users see their own
+                user_doc_dir = os.path.join(DOCS_DIR, user['id'])
+                os.makedirs(user_doc_dir, exist_ok=True)
+                
+                files = []
+                for f in os.listdir(user_doc_dir):
+                    f_path = os.path.join(user_doc_dir, f)
+                    if os.path.isfile(f_path):
+                        stat = os.stat(f_path)
+                        files.append({
+                            "name": f,
+                            "size": stat.st_size,
+                            "date": stat.st_mtime
+                        })
+                files.sort(key=lambda x: x['date'], reverse=True)
+                self.send_json({"success": True, "files": files})
             elif action == 'delete_user':
                 uid = params.get('id', [None])[0]
                 if uid:
@@ -131,13 +155,53 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
         # --- API POST endpoints ---
         if path.startswith('/api/'):
             action = path[len('/api/'):]
+            api_key = self.headers.get('X-API-KEY', '')
+            
+            # Document upload needs multipart/form-data parsing
+            if action == 'upload_document':
+                user = db.get_user_by_api_key(api_key)
+                if not user:
+                    self.send_json({"success": False, "message": "Unauthorized"}, 401)
+                    return
+                    
+                try:
+                    form = cgi.FieldStorage(
+                        fp=self.rfile,
+                        headers=self.headers,
+                        environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']}
+                    )
+                    file_item = form.getvalue('file') if 'file' in form else None
+                    if not isinstance(file_item, bytes) and 'file' in form:
+                        # Sometimes cgi parses it as FieldStorage object if filename is present
+                        file_item = form['file'].file.read()
+                        filename = os.path.basename(form['file'].filename)
+                    else:
+                        self.send_json({"success": False, "message": "Keine gültige Datei gefunden"}, 400)
+                        return
+
+                    if not filename:
+                        filename = f"upload_{int(time.time())}.pdf"
+
+                    # Basic sanitization
+                    filename = "".join(c for c in filename if c.isalnum() or c in " .-_")
+                    
+                    user_doc_dir = os.path.join(DOCS_DIR, user['id'])
+                    os.makedirs(user_doc_dir, exist_ok=True)
+                    
+                    file_path = os.path.join(user_doc_dir, filename)
+                    with open(file_path, 'wb') as f:
+                        f.write(file_item)
+                        
+                    self.send_json({"success": True, "message": "Dokument hochgeladen", "filename": filename})
+                except Exception as e:
+                    self.send_json({"success": False, "message": f"Upload Fehler: {str(e)}"}, 500)
+                return
+
             try:
                 data = self.read_json_body()
             except Exception:
                 self.send_json({"success": False, "message": "Invalid JSON"}, 400)
                 return
-            
-            api_key = self.headers.get('X-API-KEY', '')
 
             if action == 'login':
                 result = db.login_user(data.get('username', ''), data.get('password', ''))
