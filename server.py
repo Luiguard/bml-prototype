@@ -12,6 +12,7 @@ import threading
 import glob
 from urllib.parse import urlparse, parse_qs
 import database as db
+import ai_module as ai
 
 PORT = 8001
 CONVERTER_DIR = "convertany"
@@ -170,6 +171,26 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
                 ))
             elif action == 'logout':
                 self.send_json({"success": True})
+            # --- AI Endpoints ---
+            elif action == 'ai_chat':
+                chat_type = data.get('type', 'customer')
+                msg = data.get('message', '')
+                ctx = data.get('context', None)
+                if chat_type == 'staff':
+                    self.send_json(ai.staff_chat(msg, ctx))
+                else:
+                    user_data = db.get_user_by_api_key(api_key)
+                    self.send_json(ai.customer_chat(msg, ctx, user_data))
+            elif action == 'ai_checklist':
+                self.send_json(ai.generate_checklist(data.get('room_type', 'Büro')))
+            elif action == 'ai_offer':
+                self.send_json(ai.generate_offer(
+                    data.get('service_type', 'Unterhaltsreinigung'),
+                    data.get('area_sqm', None),
+                    data.get('frequency', None)
+                ))
+            elif action == 'ai_analyze_appointment':
+                self.send_json(ai.analyze_appointment_request(data.get('message', '')))
             else:
                 self.send_json({"success": False, "message": "Unknown API action"}, 404)
             return

@@ -640,7 +640,10 @@
             try {
                 const res = await fetch('/api/ai_chat', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-API-KEY': user ? user.apiKey : ''
+                    },
                     body: JSON.stringify({ 
                         type: 'customer', 
                         message: msg,

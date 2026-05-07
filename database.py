@@ -139,6 +139,15 @@ def login_user(username, password):
     conn.close()
     return {"success": False, "message": "Benutzername oder Passwort falsch"}
 
+def get_user_by_api_key(api_key):
+    if not api_key: return None
+    conn = get_db()
+    user = conn.execute("SELECT * FROM users WHERE api_key = ?", (api_key,)).fetchone()
+    conn.close()
+    if user:
+        return dict(user)
+    return None
+
 def get_all_users(requesting_api_key):
     conn = get_db()
     requester = conn.execute("SELECT role FROM users WHERE api_key = ?", (requesting_api_key,)).fetchone()
