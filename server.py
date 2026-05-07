@@ -7,6 +7,9 @@ import shutil
 import uuid
 import json
 import re
+import time
+import threading
+import glob
 from urllib.parse import urlparse
 
 PORT = 8001
@@ -15,12 +18,41 @@ MAIN_SITE_DIR = "mediclean-pro"
 UPLOAD_DIR = "convertany/uploads"
 OUTPUT_DIR = "convertany/outputs"
 FFMPEG_PATH = "./ffmpeg"
+MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
+CLEANUP_AGE_SECONDS = 3600  # 1 hour
 
 # Ensure directories exist
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# --- Auto-Cleanup Thread ---
+def cleanup_old_files():
+    """Deletes files older than CLEANUP_AGE_SECONDS from uploads and outputs."""
+    while True:
+        try:
+            now = time.time()
+            for directory in [UPLOAD_DIR, OUTPUT_DIR]:
+                for filepath in glob.glob(os.path.join(directory, "*")):
+                    if os.path.isfile(filepath):
+                        age = now - os.path.getmtime(filepath)
+                        if age > CLEANUP_AGE_SECONDS:
+                            os.remove(filepath)
+        except Exception as e:
+            print(f"Cleanup error: {e}")
+        time.sleep(300)  # Check every 5 minutes
+
+cleanup_thread = threading.Thread(target=cleanup_old_files, daemon=True)
+cleanup_thread.start()
+
 class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        # Security headers
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('X-Frame-Options', 'SAMEORIGIN')
+        self.send_header('X-XSS-Protection', '1; mode=block')
+        self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+        super().end_headers()
+
     def do_GET(self):
         original_path = self.path
         
@@ -50,6 +82,12 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
             return super().do_GET()
 
     def do_POST(self):
+        # --- Upload size check ---
+        content_length = int(self.headers.get('Content-Length', 0))
+        if content_length > MAX_UPLOAD_SIZE:
+            self.send_error(413, f"Datei zu groß. Maximum: {MAX_UPLOAD_SIZE // (1024*1024)} MB")
+            return
+
         path = self.path
         if path.startswith('/convertany'):
             path = path[len('/convertany'):]
@@ -141,6 +179,8 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     print(f"Multi-Project Server starting on port {PORT}...")
+    print(f"  Upload limit: {MAX_UPLOAD_SIZE // (1024*1024)} MB")
+    print(f"  Auto-cleanup: files older than {CLEANUP_AGE_SECONDS // 60} min")
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", PORT), MultiProjectHandler) as httpd:
         httpd.serve_forever()

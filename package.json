@@ -1,16 +1,17 @@
 {
-  "name": "benjamin-projects",
+  "name": "mediclean-pro-workspace",
   "version": "1.0.0",
-  "description": "Monorepo für verschiedene Tools und Projekte",
+  "description": "Monorepo: Mediclean Pro Website + ConvertAny Tool",
   "private": true,
   "workspaces": [
-    "converter-site"
+    "convertany",
+    "mediclean-pro"
   ],
   "scripts": {
-    "start:converter": "cd converter-site && python3 server.py",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "python3 server.py",
+    "monitor": "python3 monitor.py",
+    "status": "systemctl status mediclean-server mediclean-tunnel mediclean-monitor"
   },
-  "keywords": [],
-  "author": "",
+  "author": "Benjamin",
   "license": "ISC"
 }
