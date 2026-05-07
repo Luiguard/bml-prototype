@@ -28,6 +28,7 @@ def init_db():
             role TEXT DEFAULT 'customer',
             api_key TEXT UNIQUE,
             permissions TEXT DEFAULT '[]',
+            profile_data TEXT DEFAULT '{}',
             created_at REAL,
             last_login REAL
         );
@@ -62,6 +63,12 @@ def init_db():
                 ('team_lead', '["view_schedule", "clock_in", "manage_team", "report_issues"]', 'Teamleitung'),
                 ('accounting', '["view_invoices", "manage_billing"]', 'Buchhaltung');
         """)
+
+    # Try to add profile_data column to existing table to prevent errors if already created without it
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN profile_data TEXT DEFAULT '{}'")
+    except sqlite3.OperationalError:
+        pass # Column already exists
 
     # Create default admin if no admin exists
     admin = conn.execute("SELECT id FROM users WHERE role = 'admin'").fetchone()
@@ -124,7 +131,8 @@ def login_user(username, password):
                 "email": user["email"],
                 "role": user["role"],
                 "apiKey": user["api_key"],
-                "permissions": user["permissions"]
+                "permissions": user["permissions"],
+                "profile_data": user["profile_data"]
             },
             "apiKey": user["api_key"]
         }
@@ -172,18 +180,33 @@ def delete_user(user_id, requesting_api_key):
 
 def upsert_user(user_id, updates, requesting_api_key):
     conn = get_db()
-    requester = conn.execute("SELECT role FROM users WHERE api_key = ?", (requesting_api_key,)).fetchone()
-    if not requester or requester["role"] != "admin":
+    
+    # Check if the user is updating themselves OR if they are an admin
+    requester = conn.execute("SELECT id, role FROM users WHERE api_key = ?", (requesting_api_key,)).fetchone()
+    if not requester:
+        conn.close()
+        return {"success": False, "message": "Nicht authentifiziert"}
+        
+    is_admin = (requester["role"] == "admin")
+    is_self = (requester["id"] == user_id)
+    
+    if not (is_admin or is_self):
         conn.close()
         return {"success": False, "message": "Keine Berechtigung"}
     
-    allowed = ["username", "email", "role", "permissions"]
+    # Non-admins can only update their own profile_data, email, and password
+    if is_admin:
+        allowed = ["username", "email", "role", "permissions", "profile_data"]
+    else:
+        allowed = ["email", "profile_data"]
+        
     sets = []
     vals = []
     for k, v in updates.items():
         if k in allowed:
             sets.append(f"{k} = ?")
             vals.append(v)
+            
     if "password" in updates and updates["password"]:
         sets.append("password_hash = ?")
         vals.append(hash_password(updates["password"]))
@@ -192,8 +215,23 @@ def upsert_user(user_id, updates, requesting_api_key):
         vals.append(user_id)
         conn.execute(f"UPDATE users SET {', '.join(sets)} WHERE id = ?", vals)
         conn.commit()
+        
+    # Fetch updated user data
+    user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     conn.close()
-    return {"success": True}
+    
+    return {
+        "success": True, 
+        "user": {
+            "id": user["id"],
+            "username": user["username"],
+            "email": user["email"],
+            "role": user["role"],
+            "apiKey": user["api_key"],
+            "permissions": user["permissions"],
+            "profile_data": user["profile_data"]
+        }
+    }
 
 def create_support_request(user_id, username, message, req_type="general"):
     conn = get_db()
