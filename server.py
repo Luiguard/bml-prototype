@@ -10,7 +10,8 @@ import re
 import time
 import threading
 import glob
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
+import database as db
 
 PORT = 8001
 CONVERTER_DIR = "convertany"
@@ -53,9 +54,47 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
         super().end_headers()
 
+    def send_json(self, data, status=200):
+        """Helper to send a JSON response."""
+        body = json.dumps(data).encode('utf-8')
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', len(body))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def read_json_body(self):
+        """Read and parse JSON from request body."""
+        length = int(self.headers.get('Content-Length', 0))
+        if length == 0:
+            return {}
+        raw = self.rfile.read(length)
+        return json.loads(raw.decode('utf-8'))
+
     def do_GET(self):
-        original_path = self.path
+        parsed = urlparse(self.path)
+        original_path = parsed.path
+        params = parse_qs(parsed.query)
         
+        # --- API GET endpoints ---
+        if original_path.startswith('/api/'):
+            action = original_path[len('/api/'):]
+            api_key = self.headers.get('X-API-KEY', '')
+
+            if action == 'get_users':
+                self.send_json(db.get_all_users(api_key))
+            elif action == 'get_roles':
+                self.send_json(db.get_all_roles())
+            elif action == 'delete_user':
+                uid = params.get('id', [None])[0]
+                if uid:
+                    self.send_json(db.delete_user(uid, api_key))
+                else:
+                    self.send_json({"success": False, "message": "Missing id"}, 400)
+            else:
+                self.send_json({"success": False, "message": "Unknown API action"}, 404)
+            return
+
         # Redirect /convertany to /convertany/ for correct relative paths
         if original_path == '/convertany':
             self.send_response(301)
@@ -65,11 +104,8 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
 
         # Handle Converter logic
         if original_path.startswith('/convertany/'):
-            # Strip prefix
             path_within_converter = original_path[len('/convertany'):]
             if path_within_converter == '/' or path_within_converter == '': path_within_converter = '/index.html'
-            
-            # Serve from converter-site directory
             self.path = CONVERTER_DIR + path_within_converter
             return super().do_GET()
         
@@ -88,7 +124,57 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(413, f"Datei zu groß. Maximum: {MAX_UPLOAD_SIZE // (1024*1024)} MB")
             return
 
-        path = self.path
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # --- API POST endpoints ---
+        if path.startswith('/api/'):
+            action = path[len('/api/'):]
+            try:
+                data = self.read_json_body()
+            except Exception:
+                self.send_json({"success": False, "message": "Invalid JSON"}, 400)
+                return
+            
+            api_key = self.headers.get('X-API-KEY', '')
+
+            if action == 'login':
+                result = db.login_user(data.get('username', ''), data.get('password', ''))
+                self.send_json(result)
+            elif action == 'register':
+                result = db.register_user(
+                    data.get('username', ''),
+                    data.get('email', ''),
+                    data.get('password', ''),
+                    data.get('role', 'customer')
+                )
+                self.send_json(result)
+            elif action == 'upsert_user':
+                uid = data.pop('id', None)
+                if uid:
+                    self.send_json(db.upsert_user(uid, data, api_key))
+                else:
+                    self.send_json({"success": False, "message": "Missing id"}, 400)
+            elif action == 'upsert_role':
+                self.send_json(db.upsert_role(
+                    data.get('name', ''),
+                    data.get('permissions', '[]'),
+                    data.get('description', '')
+                ))
+            elif action == 'support_request':
+                self.send_json(db.create_support_request(
+                    data.get('userId', 'guest'),
+                    data.get('username', ''),
+                    data.get('message', ''),
+                    data.get('type', 'general')
+                ))
+            elif action == 'logout':
+                self.send_json({"success": True})
+            else:
+                self.send_json({"success": False, "message": "Unknown API action"}, 404)
+            return
+
+        # --- Converter POST endpoints ---
         if path.startswith('/convertany'):
             path = path[len('/convertany'):]
             if not path.startswith('/'): path = '/' + path

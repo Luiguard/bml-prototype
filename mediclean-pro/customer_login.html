@@ -263,7 +263,7 @@
 
             feedback.style.display = 'none';
             try {
-                const res = await fetch('api.php?action=support_request', {
+                const res = await fetch('/api/support_request', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: 'guest', username: user, message: `Portal Passwort-Reset`, type: 'password_reset' })
