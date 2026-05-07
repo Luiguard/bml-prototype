@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitarbeiter-Portal | MediClean Pro®</title>
+    <link rel="stylesheet" href="/css/style.v3.css">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>
+        // Theme init
+        const savedTheme = localStorage.getItem('aura_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <style>
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+        @media(max-width: 768px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+        }
+        
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .sidebar-menu button {
+            text-align: left;
+            padding: 1rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        .sidebar-menu button.active, .sidebar-menu button:hover {
+            background: var(--v3-primary);
+            color: white;
+            border-color: var(--v3-primary);
+        }
+
+        /* Views */
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        /* Checklist Generator */
+        .checklist-result {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        /* Chatbot UI */
+        .chat-container {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background: #10b981; /* Green for internal staff */
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .message {
+            max-width: 85%;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .msg-user {
+            align-self: flex-end;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--text-primary);
+            border-bottom-right-radius: 4px;
+        }
+        .msg-ai {
+            align-self: flex-start;
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-surface);
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-body);
+            color: var(--text-primary);
+            margin-right: 0.5rem;
+        }
+        .chat-input button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .loading {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar" style="position: sticky; top: 0; z-index: 1000; background: var(--bg-surface);">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png" alt="MediClean Pro®">
+            </a>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <span style="color: #10b981; font-weight: 700; border: 1px solid #10b981; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem;">STAFF</span>
+                <span id="welcome-msg" style="color: var(--text-secondary); font-weight: 500;"></span>
+                <button onclick="logout()" class="btn btn-secondary btn-compact" style="border: none;">Abmelden</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-menu">
+            <button class="active" onclick="switchView('view-chat', this)">💬 Fachfragen-KI</button>
+            <button onclick="switchView('view-checklist', this)">📋 Checklisten-Generator</button>
+            <button onclick="alert('In Arbeit...')">📅 Dienstplan</button>
+            <button onclick="alert('In Arbeit...')">⚠️ Vorfall melden</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div>
+            <!-- AI Staff Chat View -->
+            <div id="view-chat" class="view-section active">
+                <h2 style="margin-bottom: 0.5rem;">KI-Fachassistenz</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Stelle Fragen zu Reinigungschemie, ÖNORM-Richtlinien oder hartnäckigen Flecken.</p>
+                
+                <div class="chat-container">
+                    <div class="chat-header">
+                        🧹 Interner Reinigungs-Assistent
+                    </div>
+                    <div class="chat-messages" id="chat-box">
+                        <div class="message msg-ai">Hallo! Ich bin dein Fachassistent. Brauchst du Infos zur Dosierung, Desinfektion oder Arbeitssicherheit?</div>
+                    </div>
+                    <div id="typing" style="font-size: 0.85rem; color: var(--text-secondary); padding: 0 1rem; display: none;">Antwort wird generiert...</div>
+                    <form class="chat-input" id="chat-form">
+                        <input type="text" id="chat-input" placeholder="Frage eingeben..." required autocomplete="off">
+                        <button type="submit">Senden</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- AI Checklist Generator View -->
+            <div id="view-checklist" class="view-section">
+                <h2 style="margin-bottom: 0.5rem;">Checklisten-Generator</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Lass dir von der KI eine maßgeschneiderte Checkliste für einen bestimmten Raum oder Bereich erstellen.</p>
+                
+                <div class="card-v2">
+                    <form id="checklist-form" style="display: flex; gap: 1rem;">
+                        <input type="text" id="room-input" placeholder="Z.B. 'Ordination Wartezimmer', 'Küche Gastro'..." style="flex:1; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-light); background: var(--bg-surface-subtle); color: var(--text-primary);" required>
+                        <button type="submit" class="btn btn-primary">Erstellen</button>
+                    </form>
+                    <div id="checklist-loading" class="loading">Generiere professionelle Checkliste... Bitte warten.</div>
+                    <div id="checklist-result" class="checklist-result" style="display: none;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Check Auth
+        const user = JSON.parse(localStorage.getItem('aura_current_user') || 'null');
+        const allowedRoles = ['admin', 'employee', 'cleaning_staff', 'team_lead', 'accounting'];
+        if (!user || !allowedRoles.includes(user.role)) {
+            window.location.href = '/login.html';
+        } else {
+            document.getElementById('welcome-msg').textContent = `Mitarbeiter: ${user.username}`;
+        }
+
+        function logout() {
+            localStorage.removeItem('aura_current_user');
+            window.location.href = '/index.html';
+        }
+
+        // View Switcher
+        function switchView(viewId, btn) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar-menu button').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Chatbot Logic
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatBox = document.getElementById('chat-box');
+        const typing = document.getElementById('typing');
+        let chatContext = null;
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+
+            addMessage(msg, 'user');
+            chatInput.value = '';
+            typing.style.display = 'block';
+
+            try {
+                const res = await fetch('/api/ai_chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        type: 'staff', 
+                        message: msg,
+                        context: chatContext 
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    addMessage(data.response, 'ai');
+                    chatContext = data.context; 
+                } else {
+                    addMessage('Fehler bei der KI-Anfrage.', 'ai');
+                }
+            } catch (err) {
+                addMessage('Netzwerkfehler.', 'ai');
+            } finally {
+                typing.style.display = 'none';
+            }
+        });
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `message msg-${sender}`;
+            div.textContent = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Checklist Logic
+        const clForm = document.getElementById('checklist-form');
+        const clResult = document.getElementById('checklist-result');
+        const clLoading = document.getElementById('checklist-loading');
+
+        clForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const room = document.getElementById('room-input').value.trim();
+            if (!room) return;
+
+            clResult.style.display = 'none';
+            clLoading.style.display = 'block';
+
+            try {
+                const res = await fetch('/api/ai_checklist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ room_type: room })
+                });
+                const data = await res.json();
+                
+                clLoading.style.display = 'none';
+                clResult.style.display = 'block';
+                if (data.success) {
+                    clResult.textContent = data.response;
+                } else {
+                    clResult.textContent = 'Fehler bei der Generierung.';
+                }
+            } catch (err) {
+                clLoading.style.display = 'none';
+                clResult.style.display = 'block';
+                clResult.textContent = 'Netzwerkfehler.';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kunden-Dashboard | MediClean Pro®</title>
+    <link rel="stylesheet" href="/css/style.v3.css">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>
+        // Theme init
+        const savedTheme = localStorage.getItem('aura_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <style>
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+        }
+        @media(max-width: 768px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+        }
+        
+        /* Chatbot UI */
+        .chat-container {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+        .chat-header {
+            background: var(--v3-primary);
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .message {
+            max-width: 85%;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .msg-user {
+            align-self: flex-end;
+            background: rgba(0, 195, 255, 0.1);
+            border: 1px solid rgba(0, 195, 255, 0.2);
+            color: var(--text-primary);
+            border-bottom-right-radius: 4px;
+        }
+        .msg-ai {
+            align-self: flex-start;
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-surface);
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-body);
+            color: var(--text-primary);
+            margin-right: 0.5rem;
+        }
+        .chat-input button {
+            background: var(--v3-primary);
+            color: white;
+            border: none;
+            padding: 0 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .typing-indicator {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            display: none;
+            padding: 0 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar" style="position: sticky; top: 0; z-index: 1000; background: var(--bg-surface);">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png" alt="MediClean Pro®">
+            </a>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <span id="welcome-msg" style="color: var(--text-secondary); font-weight: 500;"></span>
+                <button onclick="logout()" class="btn btn-secondary btn-compact" style="border: none;">Abmelden</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <!-- Main Content (Chat) -->
+        <div>
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.8rem;">Ihre persönliche Assistenz</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Unsere KI hilft Ihnen bei Fragen zu Preisen, Terminbuchungen und Reinigungsleistungen. Für ein bindendes Angebot leitet die KI Ihre Anfrage direkt an unser Team weiter.</p>
+            
+            <div class="chat-container">
+                <div class="chat-header">
+                    🤖 MediClean KI-Assistent
+                </div>
+                <div class="chat-messages" id="chat-box">
+                    <div class="message msg-ai">Hallo! Wie kann ich Ihnen heute weiterhelfen? Möchten Sie einen Termin vereinbaren oder haben Sie Fragen zu unseren Preisen?</div>
+                </div>
+                <div class="typing-indicator" id="typing">Die KI schreibt...</div>
+                <form class="chat-input" id="chat-form">
+                    <input type="text" id="chat-input" placeholder="Fragen Sie etwas..." required autocomplete="off">
+                    <button type="submit">Senden</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <div class="card-v2" style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem;">Ihre Dokumente</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Aktuell sind keine Dokumente oder Rechnungen für Sie hinterlegt.</p>
+                <button class="btn btn-secondary" style="width: 100%;">Upload-Portal öffnen</button>
+            </div>
+            
+            <div class="card-v2">
+                <h3 style="margin-bottom: 1rem;">Termine</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Keine anstehenden Termine.</p>
+                <a href="/termin.html" class="btn btn-primary" style="width: 100%; text-align: center; display: inline-block;">Neuen Termin anfragen</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check Auth
+        const user = JSON.parse(localStorage.getItem('aura_current_user') || 'null');
+        if (!user || user.role !== 'customer') {
+            window.location.href = '/customer_login.html';
+        } else {
+            document.getElementById('welcome-msg').textContent = `Willkommen, ${user.username}`;
+        }
+
+        function logout() {
+            localStorage.removeItem('aura_current_user');
+            window.location.href = '/index.html';
+        }
+
+        // Chatbot Logic
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatBox = document.getElementById('chat-box');
+        const typing = document.getElementById('typing');
+        let chatContext = null;
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+
+            // Add user message
+            addMessage(msg, 'user');
+            chatInput.value = '';
+            typing.style.display = 'block';
+
+            // Send to AI
+            try {
+                const res = await fetch('/api/ai_chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        type: 'customer', 
+                        message: msg,
+                        context: chatContext 
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    addMessage(data.response, 'ai');
+                    chatContext = data.context; // Save context for conversation history
+                } else {
+                    addMessage('Entschuldigung, es gab ein Problem bei der Verbindung zur KI.', 'ai');
+                }
+            } catch (err) {
+                addMessage('Netzwerkfehler. Bitte versuchen Sie es später erneut.', 'ai');
+            } finally {
+                typing.style.display = 'none';
+            }
+        });
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `message msg-${sender}`;
+            div.textContent = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
