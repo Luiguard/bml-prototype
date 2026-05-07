@@ -6,157 +6,446 @@
     <title>Kunden-Dashboard | MediClean Pro®</title>
     <link rel="stylesheet" href="/css/style.v3.css">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         // Theme init
         const savedTheme = localStorage.getItem('aura_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
     <style>
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 2rem;
-        }
-        @media(max-width: 768px) {
-            .dashboard-container { grid-template-columns: 1fr; }
-        }
-        
-        /* Chatbot UI */
-        .chat-container {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-light);
-            border-radius: 16px;
-            height: 500px;
+        /* Premium Dashboard Styling */
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
         }
-        .chat-header {
-            background: var(--v3-primary);
-            color: white;
-            padding: 1rem;
-            font-weight: 600;
+
+        /* Glass Header */
+        .portal-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .portal-header img {
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-greeting {
+            color: var(--text-secondary);
+            font-weight: 500;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-        .chat-messages {
+
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Layout */
+        .dashboard-layout {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2.5rem;
             flex: 1;
-            padding: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        @media(max-width: 992px) {
+            .dashboard-layout { 
+                grid-template-columns: 1fr; 
+                margin: 1rem auto;
+                padding: 0 1rem;
+            }
+        }
+
+        /* Hero Header inside Dashboard */
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Premium Chat UI */
+        .chat-glass-container {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .chat-header-bar {
+            background: linear-gradient(90deg, var(--v3-primary) 0%, #3b82f6 100%);
+            padding: 1.2rem 1.5rem;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-messages-area {
+            flex: 1;
+            padding: 1.5rem;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.5rem;
+            scroll-behavior: smooth;
         }
-        .message {
-            max-width: 85%;
-            padding: 0.8rem 1rem;
-            border-radius: 12px;
+
+        /* Message Bubbles */
+        .msg-bubble {
+            max-width: 80%;
+            padding: 1rem 1.2rem;
+            border-radius: 18px;
             font-size: 0.95rem;
-            line-height: 1.5;
+            line-height: 1.6;
+            position: relative;
+            animation: fadeIn 0.3s ease-out forwards;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .msg-user {
             align-self: flex-end;
-            background: rgba(0, 195, 255, 0.1);
-            border: 1px solid rgba(0, 195, 255, 0.2);
-            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--v3-primary) 0%, #2563eb 100%);
+            color: white;
             border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
         }
+
         .msg-ai {
             align-self: flex-start;
-            background: var(--bg-surface-subtle);
-            border: 1px solid var(--border-light);
-            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
             border-bottom-left-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        .chat-input {
+
+        /* Input Area */
+        .chat-input-wrapper {
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-form-inner {
             display: flex;
-            padding: 1rem;
-            border-top: 1px solid var(--border-light);
-            background: var(--bg-surface);
+            gap: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 0.5rem;
+            transition: all 0.3s ease;
         }
-        .chat-input input {
+
+        .chat-form-inner:focus-within {
+            border-color: var(--v3-primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .chat-input-field {
             flex: 1;
-            padding: 0.8rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-light);
-            background: var(--bg-body);
-            color: var(--text-primary);
-            margin-right: 0.5rem;
+            background: transparent;
+            border: none;
+            padding: 0.8rem 1rem;
+            color: white;
+            font-size: 1rem;
+            outline: none;
         }
-        .chat-input button {
+        
+        .chat-input-field::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .send-btn {
             background: var(--v3-primary);
             color: white;
             border: none;
-            padding: 0 1.5rem;
-            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
             cursor: pointer;
-            font-weight: 600;
+            transition: all 0.2s;
         }
-        .typing-indicator {
-            font-size: 0.85rem;
+        .send-btn:hover {
+            transform: scale(1.05);
+            background: #3b82f6;
+        }
+
+        /* Typing Animation */
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 1rem 1.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            margin-bottom: 1rem;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Sidebar Cards */
+        .sidebar-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .sidebar-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .card-icon-wrapper {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--v3-primary);
+            display: grid;
+            place-items: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+        
+        .card-text {
             color: var(--text-secondary);
-            font-style: italic;
-            display: none;
-            padding: 0 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-solid {
+            background: var(--v3-primary);
+            border: none;
+            color: white;
+        }
+        .btn-solid:hover {
+            background: #3b82f6;
+        }
+
+        /* Decorative background element */
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, rgba(0,0,0,0) 70%);
+            top: -200px;
+            left: -200px;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .bg-glow-2 {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, rgba(0,0,0,0) 70%);
+            bottom: -100px;
+            right: -100px;
+            z-index: -1;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <header class="navbar" style="position: sticky; top: 0; z-index: 1000; background: var(--bg-surface);">
-        <div class="nav-container">
-            <a href="/" class="logo">
-                <img src="/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png" alt="MediClean Pro®">
-            </a>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <span id="welcome-msg" style="color: var(--text-secondary); font-weight: 500;"></span>
-                <button onclick="logout()" class="btn btn-secondary btn-compact" style="border: none;">Abmelden</button>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+
+    <header class="portal-header">
+        <a href="/">
+            <img src="/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png" alt="MediClean Pro®">
+        </a>
+        <div class="user-controls">
+            <div class="user-greeting">
+                <i data-lucide="user" style="width: 18px; height: 18px;"></i>
+                <span id="welcome-msg">Lade Profil...</span>
             </div>
+            <button onclick="logout()" class="logout-btn">
+                <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                Abmelden
+            </button>
         </div>
     </header>
 
-    <div class="dashboard-container">
+    <div class="dashboard-layout">
         <!-- Main Content (Chat) -->
-        <div>
-            <h2 style="margin-bottom: 1.5rem; font-size: 1.8rem;">Ihre persönliche Assistenz</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Unsere KI hilft Ihnen bei Fragen zu Preisen, Terminbuchungen und Reinigungsleistungen. Für ein bindendes Angebot leitet die KI Ihre Anfrage direkt an unser Team weiter.</p>
+        <main>
+            <h1 class="page-title">Ihre persönliche Assistenz</h1>
+            <p class="page-subtitle">Unsere KI hilft Ihnen bei Fragen zu Preisen, Terminbuchungen und Reinigungsleistungen. Für ein bindendes Angebot leitet die KI Ihre Anfrage direkt an unser Team weiter.</p>
             
-            <div class="chat-container">
-                <div class="chat-header">
-                    🤖 MediClean KI-Assistent
+            <div class="chat-glass-container">
+                <div class="chat-header-bar">
+                    <i data-lucide="bot" style="width: 24px; height: 24px;"></i>
+                    MediClean KI-Assistent
                 </div>
-                <div class="chat-messages" id="chat-box">
-                    <div class="message msg-ai">Hallo! Wie kann ich Ihnen heute weiterhelfen? Möchten Sie einen Termin vereinbaren oder haben Sie Fragen zu unseren Preisen?</div>
+                
+                <div class="chat-messages-area" id="chat-box">
+                    <div class="msg-bubble msg-ai">Hallo! Wie kann ich Ihnen heute weiterhelfen? Möchten Sie einen Termin vereinbaren oder haben Sie Fragen zu unseren Preisen?</div>
                 </div>
-                <div class="typing-indicator" id="typing">Die KI schreibt...</div>
-                <form class="chat-input" id="chat-form">
-                    <input type="text" id="chat-input" placeholder="Fragen Sie etwas..." required autocomplete="off">
-                    <button type="submit">Senden</button>
-                </form>
+
+                <div id="typing" style="display: none; padding: 0 1.5rem;">
+                    <div class="typing-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+
+                <div class="chat-input-wrapper">
+                    <form id="chat-form" class="chat-form-inner">
+                        <input type="text" id="chat-input" class="chat-input-field" placeholder="Geben Sie hier Ihre Frage ein..." required autocomplete="off">
+                        <button type="submit" class="send-btn" aria-label="Senden">
+                            <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
+        </main>
 
         <!-- Sidebar -->
-        <div>
-            <div class="card-v2" style="margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1rem;">Ihre Dokumente</h3>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Aktuell sind keine Dokumente oder Rechnungen für Sie hinterlegt.</p>
-                <button class="btn btn-secondary" style="width: 100%;">Upload-Portal öffnen</button>
+        <aside>
+            <div class="sidebar-card">
+                <div class="card-icon-wrapper">
+                    <i data-lucide="file-text" style="width: 24px; height: 24px;"></i>
+                </div>
+                <h3 class="card-title">Ihre Dokumente</h3>
+                <p class="card-text">Aktuell sind keine Dokumente oder Rechnungen für Sie hinterlegt.</p>
+                <button class="action-btn btn-outline" onclick="alert('Upload-Portal ist in Vorbereitung.')">
+                    <i data-lucide="upload-cloud" style="width: 18px; height: 18px;"></i>
+                    Upload-Portal öffnen
+                </button>
             </div>
             
-            <div class="card-v2">
-                <h3 style="margin-bottom: 1rem;">Termine</h3>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Keine anstehenden Termine.</p>
-                <a href="/termin.html" class="btn btn-primary" style="width: 100%; text-align: center; display: inline-block;">Neuen Termin anfragen</a>
+            <div class="sidebar-card">
+                <div class="card-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                    <i data-lucide="calendar" style="width: 24px; height: 24px;"></i>
+                </div>
+                <h3 class="card-title">Termine</h3>
+                <p class="card-text">Keine anstehenden Termine für diesen Monat gebucht.</p>
+                <a href="/termin.html" class="action-btn btn-solid">
+                    <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                    Neuen Termin anfragen
+                </a>
             </div>
-        </div>
+        </aside>
     </div>
 
     <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
         // Check Auth
         const user = JSON.parse(localStorage.getItem('aura_current_user') || 'null');
         if (!user || user.role !== 'customer') {
@@ -186,6 +475,7 @@
             addMessage(msg, 'user');
             chatInput.value = '';
             typing.style.display = 'block';
+            scrollToBottom();
 
             // Send to AI
             try {
@@ -202,7 +492,7 @@
                 
                 if (data.success) {
                     addMessage(data.response, 'ai');
-                    chatContext = data.context; // Save context for conversation history
+                    chatContext = data.context;
                 } else {
                     addMessage('Entschuldigung, es gab ein Problem bei der Verbindung zur KI.', 'ai');
                 }
@@ -210,15 +500,24 @@
                 addMessage('Netzwerkfehler. Bitte versuchen Sie es später erneut.', 'ai');
             } finally {
                 typing.style.display = 'none';
+                scrollToBottom();
             }
         });
 
         function addMessage(text, sender) {
             const div = document.createElement('div');
-            div.className = `message msg-${sender}`;
+            div.className = `msg-bubble msg-${sender}`;
             div.textContent = text;
             chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatBox.scrollTo({
+                    top: chatBox.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 50);
         }
     </script>
 </body>
