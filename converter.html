@@ -236,6 +236,15 @@
                 </div>
             </div>
 
+            <div class="panel" style="margin-top:1rem; border-color: #10b981;">
+                <div class="panel-title" style="color: #10b981;">📁 Lokalen Website-Ordner konvertieren</div>
+                <p style="font-size:.8rem; color:var(--text-muted); margin-bottom:1rem;">Wähle einen Ordner mit HTML, CSS und Bildern aus. Alles wird lokal zu 100% inlined und kompiliert.</p>
+                <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
+                <div class="btn-row">
+                    <button class="btn" style="background:#10b981; color:#fff;" id="btnFolderUpload">Ordner auswählen & Kompilieren</button>
+                </div>
+            </div>
+
             <div class="panel" style="margin-top:1rem; border-color: var(--accent);">
                 <div class="panel-title" style="color: var(--accent);">🤖 AI Website Generator</div>
                 <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
@@ -610,6 +619,67 @@ document.getElementById('btnConvert').addEventListener('click',async()=>{
         document.getElementById('btnDownload').style.display='';
     } catch(err) {
         alert("Fehler bei der Iframe-Konvertierung: " + err);
+    }
+});
+
+document.getElementById('btnFolderUpload').addEventListener('click', () => {
+    document.getElementById('folderInput').click();
+});
+
+document.getElementById('folderInput').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    
+    let indexFile = files.find(f => f.name === 'index.html' || f.name === 'index.htm');
+    if (!indexFile) indexFile = files.find(f => f.name.endsWith('.html'));
+    if (!indexFile) {
+        alert("Keine index.html im Ordner gefunden!");
+        return;
+    }
+
+    const btn = document.getElementById('btnFolderUpload');
+    const oldText = btn.textContent;
+    btn.textContent = 'Lese lokale Dateien...';
+    btn.disabled = true;
+
+    try {
+        let htmlContent = await indexFile.text();
+        
+        const fileDataMap = {};
+        for (const file of files) {
+            if (file === indexFile) continue;
+            const dataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = ev => resolve(ev.target.result);
+                reader.readAsDataURL(file);
+            });
+            const pathParts = file.webkitRelativePath.split('/');
+            pathParts.shift();
+            const relativePath = pathParts.join('/');
+            
+            fileDataMap[relativePath] = dataUrl;
+            fileDataMap[file.name] = dataUrl;
+        }
+
+        for (const [path, dataUrl] of Object.entries(fileDataMap)) {
+            htmlContent = htmlContent.split(`"${path}"`).join(`"${dataUrl}"`);
+            htmlContent = htmlContent.split(`'${path}'`).join(`'${dataUrl}'`);
+            htmlContent = htmlContent.split(`url(${path})`).join(`url(${dataUrl})`);
+        }
+
+        btn.textContent = 'Kompiliere in Iframe...';
+        
+        const bweb = await clientSideConvert(htmlContent);
+        lastBweb = bweb;
+        await renderBinary(bweb);
+        document.getElementById('btnDownload').style.display = '';
+        
+    } catch(err) {
+        alert("Fehler beim Inlining oder Konvertieren: " + err);
+    } finally {
+        btn.textContent = oldText;
+        btn.disabled = false;
+        e.target.value = '';
     }
 });
 
