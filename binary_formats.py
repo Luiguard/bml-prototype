@@ -25,6 +25,8 @@ BWEB_VERSION = 1
 SEC_BML = 1
 SEC_BDT = 2
 SEC_BLB = 3
+SEC_BIB = 4
+SEC_BVS = 5
 
 TAG = {
     'div':0x01,'span':0x02,'p':0x03,'a':0x04,
@@ -371,15 +373,51 @@ def _write_blb_block(buf, node_id, s, default_display):
     buf += _i16(z)
 
 # ═══════════════════════════════════════════════════════════════
+#  BIB Serializer
+# ═══════════════════════════════════════════════════════════════
+
+BIB_MAGIC = b'BIB\x01'
+
+def serialize_bib(images: list) -> bytes:
+    # images: list of dicts with 'id', 'w', 'h', 'rgba_data'
+    if not images:
+        return b''
+    
+    buf = bytearray(BIB_MAGIC)
+    buf += _u32(len(images))
+    
+    for img in images:
+        # Header (24 Bytes)
+        buf += _u32(img['id'])
+        buf += _u16(img['w'])
+        buf += _u16(img['h'])
+        buf.append(1) # RGBA
+        buf.append(0) # Raw uncompressed
+        buf += bytes(6) # Padding
+        
+        # Single Block (id=0)
+        buf += _u16(0)
+        payload = img['rgba_data']
+        buf += _u32(len(payload))
+        buf += payload
+
+    return bytes(buf)
+
+# ═══════════════════════════════════════════════════════════════
 #  BWEB Container
 # ═══════════════════════════════════════════════════════════════
 
-def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes) -> bytes:
+def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes, bib: bytes = b'', bvs: bytes = b'') -> bytes:
     buf = bytearray(BWEB_MAGIC)
     buf.append(BWEB_VERSION)
-    buf.append(3)  # section_count
+    
+    sections = [(SEC_BML, bml), (SEC_BDT, bdt), (SEC_BLB, blb)]
+    if bib: sections.append((SEC_BIB, bib))
+    if bvs: sections.append((SEC_BVS, bvs))
+    
+    buf.append(len(sections))
 
-    for sec_type, data in [(SEC_BML, bml), (SEC_BDT, bdt), (SEC_BLB, blb)]:
+    for sec_type, data in sections:
         buf.append(sec_type)
         buf += _u32(len(data))
         buf += data
@@ -405,12 +443,12 @@ def unbundle_bweb(data: bytes) -> dict:
 #  HTML → BWEB Pipeline
 # ═══════════════════════════════════════════════════════════════
 
-def html_to_bweb(html_str: str) -> bytes:
+def html_to_bweb(html_str: str, bib: bytes = b'', bvs: bytes = b'') -> bytes:
     dom = html_to_dom(html_str)
     bml = serialize_bml(dom)
     bdt = serialize_bdt(dom)
     blb = serialize_blb(dom)
-    return bundle_bweb(bml, bdt, blb)
+    return bundle_bweb(bml, bdt, blb, bib=bib, bvs=bvs)
 
 
 def html_file_to_bweb(html_path: str, output_path: str = None) -> str:
@@ -430,17 +468,21 @@ def bweb_stats(data: bytes) -> dict:
     bml = sections.get(SEC_BML, b'')
     bdt = sections.get(SEC_BDT, b'')
     blb = sections.get(SEC_BLB, b'')
+    bib = sections.get(SEC_BIB, b'')
 
     bdt_nodes = struct.unpack('>I', bdt[4:8])[0] if len(bdt) >= 8 else 0
     blb_blocks = struct.unpack('>I', blb[4:8])[0] if len(blb) >= 8 else 0
+    bib_images = struct.unpack('>I', bib[4:8])[0] if len(bib) >= 8 else 0
 
     return {
         'total_bytes': len(data),
         'bml_bytes': len(bml),
         'bdt_bytes': len(bdt),
         'blb_bytes': len(blb),
+        'bib_bytes': len(bib),
         'bdt_nodes': bdt_nodes,
         'blb_blocks': blb_blocks,
+        'bib_images': bib_images,
     }
 
 # ═══════════════════════════════════════════════════════════════

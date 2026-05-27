@@ -72,6 +72,8 @@ async def generate_with_ollama(prompt: str) -> str:
         <div style="margin-top: 20px; padding: 20px; background: #0f172a; border-radius: 8px; border-left: 4px solid #10b981;">
             <h2 style="margin-top: 0; color: #10b981;">Erfolg!</h2>
             <p>Die Pipeline hat den Prompt verarbeitet und diese HTML-Struktur generiert.</p>
+            <p>Hier ist ein nativer BIB-Bildblock, direkt von der GPU gezeichnet:</p>
+            <canvas data-bind="99" width="64" height="64" style="border: 2px solid #3b82f6; border-radius: 8px; display: block; margin-top: 10px;"></canvas>
             <button style="margin-top: 15px; background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">Interaktion Testen</button>
         </div>
     </div>
@@ -89,7 +91,17 @@ async def handle_generate_site(request):
         print("✅ HTML generiert. Konvertiere in BWEB...")
         
         # 2. Binäre Konvertierung (HTML -> BWEB Container)
-        bweb_bytes = binary_formats.html_to_bweb(html_output)
+        
+        # Erstelle Dummy BIB (Binary Image Block) - 64x64 Gradient
+        red_block = bytearray()
+        for y in range(64):
+            for x in range(64):
+                red_block.extend([x*4, y*4, 255 - x*2, 255])
+        
+        img = {'id': 99, 'w': 64, 'h': 64, 'rgba_data': bytes(red_block)}
+        bib_bytes = binary_formats.serialize_bib([img])
+        
+        bweb_bytes = binary_formats.html_to_bweb(html_output, bib=bib_bytes)
         
         # 3. Rückgabe als Octet-Stream
         return web.Response(body=bweb_bytes, content_type='application/octet-stream')

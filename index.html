@@ -111,6 +111,8 @@
         .legend-bml::before{background:#3b82f6}
         .legend-bdt::before{background:#10b981}
         .legend-blb::before{background:#f59e0b}
+        .sec-bib{background:#ec4899}
+        .legend-bib::before{background:#ec4899}
         .tree-view{
             font-family:'JetBrains Mono',monospace;font-size:.75rem;
             color:var(--text-secondary);max-height:250px;overflow-y:auto;
@@ -209,6 +211,7 @@
                         <span class="legend-bml">BML</span>
                         <span class="legend-bdt">BDT</span>
                         <span class="legend-blb">BLB</span>
+                        <span class="legend-bib">BIB</span>
                     </div>
                 </div>
 
@@ -218,6 +221,7 @@
                     <div class="stat stat-bml"><div class="stat-label">BML (Inhalt)</div><div class="stat-value" id="statBml">–</div></div>
                     <div class="stat stat-bdt"><div class="stat-label">BDT (Baum)</div><div class="stat-value" id="statBdt">–</div></div>
                     <div class="stat stat-blb"><div class="stat-label">BLB (Layout)</div><div class="stat-value" id="statBlb">–</div></div>
+                    <div class="stat stat-bib"><div class="stat-label">BIB (Images)</div><div class="stat-value" id="statBib">–</div></div>
                     <div class="stat stat-ratio"><div class="stat-label">Nodes</div><div class="stat-value" id="statNodes">–</div></div>
                 </div>
             </div>
@@ -359,6 +363,31 @@ class BLBParser{
     }
 }
 
+class BIBParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const images={};
+        for(let i=0;i<count;i++){
+            const id=this.v.getUint32(this.o);this.o+=4;
+            const w=this.v.getUint16(this.o);this.o+=2;
+            const h=this.v.getUint16(this.o);this.o+=2;
+            const cs=this.v.getUint8(this.o++);
+            const comp=this.v.getUint8(this.o++);
+            this.o+=6; // padding
+            
+            const blockId=this.v.getUint16(this.o);this.o+=2;
+            const dataLen=this.v.getUint32(this.o);this.o+=4;
+            
+            const pxData=new Uint8ClampedArray(this.v.buffer,this.o,dataLen);
+            this.o+=dataLen;
+            
+            images[id]={w,h,data:pxData};
+        }
+        return images;
+    }
+}
+
 function cssVal(v){
     if(v===0xFFFF)return'auto';
     if(v&0x8000)return(v&0x7FFF)/10+'%';
@@ -415,6 +444,21 @@ function applyBLB(rootEl,blocks){
         if(bl.overflow>0)s.overflow=OVERFLOW[bl.overflow];
         if(bl.opacity<255)s.opacity=(bl.opacity/255).toFixed(2);
         if(bl.zIndex!==0)s.zIndex=bl.zIndex;
+    });
+}
+
+function applyBIB(rootEl,images){
+    const canvases=rootEl.querySelectorAll('canvas[data-bind]');
+    canvases.forEach(cvs=>{
+        const id=parseInt(cvs.getAttribute('data-bind'));
+        const img=images[id];
+        if(img){
+            cvs.width=img.w;
+            cvs.height=img.h;
+            const ctx=cvs.getContext('2d');
+            const imgData=new ImageData(img.data,img.w,img.h);
+            ctx.putImageData(imgData,0,0);
+        }
     });
 }
 
@@ -485,6 +529,15 @@ function renderBinary(buf){
         applyBLB(rootEl,blbBlocks);
     }
 
+    if(sections[4]&&rootEl){
+        const bibBuf=sections[4];
+        const bibView=new Uint8Array(bibBuf);
+        let bibStart=0;
+        if(bibView[0]===0x42&&bibView[1]===0x49&&bibView[2]===0x42)bibStart=4;
+        const images=new BIBParser(bibBuf,bibStart).parse();
+        applyBIB(rootEl,images);
+    }
+
     const target=document.getElementById('renderTarget');
     const empty=document.getElementById('viewportEmpty');
     target.innerHTML='';
@@ -501,14 +554,16 @@ function renderBinary(buf){
     document.getElementById('statBml').textContent=bmlBuf?bmlBuf.byteLength+' B':'–';
     document.getElementById('statBdt').textContent=bdtBuf?bdtBuf.byteLength+' B':'–';
     document.getElementById('statBlb').textContent=blbBuf?blbBuf.byteLength+' B':'–';
+    document.getElementById('statBib').textContent=sections[4]?sections[4].byteLength+' B':'–';
     document.getElementById('statNodes').textContent=bdtNodes?bdtNodes.length:'–';
 
     if(bmlBuf&&bdtBuf&&blbBuf){
         const total=buf.byteLength;
+        const bibBuf=sections[4];
         const map=document.getElementById('sectionMap');
         map.style.display='';
         const bar=document.getElementById('sectionBar');
-        bar.innerHTML=`<div class="sec-bml" style="width:${bmlBuf.byteLength/total*100}%"></div><div class="sec-bdt" style="width:${bdtBuf.byteLength/total*100}%"></div><div class="sec-blb" style="width:${blbBuf.byteLength/total*100}%"></div>`;
+        bar.innerHTML=`<div class="sec-bml" style="width:${bmlBuf.byteLength/total*100}%"></div><div class="sec-bdt" style="width:${bdtBuf.byteLength/total*100}%"></div><div class="sec-blb" style="width:${blbBuf.byteLength/total*100}%"></div>`+(bibBuf?`<div class="sec-bib" style="width:${bibBuf.byteLength/total*100}%"></div>`:'');
     }
 
     renderBDTTree(bdtNodes);
