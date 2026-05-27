@@ -247,7 +247,13 @@
 
             <div class="panel" style="margin-top:1rem; border-color: var(--accent);">
                 <div class="panel-title" style="color: var(--accent);">🤖 AI Website Generator</div>
-                <input type="password" id="geminiApiKey" class="html-input" style="min-height:30px; margin-bottom: 0.5rem; font-family: sans-serif;" placeholder="Dein Gemini API-Key (für Nutzung ohne lokalen Server)">
+                <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
+                    <select id="aiBackendSelect" class="html-input" style="min-height:30px; margin-top:0; padding: 0.4rem; flex: 1;">
+                        <option value="nvme">Lokale NVMe-KI (http://127.0.0.1:8090)</option>
+                        <option value="gemini">Google Gemini API (Key benötigt)</option>
+                    </select>
+                    <input type="password" id="geminiApiKey" class="html-input" style="min-height:30px; margin-top:0; font-family: sans-serif; flex: 1; display:none;" placeholder="Dein Gemini API-Key">
+                </div>
                 <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
                 <div class="btn-row">
                     <button class="btn btn-primary" id="btnGenerate">Website Generieren (BWEB)</button>
@@ -691,9 +697,14 @@ document.getElementById('btnDownload').addEventListener('click',()=>{
     a.href=URL.createObjectURL(blob);a.download='page.bweb';a.click();
 });
 
+document.getElementById('aiBackendSelect').addEventListener('change', (e) => {
+    document.getElementById('geminiApiKey').style.display = e.target.value === 'gemini' ? '' : 'none';
+});
+
 document.getElementById('btnGenerate').addEventListener('click',async()=>{
     const prompt=document.getElementById('promptInput').value.trim();
     const apiKey=document.getElementById('geminiApiKey').value.trim();
+    const backend=document.getElementById('aiBackendSelect').value;
     if(!prompt)return;
     
     const btn=document.getElementById('btnGenerate');
@@ -702,7 +713,34 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
     btn.disabled=true;
     
     try{
-        if (apiKey) {
+        if (backend === 'nvme') {
+            // Lokale NVMe-KI via RAG-NVMe Server
+            const nvmeUrl = 'http://127.0.0.1:8090/chat';
+            const nvmePrompt = `Erstelle eine vollständige HTML/CSS Webseite. Nutze Inline-Styles oder <style> Tags. Gib NUR den reinen HTML-Code aus, keine Erklärungen, keinen Markdown-Block. Prompt: ${prompt}`;
+            
+            const resp = await fetch(nvmeUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: nvmePrompt})
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                let html = data.answer || '';
+                html = html.replace(/^```html/i, '').replace(/```$/i, '').trim();
+                
+                btn.textContent = 'Kompiliere NVMe-Resultat...';
+                const bweb = await clientSideConvert(html);
+                lastBweb = bweb;
+                await renderBinary(bweb);
+                document.getElementById('btnDownload').style.display = '';
+            } else {
+                alert("Fehler: NVMe-KI nicht erreichbar auf " + nvmeUrl + ". Hast du rag_server_async.py auf Port 8090 gestartet?");
+            }
+        } else if (backend === 'gemini') {
+            if (!apiKey) {
+                alert("Bitte gib einen Gemini API-Key ein.");
+                return;
+            }
             // Lokale Client-Side Generierung via Google API
             const payload = {
                 contents: [{
@@ -727,20 +765,6 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
                 document.getElementById('btnDownload').style.display = '';
             } else {
                 alert("Fehler bei der lokalen Gemini API-Anfrage (Key ungültig?).");
-            }
-        } else {
-            // Fallback auf lokales Python Backend (falls vorhanden)
-            const resp=await fetch('/api/generate-site',{
-                method:'POST',headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({prompt})
-            });
-            if(resp.ok){
-                const buf=await resp.arrayBuffer();
-                lastBweb=buf;
-                await renderBinary(buf);
-                document.getElementById('btnDownload').style.display='';
-            } else {
-                alert("Fehler: Kein API-Key angegeben und lokales Backend nicht erreichbar.");
             }
         }
     }catch(e){
