@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Markup Language (BML) Client-Side Renderer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+            color: #f1f5f9;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        #bml-viewport {
+            width: 100%;
+            max-width: 800px;
+            background-color: #1e293b;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+        }
+        .bml-meta {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #64748b;
+            text-align: center;
+        }
+        .bml-tag-div { margin-bottom: 1rem; }
+        .bml-tag-h1 { color: #38bdf8; font-size: 2rem; margin-top: 0; }
+        .bml-tag-p { line-height: 1.6; color: #cbd5e1; }
+        .bml-tag-a { color: #f43f5e; text-decoration: none; font-weight: bold; }
+        .bml-tag-a:hover { text-decoration: underline; }
+        .bml-tag-img { max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 1rem 0; }
+    </style>
+</head>
+<body>
+
+    <div id="bml-viewport">
+        <p style="color: #64748b; text-align: center;">Lade binäre Website (page.bml)…</p>
+    </div>
+    
+    <div class="bml-meta" id="bml-stats"></div>
+
+    <script>
+        // BML Tag mapping definitions
+        const TAG_MAP = {
+            0x01: "div",
+            0x02: "span",
+            0x03: "p",
+            0x04: "a",
+            0x05: "h1",
+            0x06: "img"
+        };
+
+        // BML Attribute mapping definitions
+        const ATTR_MAP = {
+            0x10: "class",
+            0x11: "id",
+            0x12: "href",
+            0x13: "src",
+            0x14: "style"
+        };
+
+        class BMLParser {
+            constructor(arrayBuffer) {
+                this.view = new DataView(arrayBuffer);
+                this.decoder = new TextDecoder("utf-8");
+                this.offset = 0;
+            }
+
+            parseNode() {
+                if (this.offset >= this.view.byteLength) return null;
+
+                // 1. Read Node Metadata
+                const tagType = this.view.getUint8(this.offset++);
+                const numAttrs = this.view.getUint8(this.offset++);
+                const numChildren = this.view.getUint8(this.offset++);
+                const textLen = this.view.getUint16(this.offset, false); // Big Endian
+                this.offset += 2;
+
+                const tagName = TAG_MAP[tagType] || "div";
+                const el = document.createElement(tagName);
+                el.classList.add(`bml-tag-${tagName}`);
+
+                // 2. Read Attributes
+                for (let i = 0; i < numAttrs; i++) {
+                    const attrId = this.view.getUint8(this.offset++);
+                    const valLen = this.view.getUint8(this.offset++);
+                    const valBytes = new Uint8Array(this.view.buffer, this.offset, valLen);
+                    this.offset += valLen;
+                    
+                    const attrName = ATTR_MAP[attrId];
+                    const attrVal = this.decoder.decode(valBytes);
+                    if (attrName) {
+                        el.setAttribute(attrName, attrVal);
+                    }
+                }
+
+                // 3. Read Text Content
+                if (textLen > 0) {
+                    const textBytes = new Uint8Array(this.view.buffer, this.offset, textLen);
+                    this.offset += textLen;
+                    el.textContent = this.decoder.decode(textBytes);
+                }
+
+                // 4. Read Children recursively
+                for (let i = 0; i < numChildren; i++) {
+                    const childNode = this.parseNode();
+                    if (childNode) {
+                        el.appendChild(childNode);
+                    }
+                }
+
+                return el;
+            }
+        }
+
+        const INLINE_BML_BASE64 = "AQEEAAAUM2Rpc3BsYXk6IGZsZXg7IGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47IGdhcDogMS41cmVtOwUAAAAlQmluYXJ5IE1hcmt1cCBMYW5ndWFnZSAoQk1MKSBQcm90b3R5cAMAAAEDRGllc2VzIERva3VtZW50IHd1cmRlIHZvbGxrb21tZW4gb2huZSB0ZXh0YmFzaWVydGVzIEhUTUwgw7xiZXJ0cmFnZW4uIERlciBCcm93c2VyLVBvbHlmaWxsIGzDpGR0IGRpZSBiaW7DpHJlbiBCeXRlcyBkZXIgcGFnZS5ibWwtRGF0ZWkgdW5kIMO8YmVyc2V0enQgZGllIGtvbXByaW1pZXJ0ZSBCbG9ja3N0cnVrdHVyIGRpcmVrdCBpbiBkZW4gRE9NLUJhdW0gZGVzIEJyb3dzZXJzLiBEYXMgc3BhcnQgQmFuZGJyZWl0ZSB1bmQgQ1BVLVBhcnNpbmd6ZWl0LgYBAAAAE0JodHRwczovL2ltYWdlcy51bnNwbGFzaC5jb20vcGhvdG8tMTYxODAwNTE4MjM4NC1hODNhOGJkNTdmYmU/dz04MDAEAgAAHhIbaHR0cHM6Ly9naXRodWIuY29tL0x1aWd1YXJkFCtjb2xvcjogIzM4YmRmODsgdGV4dC1kZWNvcmF0aW9uOiB1bmRlcmxpbmU7RW50d2lja2VsdCB2b24gQmVuamFtaW4gTGVpbWVy";
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        async function initBML() {
+            const t0 = performance.now();
+            const viewport = document.getElementById("bml-viewport");
+            const stats = document.getElementById("bml-stats");
+
+            let buffer;
+            let loadedFrom = "HTTP-Fetch";
+
+            if (window.location.protocol === "file:") {
+                buffer = base64ToArrayBuffer(INLINE_BML_BASE64);
+                loadedFrom = "Inline Base64 Fallback (CORS-Bypass)";
+            } else {
+                try {
+                    const response = await fetch("page.bml");
+                    if (!response.ok) throw new Error("HTTP-Fehler beim Laden von page.bml");
+                    buffer = await response.arrayBuffer();
+                } catch (err) {
+                    buffer = base64ToArrayBuffer(INLINE_BML_BASE64);
+                    loadedFrom = "Inline Base64 Fallback (CORS-Bypass)";
+                }
+            }
+
+            try {
+                const byteSize = buffer.byteLength;
+                const parser = new BMLParser(buffer);
+                const rootNode = parser.parseNode();
+                
+                viewport.innerHTML = "";
+                if (rootNode) {
+                    viewport.appendChild(rootNode);
+                } else {
+                    throw new Error("Leerer DOM-Baum geparst");
+                }
+                
+                const t1 = performance.now();
+                const renderTime = (t1 - t0).toFixed(2);
+                stats.innerHTML = `<b>BML-Quelle:</b> ${loadedFrom} | <b>Größe:</b> ${byteSize} Bytes | <b>Renderzeit:</b> ${renderTime} ms`;
+            } catch (err) {
+                viewport.innerHTML = `<p style="color: #ef4444; text-align: center;"><b>Fehler:</b> ${err.message}</p>`;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", initBML);
+    </script>
+</body>
+</html>
