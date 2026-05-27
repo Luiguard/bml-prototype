@@ -247,6 +247,7 @@
 
             <div class="panel" style="margin-top:1rem; border-color: var(--accent);">
                 <div class="panel-title" style="color: var(--accent);">🤖 AI Website Generator</div>
+                <input type="password" id="geminiApiKey" class="html-input" style="min-height:30px; margin-bottom: 0.5rem; font-family: sans-serif;" placeholder="Dein Gemini API-Key (für Nutzung ohne lokalen Server)">
                 <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
                 <div class="btn-row">
                     <button class="btn btn-primary" id="btnGenerate">Website Generieren (BWEB)</button>
@@ -692,6 +693,7 @@ document.getElementById('btnDownload').addEventListener('click',()=>{
 
 document.getElementById('btnGenerate').addEventListener('click',async()=>{
     const prompt=document.getElementById('promptInput').value.trim();
+    const apiKey=document.getElementById('geminiApiKey').value.trim();
     if(!prompt)return;
     
     const btn=document.getElementById('btnGenerate');
@@ -700,20 +702,49 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
     btn.disabled=true;
     
     try{
-        const resp=await fetch('/api/generate-site',{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({prompt})
-        });
-        if(resp.ok){
-            const buf=await resp.arrayBuffer();
-            lastBweb=buf;
-            await renderBinary(buf);
-            document.getElementById('btnDownload').style.display='';
+        if (apiKey) {
+            // Lokale Client-Side Generierung via Google API
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [{ text: `Generate a beautiful, modern, responsive HTML/CSS webpage based on this prompt. Use inline styles or <style> tags. Include some realistic images via unsplash. Return ONLY the raw HTML code, no markdown block, no explanation. Prompt: ${prompt}` }]
+                }]
+            };
+            const aiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if (aiResp.ok) {
+                const data = await aiResp.json();
+                let html = data.candidates[0].content.parts[0].text;
+                html = html.replace(/^```html/i, '').replace(/```$/i, '').trim();
+                
+                btn.textContent = 'Kompiliere in BWEB...';
+                const bweb = await clientSideConvert(html);
+                lastBweb = bweb;
+                await renderBinary(bweb);
+                document.getElementById('btnDownload').style.display = '';
+            } else {
+                alert("Fehler bei der lokalen Gemini API-Anfrage (Key ungültig?).");
+            }
         } else {
-            alert("Fehler bei der KI-Generierung.");
+            // Fallback auf lokales Python Backend (falls vorhanden)
+            const resp=await fetch('/api/generate-site',{
+                method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({prompt})
+            });
+            if(resp.ok){
+                const buf=await resp.arrayBuffer();
+                lastBweb=buf;
+                await renderBinary(buf);
+                document.getElementById('btnDownload').style.display='';
+            } else {
+                alert("Fehler: Kein API-Key angegeben und lokales Backend nicht erreichbar.");
+            }
         }
     }catch(e){
-        alert("Server nicht erreichbar.");
+        alert("Server oder API nicht erreichbar: " + e);
     }finally{
         btn.textContent=oldText;
         btn.disabled=false;
