@@ -603,10 +603,14 @@ document.getElementById('btnConvert').addEventListener('click',async()=>{
             return;
         }
     }catch(e){}
-    const bweb=clientSideConvert(html);
-    lastBweb=bweb;
-    await renderBinary(bweb);
-    document.getElementById('btnDownload').style.display='';
+    try {
+        const bweb=await clientSideConvert(html);
+        lastBweb=bweb;
+        await renderBinary(bweb);
+        document.getElementById('btnDownload').style.display='';
+    } catch(err) {
+        alert("Fehler bei der Iframe-Konvertierung: " + err);
+    }
 });
 
 document.getElementById('btnDownload').addEventListener('click',()=>{
@@ -646,135 +650,287 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
     }
 });
 
-function clientSideConvert(html){
-    const parser=new DOMParser();
-    const doc=parser.parseFromString(html,'text/html');
-    const body=doc.body;
+async function clientSideConvert(html){
+    return new Promise((resolve, reject) => {
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'absolute';
+        iframe.style.width = '1920px'; // Standard desktop width for layout computation
+        iframe.style.height = '1080px';
+        iframe.style.opacity = '0';
+        iframe.style.pointerEvents = 'none';
+        document.body.appendChild(iframe);
 
-    const TAG_FWD={};
-    for(const[k,v]of Object.entries(TAG_REV))TAG_FWD[v]=parseInt(k);
-    const ATTR_FWD={};
-    for(const[k,v]of Object.entries(ATTR_REV))ATTR_FWD[v]=parseInt(k);
+        iframe.onload = async () => {
+            // Wait a brief moment for dynamic scripts and images to render
+            await new Promise(r => setTimeout(r, 500));
+            try {
+                const doc = iframe.contentWindow.document;
+                const body = doc.body;
+                
+                const TAG_FWD={};
+                for(const[k,v]of Object.entries(TAG_REV))TAG_FWD[v]=parseInt(k);
+                const ATTR_FWD={};
+                for(const[k,v]of Object.entries(ATTR_REV))ATTR_FWD[v]=parseInt(k);
 
-    const enc=new TextEncoder();
-    const bmlBuf=[];
-    const flatNodes=[];
+                const enc=new TextEncoder();
+                const bmlBuf=[];
+                const flatNodes=[];
+                const extractedImages = [];
 
-    function serNode(el,parentIdx){
-        const tag=el.tagName?el.tagName.toLowerCase():'div';
-        const tagByte=TAG_FWD[tag]||0x01;
-        const nodeIdx=flatNodes.length;
-        flatNodes.push({tag:tagByte,parentIdx,children:[]});
-        if(parentIdx>=0)flatNodes[parentIdx].children.push(nodeIdx);
-
-        const attrs=[];
-        if(el.attributes){
-            for(const attr of el.attributes){
-                const aid=ATTR_FWD[attr.name];
-                if(aid!==undefined&&attr.name!=='style'){
-                    const vb=enc.encode(attr.value);
-                    attrs.push({id:aid,val:vb});
+                function parseColor(c) {
+                    const m = c.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                    if (m) {
+                        return {r: parseInt(m[1]), g: parseInt(m[2]), b: parseInt(m[3]), a: 255};
+                    }
+                    return {r: 255, g: 255, b: 255, a: 255};
                 }
+
+                function serNode(el,parentIdx){
+                    // Ensure it is an element
+                    if (el.nodeType !== 1) return;
+                    
+                    let tag=el.tagName?el.tagName.toLowerCase():'div';
+                    const attrs=[];
+                    
+                    // Image Extraction (BIB)
+                    if (tag === 'img') {
+                        tag = 'canvas'; // Replace with canvas for BWEB rendering
+                        try {
+                            const cvs = document.createElement('canvas');
+                            cvs.width = el.width || el.naturalWidth || 100;
+                            cvs.height = el.height || el.naturalHeight || 100;
+                            const ctx = cvs.getContext('2d');
+                            ctx.drawImage(el, 0, 0, cvs.width, cvs.height);
+                            const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+                            const bibId = extractedImages.length;
+                            extractedImages.push({
+                                id: bibId,
+                                w: cvs.width,
+                                h: cvs.height,
+                                data: new Uint8Array(imgData.data.buffer)
+                            });
+                            // Add data-bind attribute for the parser
+                            const aid = ATTR_FWD['data-bind'];
+                            if (aid !== undefined) {
+                                attrs.push({id: aid, val: enc.encode(bibId.toString())});
+                            }
+                        } catch(e) {
+                            console.warn("CORS blockiert Bild-Extraktion", e);
+                        }
+                    }
+
+                    const tagByte=TAG_FWD[tag]||0x01;
+                    const nodeIdx=flatNodes.length;
+                    
+                    // Extract Computed Style
+                    const style = iframe.contentWindow.getComputedStyle(el);
+                    const bg = parseColor(style.backgroundColor);
+                    const fg = parseColor(style.color);
+                    
+                    flatNodes.push({
+                        tag: tagByte, 
+                        parentIdx, 
+                        children: [],
+                        computed: {
+                            mt: parseFloat(style.marginTop) || 0,
+                            mr: parseFloat(style.marginRight) || 0,
+                            mb: parseFloat(style.marginBottom) || 0,
+                            ml: parseFloat(style.marginLeft) || 0,
+                            pt: parseFloat(style.paddingTop) || 0,
+                            pr: parseFloat(style.paddingRight) || 0,
+                            pb: parseFloat(style.paddingBottom) || 0,
+                            pl: parseFloat(style.paddingLeft) || 0,
+                            w: parseFloat(style.width) || 0,
+                            h: parseFloat(style.height) || 0,
+                            bg, fg
+                        }
+                    });
+                    
+                    if(parentIdx>=0)flatNodes[parentIdx].children.push(nodeIdx);
+
+                    if(el.attributes){
+                        for(const attr of el.attributes){
+                            if(attr.name === 'src' && tag === 'canvas') continue; // Handled by BIB
+                            const aid=ATTR_FWD[attr.name];
+                            if(aid!==undefined&&attr.name!=='style'){
+                                const vb=enc.encode(attr.value);
+                                attrs.push({id:aid,val:vb});
+                            }
+                        }
+                    }
+
+                    let textContent='';
+                    for(const cn of el.childNodes){
+                        if(cn.nodeType===3){
+                            const t=cn.textContent.trim();
+                            if(t)textContent+=t+' ';
+                        }
+                    }
+                    textContent=textContent.trim();
+                    const textBytes=textContent?enc.encode(textContent):new Uint8Array(0);
+
+                    const childElements=[];
+                    for(const cn of el.childNodes){
+                        if(cn.nodeType===1)childElements.push(cn);
+                    }
+
+                    bmlBuf.push(tagByte);
+                    bmlBuf.push(attrs.length);
+                    bmlBuf.push((childElements.length>>8)&0xFF,childElements.length&0xFF);
+                    bmlBuf.push((textBytes.length>>8)&0xFF,textBytes.length&0xFF);
+
+                    for(const a of attrs){
+                        bmlBuf.push(a.id);
+                        bmlBuf.push((a.val.length>>8)&0xFF,a.val.length&0xFF);
+                        for(const b of a.val)bmlBuf.push(b);
+                    }
+                    for(const b of textBytes)bmlBuf.push(b);
+
+                    for(const ce of childElements)serNode(ce,nodeIdx);
+                }
+
+                const topChildren=[...body.children];
+                const wrapDiv=doc.createElement('div');
+                for(const c of topChildren)wrapDiv.appendChild(c.cloneNode(true));
+                serNode(wrapDiv,-1);
+
+                const bmlData=new Uint8Array([0x42,0x4D,0x4C,0x02,...bmlBuf]);
+
+                const bdtBuf=new ArrayBuffer(4+4+flatNodes.length*11);
+                const bdtView=new DataView(bdtBuf);
+                bdtView.setUint8(0,0x42);bdtView.setUint8(1,0x44);bdtView.setUint8(2,0x54);bdtView.setUint8(3,0x01);
+                bdtView.setUint32(4,flatNodes.length);
+                for(let i=0;i<flatNodes.length;i++){
+                    const off=8+i*11;
+                    const n=flatNodes[i];
+                    bdtView.setUint16(off,i);
+                    bdtView.setUint16(off+2,n.parentIdx>=0?n.parentIdx:0xFFFF);
+                    bdtView.setUint16(off+4,n.children.length?n.children[0]:0xFFFF);
+                    let ns=0xFFFF;
+                    if(n.parentIdx>=0){
+                        const siblings=flatNodes[n.parentIdx].children;
+                        const myPos=siblings.indexOf(i);
+                        if(myPos>=0&&myPos<siblings.length-1)ns=siblings[myPos+1];
+                    }
+                    bdtView.setUint16(off+6,ns);
+                    bdtView.setUint8(off+8,1);
+                    bdtView.setUint8(off+9,n.tag);
+                    let depth=0,p=n.parentIdx;
+                    while(p>=0&&depth<255){depth++;p=flatNodes[p].parentIdx}
+                    bdtView.setUint8(off+10,depth);
+                }
+
+                const blbSize=4+4+flatNodes.length*BLB_BLOCK_SIZE;
+                const blbBuf=new ArrayBuffer(blbSize);
+                const blbView=new DataView(blbBuf);
+                blbView.setUint8(0,0x42);blbView.setUint8(1,0x4C);blbView.setUint8(2,0x42);blbView.setUint8(3,0x01);
+                blbView.setUint32(4,flatNodes.length);
+                for(let i=0;i<flatNodes.length;i++){
+                    const off=8+i*BLB_BLOCK_SIZE;
+                    const c = flatNodes[i].computed;
+                    blbView.setUint16(off,i);
+                    
+                    // Margins
+                    blbView.setUint16(off+2, Math.max(0, c.mt));
+                    blbView.setUint16(off+4, Math.max(0, c.mr));
+                    blbView.setUint16(off+6, Math.max(0, c.mb));
+                    blbView.setUint16(off+8, Math.max(0, c.ml));
+                    // Padding
+                    blbView.setUint16(off+10, Math.max(0, c.pt));
+                    blbView.setUint16(off+12, Math.max(0, c.pr));
+                    blbView.setUint16(off+14, Math.max(0, c.pb));
+                    blbView.setUint16(off+16, Math.max(0, c.pl));
+                    // Width & Height
+                    blbView.setUint16(off+41, Math.max(0, c.w));
+                    blbView.setUint16(off+43, Math.max(0, c.h));
+                    
+                    // Background Color
+                    blbView.setUint8(off+54, c.bg.r);
+                    blbView.setUint8(off+55, c.bg.g);
+                    blbView.setUint8(off+56, c.bg.b);
+                    blbView.setUint8(off+57, c.bg.a);
+                }
+
+                // BIB Generation
+                let bibData = new Uint8Array(0);
+                let bibLen = 0;
+                if (extractedImages.length > 0) {
+                    const bibHeader = new Uint8Array([0x42, 0x49, 0x42, 0x01]);
+                    const bibChunks = [bibHeader];
+                    bibLen += 4;
+                    
+                    const dv4 = new DataView(new ArrayBuffer(4));
+                    dv4.setUint32(0, extractedImages.length);
+                    bibChunks.push(new Uint8Array(dv4.buffer));
+                    bibLen += 4;
+                    
+                    for (const img of extractedImages) {
+                        const h = new DataView(new ArrayBuffer(12));
+                        h.setUint16(0, img.id);
+                        h.setUint16(2, img.w);
+                        h.setUint16(4, img.h);
+                        h.setUint8(6, 1); // Format RGBA
+                        h.setUint32(7, img.data.length);
+                        bibChunks.push(new Uint8Array(h.buffer));
+                        bibChunks.push(img.data);
+                        bibLen += 12 + img.data.length;
+                    }
+                    bibData = new Uint8Array(bibLen);
+                    let offset = 0;
+                    for (const chunk of bibChunks) {
+                        bibData.set(chunk, offset);
+                        offset += chunk.length;
+                    }
+                }
+
+                let secCount = 3;
+                if (bibLen > 0) secCount = 4;
+
+                const totalSize=6 + 
+                    (1+4+bmlData.length) + 
+                    (1+4+bdtBuf.byteLength) + 
+                    (1+4+blbBuf.byteLength) + 
+                    (bibLen > 0 ? (1+4+bibLen) : 0);
+                    
+                const out=new ArrayBuffer(totalSize);
+                const ov=new DataView(out);
+                const ou=new Uint8Array(out);
+                let off=0;
+                ou[off++]=0x42;ou[off++]=0x57;ou[off++]=0x45;ou[off++]=0x42;
+                ou[off++]=1;
+                ou[off++]=secCount;
+
+                ou[off++]=1;
+                ov.setUint32(off,bmlData.length);off+=4;
+                ou.set(bmlData,off);off+=bmlData.length;
+
+                ou[off++]=2;
+                ov.setUint32(off,bdtBuf.byteLength);off+=4;
+                ou.set(new Uint8Array(bdtBuf),off);off+=bdtBuf.byteLength;
+
+                ou[off++]=3;
+                ov.setUint32(off,blbBuf.byteLength);off+=4;
+                ou.set(new Uint8Array(blbBuf),off);off+=blbBuf.byteLength;
+
+                if (bibLen > 0) {
+                    ou[off++]=4;
+                    ov.setUint32(off,bibLen);off+=4;
+                    ou.set(bibData,off);off+=bibLen;
+                }
+
+                document.body.removeChild(iframe);
+                resolve(out);
+            } catch(e) {
+                console.error(e);
+                document.body.removeChild(iframe);
+                reject(e);
             }
-        }
-
-        let textContent='';
-        for(const cn of el.childNodes){
-            if(cn.nodeType===3){
-                const t=cn.textContent.trim();
-                if(t)textContent+=t+' ';
-            }
-        }
-        textContent=textContent.trim();
-        const textBytes=textContent?enc.encode(textContent):new Uint8Array(0);
-
-        const childElements=[];
-        for(const cn of el.childNodes){
-            if(cn.nodeType===1)childElements.push(cn);
-        }
-
-        bmlBuf.push(tagByte);
-        bmlBuf.push(attrs.length);
-        bmlBuf.push((childElements.length>>8)&0xFF,childElements.length&0xFF);
-        bmlBuf.push((textBytes.length>>8)&0xFF,textBytes.length&0xFF);
-
-        for(const a of attrs){
-            bmlBuf.push(a.id);
-            bmlBuf.push((a.val.length>>8)&0xFF,a.val.length&0xFF);
-            for(const b of a.val)bmlBuf.push(b);
-        }
-        for(const b of textBytes)bmlBuf.push(b);
-
-        for(const ce of childElements)serNode(ce,nodeIdx);
-    }
-
-    const topChildren=[...body.children];
-    const wrapDiv=document.createElement('div');
-    for(const c of topChildren)wrapDiv.appendChild(c.cloneNode(true));
-    serNode(wrapDiv,-1);
-
-    const bmlData=new Uint8Array([0x42,0x4D,0x4C,0x02,...bmlBuf]);
-
-    const bdtBuf=new ArrayBuffer(4+4+flatNodes.length*11);
-    const bdtView=new DataView(bdtBuf);
-    bdtView.setUint8(0,0x42);bdtView.setUint8(1,0x44);bdtView.setUint8(2,0x54);bdtView.setUint8(3,0x01);
-    bdtView.setUint32(4,flatNodes.length);
-    for(let i=0;i<flatNodes.length;i++){
-        const off=8+i*11;
-        const n=flatNodes[i];
-        bdtView.setUint16(off,i);
-        bdtView.setUint16(off+2,n.parentIdx>=0?n.parentIdx:0xFFFF);
-        bdtView.setUint16(off+4,n.children.length?n.children[0]:0xFFFF);
-        let ns=0xFFFF;
-        if(n.parentIdx>=0){
-            const siblings=flatNodes[n.parentIdx].children;
-            const myPos=siblings.indexOf(i);
-            if(myPos>=0&&myPos<siblings.length-1)ns=siblings[myPos+1];
-        }
-        bdtView.setUint16(off+6,ns);
-        bdtView.setUint8(off+8,1);
-        bdtView.setUint8(off+9,n.tag);
-        let depth=0,p=n.parentIdx;
-        while(p>=0&&depth<255){depth++;p=flatNodes[p].parentIdx}
-        bdtView.setUint8(off+10,depth);
-    }
-
-    const blbSize=4+4+flatNodes.length*BLB_BLOCK_SIZE;
-    const blbBuf=new ArrayBuffer(blbSize);
-    const blbView=new DataView(blbBuf);
-    blbView.setUint8(0,0x42);blbView.setUint8(1,0x4C);blbView.setUint8(2,0x42);blbView.setUint8(3,0x01);
-    blbView.setUint32(4,flatNodes.length);
-    for(let i=0;i<flatNodes.length;i++){
-        const off=8+i*BLB_BLOCK_SIZE;
-        blbView.setUint16(off,i);
-        blbView.setUint16(off+41,160);
-        blbView.setUint16(off+43,400);
-        blbView.setUint8(off+51,3);
-        blbView.setUint8(off+57,255);
-    }
-
-    const totalSize=6+1+4+bmlData.length+1+4+bdtBuf.byteLength+1+4+blbBuf.byteLength;
-    const out=new ArrayBuffer(totalSize);
-    const ov=new DataView(out);
-    const ou=new Uint8Array(out);
-    let off=0;
-    ou[off++]=0x42;ou[off++]=0x57;ou[off++]=0x45;ou[off++]=0x42;
-    ou[off++]=1;
-    ou[off++]=3;
-
-    ou[off++]=1;
-    ov.setUint32(off,bmlData.length);off+=4;
-    ou.set(bmlData,off);off+=bmlData.length;
-
-    ou[off++]=2;
-    ov.setUint32(off,bdtBuf.byteLength);off+=4;
-    ou.set(new Uint8Array(bdtBuf),off);off+=bdtBuf.byteLength;
-
-    ou[off++]=3;
-    ov.setUint32(off,blbBuf.byteLength);off+=4;
-    ou.set(new Uint8Array(blbBuf),off);off+=blbBuf.byteLength;
-
-    return out;
+        };
+        
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(html);
+        iframe.contentWindow.document.close();
+    });
 }
 
 (async()=>{
