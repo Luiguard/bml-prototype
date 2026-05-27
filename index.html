@@ -180,6 +180,30 @@
             color:var(--text-muted);
         }
         .attribution a{color:var(--accent);text-decoration:none}
+        
+        .explainer-section{
+            width:100%;max-width:1100px;margin:3rem auto;
+            background:var(--bg-card);border:1px solid var(--border);
+            border-radius:12px;padding:2.5rem;color:var(--text-primary);
+        }
+        .explainer-section h2{
+            color:var(--accent);font-size:1.8rem;margin-bottom:1.5rem;
+            border-bottom:2px solid var(--border);padding-bottom:.5rem;
+        }
+        .explainer-section h3{
+            color:#8b5cf6;font-size:1.3rem;margin:1.5rem 0 1rem;
+        }
+        .explainer-section p{
+            line-height:1.7;color:var(--text-secondary);margin-bottom:1rem;
+        }
+        .explainer-section ul{
+            padding-left:1.5rem;margin-bottom:1.5rem;color:var(--text-secondary);line-height:1.7;
+        }
+        .explainer-section li::marker{color:var(--accent)}
+        .explainer-section .highlight-box{
+            background:rgba(16, 185, 129, 0.1);border-left:4px solid var(--success);
+            padding:1.5rem;border-radius:0 8px 8px 0;margin:1.5rem 0;
+        }
     </style>
 </head>
 <body>
@@ -256,6 +280,29 @@
             </div>
             <div id="renderTarget"></div>
         </div>
+    </div>
+
+    <div class="explainer-section">
+        <h2>Warum das Web binär werden muss (BWEB Architektur)</h2>
+        <p>Das klassische Web besteht aus textbasiertem HTML, CSS und JavaScript. Millionen von Tags, verschachtelten Strings und CSS-Regeln müssen vom Browser bei jedem Seitenaufruf aufwändig geparst, kompiliert und in interne C++ Bäume (DOM/CSSOM) umgewandelt werden. Dieser Prozess frisst massive CPU-Ressourcen und Akkulaufzeit.</p>
+        
+        <div class="highlight-box">
+            <h3 style="margin-top:0;color:var(--success)">Der Gamechanger: BWEB (Binary Web)</h3>
+            <p>BWEB überspringt den Text-Parsing-Schritt komplett. Es liefert dem Browser die Struktur, das Layout und die Medien <strong>direkt im nativen Speicherformat</strong> (ArrayBuffer). Die GPU und die Web-APIs können diese Blöcke ohne String-Operationen sofort rendern.</p>
+        </div>
+
+        <h3>Die 5 Säulen des Binären Webs</h3>
+        <ul>
+            <li><strong>SEC 1: BML (Binary Markup Language):</strong> HTML-Tags werden auf ein einziges Byte reduziert (`&lt;div&gt;` wird zu `0x01`). Kein Schließen von Tags nötig. Text-Nodes werden als reine Byte-Längen gespeichert.</li>
+            <li><strong>SEC 2: BDT (Binary DOM Tree):</strong> Ein linearer C-Style Pointer-Baum. Anstatt `<parent><child></child></parent>` zu parsen, enthält BDT ein Array von O(1)-Pointern. Jeder Node verweist via 16-Bit Integer auf seinen Parent, sein erstes Kind und seinen nächsten Nachbarn.</li>
+            <li><strong>SEC 3: BLB (Binary Layout Blocks):</strong> Ersetzt CSS. Statt Text wie `margin-top: 15px; display: flex;` zu lesen, nutzt BLB feste 60-Byte-Strukturen pro Element. Das Layout ist sofort speicherfertig.</li>
+            <li><strong>SEC 4: BIB (Binary Image Blocks):</strong> Bilder müssen nicht mehr base64-kodiert oder als schwerfällige `<img>` Tags referenziert werden. BIB liefert rohe Pixeldaten (RGBA), die per asynchroner GPU-Pipeline (`createImageBitmap` & `OffscreenCanvas`) ohne CPU-Blocking gerendert werden.</li>
+            <li><strong>SEC 5: BVS (Binary Video Streams):</strong> Multiplexte Chunk-Streams für Zero-Latency Video-Playbacks ohne MP4-Container-Overhead.</li>
+        </ul>
+
+        <h3>Warum Browser keine Updates brauchen (Der Polyfill)</h3>
+        <p>Die größte Hürde für neue Web-Standards ist normalerweise die Browser-Kompatibilität (Chrome, Firefox, Safari). BWEB löst dieses Problem durch einen intelligenten <strong>Client-Side Polyfill</strong>.</p>
+        <p>Dieses BWEB-Tool (welches du gerade ansiehst) liest den Binär-Stream direkt über JavaScript (`DataView` und asynchrone Streams) und delegiert die Berechnungen an native APIs (wie das HTML5 `Canvas`). Der Browser denkt, er führt ein normales Skript aus, rendert aber im Hintergrund das gesamte binäre Web. Keine neuen Engines oder Standards nötig – jede Website kann ab <strong>heute</strong> binär ausgeliefert werden.</p>
     </div>
 
     <div class="attribution">
@@ -447,9 +494,9 @@ function applyBLB(rootEl,blocks){
     });
 }
 
-function applyBIB(rootEl,images){
+async function applyBIB(rootEl,images){
     const canvases=rootEl.querySelectorAll('canvas[data-bind]');
-    canvases.forEach(cvs=>{
+    const promises = Array.from(canvases).map(async cvs=>{
         const id=parseInt(cvs.getAttribute('data-bind'));
         const img=images[id];
         if(img){
@@ -457,9 +504,11 @@ function applyBIB(rootEl,images){
             cvs.height=img.h;
             const ctx=cvs.getContext('2d');
             const imgData=new ImageData(img.data,img.w,img.h);
-            ctx.putImageData(imgData,0,0);
+            const bitmap=await createImageBitmap(imgData);
+            ctx.drawImage(bitmap,0,0);
         }
     });
+    await Promise.all(promises);
 }
 
 function renderBDTTree(nodes){
@@ -483,6 +532,7 @@ function parseBWEB(buf){
         const version=u8[4],secCount=u8[5];
         let off=6;const sections={};
         for(let i=0;i<secCount;i++){
+            if(off>=u8.length) break;
             const secType=u8[off++];
             const secLen=new DataView(buf).getUint32(off);off+=4;
             sections[secType]=buf.slice(off,off+secLen);
@@ -490,13 +540,11 @@ function parseBWEB(buf){
         }
         return sections;
     }
-    if(u8[0]===0x42&&u8[1]===0x4D&&u8[2]===0x4C){
-        return{1:buf};
-    }
+    if(u8[0]===0x42&&u8[1]===0x4D&&u8[2]===0x4C) return{1:buf};
     return{1:buf};
 }
 
-function renderBinary(buf){
+async function renderBinary(buf){
     const t0=performance.now();
     const sections=parseBWEB(buf);
 
@@ -535,7 +583,7 @@ function renderBinary(buf){
         let bibStart=0;
         if(bibView[0]===0x42&&bibView[1]===0x49&&bibView[2]===0x42)bibStart=4;
         const images=new BIBParser(bibBuf,bibStart).parse();
-        applyBIB(rootEl,images);
+        await applyBIB(rootEl,images);
     }
 
     const target=document.getElementById('renderTarget');
@@ -574,7 +622,7 @@ let lastBweb=null;
 document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change',e=>{
     const f=e.target.files[0];if(!f)return;
-    f.arrayBuffer().then(buf=>renderBinary(buf));
+    f.arrayBuffer().then(async buf=>await renderBinary(buf));
 });
 const dz=document.getElementById('dropZone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
@@ -582,7 +630,7 @@ dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
 dz.addEventListener('drop',e=>{
     e.preventDefault();dz.classList.remove('drag-over');
     const f=e.dataTransfer.files[0];if(!f)return;
-    f.arrayBuffer().then(buf=>renderBinary(buf));
+    f.arrayBuffer().then(async buf=>await renderBinary(buf));
 });
 
 document.getElementById('btnConvert').addEventListener('click',async()=>{
@@ -596,14 +644,14 @@ document.getElementById('btnConvert').addEventListener('click',async()=>{
         if(resp.ok){
             const buf=await resp.arrayBuffer();
             lastBweb=buf;
-            renderBinary(buf);
+            await renderBinary(buf);
             document.getElementById('btnDownload').style.display='';
             return;
         }
     }catch(e){}
     const bweb=clientSideConvert(html);
     lastBweb=bweb;
-    renderBinary(bweb);
+    await renderBinary(bweb);
     document.getElementById('btnDownload').style.display='';
 });
 
@@ -631,7 +679,7 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
         if(resp.ok){
             const buf=await resp.arrayBuffer();
             lastBweb=buf;
-            renderBinary(buf);
+            await renderBinary(buf);
             document.getElementById('btnDownload').style.display='';
         } else {
             alert("Fehler bei der KI-Generierung.");
@@ -777,12 +825,18 @@ function clientSideConvert(html){
 
 (async()=>{
     try{
+        if('serviceWorker' in navigator) {
+            await navigator.serviceWorker.register('/bweb-sw.js');
+        }
+    } catch(e){}
+
+    try{
         const r=await fetch('page.bweb');
-        if(r.ok){renderBinary(await r.arrayBuffer());return}
+        if(r.ok){await renderBinary(await r.arrayBuffer());return}
     }catch(e){}
     try{
         const r=await fetch('page.bml');
-        if(r.ok){renderBinary(await r.arrayBuffer());return}
+        if(r.ok){await renderBinary(await r.arrayBuffer());return}
     }catch(e){}
 })();
 </script>
