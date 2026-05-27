@@ -14,7 +14,17 @@ BWEB is an experimental, ultra-fast binary web format designed to replace raw HT
 
 ---
 
-## 🛠️ Usage
+## 🌐 Online BWEB Converter
+
+You don't need to run the server locally to convert your HTML sites into BWEB containers. 
+We provide a public **BWEB Converter Tool** accessible via the Mediclean-Pro infrastructure:
+👉 **[Open Online BWEB Converter](https://mediclean-pro.de/bweb-converter/)**
+
+*(Allows ZIP uploads of entire website folders to instantly convert them into `.bweb` binary structures).*
+
+---
+
+## 🛠️ Local Usage
 
 1. Start the BWEB Python Server:
    ```bash
