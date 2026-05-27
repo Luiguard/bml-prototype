@@ -14,11 +14,13 @@ BWEB is an experimental, ultra-fast binary web format designed to replace raw HT
 
 ---
 
-## 🌐 Online BWEB Converter
+## 🌐 Online BWEB Engine & Converter
 
 You don't need to run the server locally to convert your HTML sites into BWEB containers. 
-We provide a public **BWEB Converter Tool** accessible via the Mediclean-Pro infrastructure:
-👉 **[Open Online BWEB Converter](https://mediclean-pro.at/bweb-converter/)**
+We provide a public **BWEB Landing Page & Converter Tool** accessible via the Mediclean-Pro infrastructure:
+
+👉 **[BWEB Architecture Landing Page](https://mediclean-pro.at/bweb-converter/)**
+👉 **[Open Online BWEB Converter Tool](https://mediclean-pro.at/bweb-converter/converter.html)**
 
 *(Allows ZIP uploads of entire website folders to instantly convert them into `.bweb` binary structures).*
 
@@ -30,9 +32,9 @@ We provide a public **BWEB Converter Tool** accessible via the Mediclean-Pro inf
    ```bash
    python3 server.py
    ```
-2. Navigate to `http://127.0.0.1:8080`.
+2. Navigate to `http://127.0.0.1:8080` (Landing Page) or `http://127.0.0.1:8080/converter.html` (Tool).
 3. Use the BWEB Converter UI or the **AI Website Generator**.
-4. The frontend (`index.html`) intercepts the binary `.bweb` stream and instantly paints the DOM structure and Canvas graphics.
+4. The frontend Polyfill intercepts the binary `.bweb` stream and instantly paints the DOM structure and Canvas graphics.
 
 ---
 
