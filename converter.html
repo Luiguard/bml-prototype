@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Engine – BML + BDT + BLB Renderer</title>
+    <meta name="description" content="Client-side Binary Web Engine: Rendert BML, BDT und BLB Binärformate direkt im Browser ohne HTML-Parsing.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --bg-primary:#0a0e1a;--bg-card:#111827;--bg-hover:#1a2236;
+            --border:#1e293b;--border-active:#3b82f6;
+            --text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#475569;
+            --accent:#3b82f6;--accent-glow:rgba(59,130,246,.15);
+            --success:#10b981;--warning:#f59e0b;--error:#ef4444;
+            --glass:rgba(17,24,39,.85);
+        }
+        body{
+            font-family:'Inter',system-ui,-apple-system,sans-serif;
+            background:var(--bg-primary);color:var(--text-primary);
+            min-height:100vh;display:flex;flex-direction:column;align-items:center;
+            padding:2rem 1rem;
+        }
+        .engine-header{
+            text-align:center;margin-bottom:2rem;
+        }
+        .engine-header h1{
+            font-size:2.2rem;font-weight:700;
+            background:linear-gradient(135deg,#3b82f6,#8b5cf6,#ec4899);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            background-clip:text;
+        }
+        .engine-header p{color:var(--text-secondary);margin-top:.5rem;font-size:.95rem}
+        .format-badges{display:flex;gap:.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap}
+        .badge{
+            padding:.35rem .8rem;border-radius:6px;font-size:.75rem;
+            font-family:'JetBrains Mono',monospace;font-weight:500;
+            border:1px solid var(--border);background:var(--bg-card);
+        }
+        .badge-bml{color:#3b82f6;border-color:#3b82f633}
+        .badge-bdt{color:#10b981;border-color:#10b98133}
+        .badge-blb{color:#f59e0b;border-color:#f59e0b33}
+        .badge-bweb{color:#ec4899;border-color:#ec489933}
+        .main-grid{
+            width:100%;max-width:1100px;
+            display:grid;grid-template-columns:320px 1fr;gap:1.5rem;
+        }
+        @media(max-width:768px){.main-grid{grid-template-columns:1fr}}
+        .panel{
+            background:var(--bg-card);border:1px solid var(--border);
+            border-radius:12px;padding:1.25rem;
+        }
+        .panel-title{
+            font-size:.85rem;font-weight:600;color:var(--text-secondary);
+            text-transform:uppercase;letter-spacing:.05em;margin-bottom:1rem;
+            display:flex;align-items:center;gap:.5rem;
+        }
+        .panel-title::before{
+            content:'';width:3px;height:14px;border-radius:2px;
+            background:var(--accent);
+        }
+        .drop-zone{
+            border:2px dashed var(--border);border-radius:10px;
+            padding:2rem;text-align:center;cursor:pointer;
+            transition:all .2s;color:var(--text-muted);
+        }
+        .drop-zone:hover,.drop-zone.drag-over{
+            border-color:var(--accent);background:var(--accent-glow);
+            color:var(--text-secondary);
+        }
+        .drop-zone input{display:none}
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:1rem}
+        .stat{
+            padding:.6rem;background:var(--bg-hover);border-radius:8px;
+            font-size:.8rem;
+        }
+        .stat-label{color:var(--text-muted);font-size:.7rem;margin-bottom:.2rem}
+        .stat-value{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:.9rem}
+        .stat-bml .stat-value{color:#3b82f6}
+        .stat-bdt .stat-value{color:#10b981}
+        .stat-blb .stat-value{color:#f59e0b}
+        .stat-total .stat-value{color:#ec4899}
+        .stat-time .stat-value{color:#8b5cf6}
+        .stat-ratio .stat-value{color:#06b6d4}
+        #bml-viewport{
+            min-height:300px;position:relative;
+        }
+        .viewport-empty{
+            display:flex;align-items:center;justify-content:center;
+            min-height:300px;color:var(--text-muted);font-size:.9rem;
+        }
+        .section-map{margin-top:1rem}
+        .section-bar{
+            display:flex;height:8px;border-radius:4px;overflow:hidden;
+            background:var(--bg-hover);margin-top:.5rem;
+        }
+        .section-bar div{transition:width .3s}
+        .sec-bml{background:#3b82f6}
+        .sec-bdt{background:#10b981}
+        .sec-blb{background:#f59e0b}
+        .section-legend{
+            display:flex;gap:1rem;margin-top:.5rem;font-size:.7rem;
+            color:var(--text-muted);
+        }
+        .section-legend span::before{
+            content:'';display:inline-block;width:8px;height:8px;
+            border-radius:2px;margin-right:4px;vertical-align:middle;
+        }
+        .legend-bml::before{background:#3b82f6}
+        .legend-bdt::before{background:#10b981}
+        .legend-blb::before{background:#f59e0b}
+        .sec-bib{background:#ec4899}
+        .legend-bib::before{background:#ec4899}
+        .tree-view{
+            font-family:'JetBrains Mono',monospace;font-size:.75rem;
+            color:var(--text-secondary);max-height:250px;overflow-y:auto;
+            background:var(--bg-hover);border-radius:8px;padding:.8rem;
+            margin-top:.8rem;line-height:1.6;
+        }
+        .tree-view .tag{color:#3b82f6}
+        .tree-view .id-ref{color:#10b981}
+        .tree-view .depth{color:var(--text-muted)}
+        .html-input{
+            width:100%;min-height:120px;background:var(--bg-hover);
+            border:1px solid var(--border);border-radius:8px;
+            color:var(--text-primary);font-family:'JetBrains Mono',monospace;
+            font-size:.8rem;padding:.8rem;resize:vertical;
+            margin-top:.5rem;
+        }
+        .html-input:focus{outline:none;border-color:var(--accent)}
+        .btn{
+            padding:.6rem 1.2rem;border-radius:8px;border:none;
+            font-family:'Inter',sans-serif;font-weight:500;font-size:.85rem;
+            cursor:pointer;transition:all .15s;margin-top:.6rem;
+        }
+        .btn-primary{background:var(--accent);color:#fff}
+        .btn-primary:hover{background:#2563eb;transform:translateY(-1px)}
+        .btn-secondary{background:var(--bg-hover);color:var(--text-secondary);border:1px solid var(--border)}
+        .btn-secondary:hover{border-color:var(--accent);color:var(--text-primary)}
+        .btn-row{display:flex;gap:.5rem;flex-wrap:wrap}
+        .rendered-node{transition:outline .2s}
+        .rendered-node:hover{outline:1px dashed rgba(59,130,246,.3)}
+        .bml-tag-h1{color:#38bdf8;font-size:2rem;margin:0 0 .5rem}
+        .bml-tag-h2{color:#60a5fa;font-size:1.5rem;margin:0 0 .4rem}
+        .bml-tag-h3{color:#818cf8;font-size:1.25rem;margin:0 0 .3rem}
+        .bml-tag-p{line-height:1.7;color:#cbd5e1;margin-bottom:.5rem}
+        .bml-tag-a{color:#f43f5e;text-decoration:none;font-weight:600}
+        .bml-tag-a:hover{text-decoration:underline}
+        .bml-tag-img{max-width:100%;height:auto;border-radius:8px;display:block;margin:.8rem 0}
+        .bml-tag-code{
+            background:rgba(59,130,246,.1);color:#93c5fd;padding:.15em .4em;
+            border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.9em;
+        }
+        .bml-tag-pre{
+            background:#0d1117;border:1px solid var(--border);border-radius:8px;
+            padding:1rem;overflow-x:auto;font-family:'JetBrains Mono',monospace;
+            font-size:.85rem;color:#c9d1d9;margin:.5rem 0;
+        }
+        .bml-tag-blockquote{
+            border-left:3px solid var(--accent);padding-left:1rem;
+            color:var(--text-secondary);font-style:italic;margin:.5rem 0;
+        }
+        .bml-tag-ul,.bml-tag-ol{padding-left:1.5rem;margin:.3rem 0}
+        .bml-tag-li{margin:.2rem 0;color:#cbd5e1}
+        .bml-tag-strong{font-weight:700;color:var(--text-primary)}
+        .bml-tag-em{font-style:italic;color:#c4b5fd}
+        .bml-tag-hr{border:none;border-top:1px solid var(--border);margin:1rem 0}
+        .bml-tag-button{
+            padding:.5rem 1rem;background:var(--accent);color:#fff;
+            border:none;border-radius:6px;cursor:pointer;font-weight:500;
+        }
+        .bml-tag-nav{display:flex;gap:1rem;padding:.5rem 0}
+        .bml-tag-header{margin-bottom:1rem}
+        .bml-tag-footer{margin-top:1rem;color:var(--text-muted);font-size:.85rem}
+        .bml-tag-section{margin:1rem 0}
+        .attribution{
+            margin-top:2rem;text-align:center;font-size:.8rem;
+            color:var(--text-muted);
+        }
+        .attribution a{color:var(--accent);text-decoration:none}
+    </style>
+</head>
+<body>
+    <div class="engine-header">
+        <h1>Binary Web Engine</h1>
+        <p>BML + BDT + BLB → Zero-Parse Client-Side Rendering</p>
+        <div class="format-badges">
+            <span class="badge badge-bml">BML v2</span>
+            <span class="badge badge-bdt">BDT v1</span>
+            <span class="badge badge-blb">BLB v1</span>
+            <span class="badge badge-bweb">BWEB Container</span>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div>
+            <div class="panel">
+                <div class="panel-title">Binärdatei laden</div>
+                <div class="drop-zone" id="dropZone">
+                    <p>📂 .bweb / .bml Datei hierher ziehen</p>
+                    <p style="font-size:.75rem;margin-top:.5rem">oder klicken zum Auswählen</p>
+                    <input type="file" id="fileInput" accept=".bweb,.bml,.bdt,.blb">
+                </div>
+
+                <div class="section-map" id="sectionMap" style="display:none">
+                    <div class="panel-title" style="margin-top:1rem">Sektionsverteilung</div>
+                    <div class="section-bar" id="sectionBar"></div>
+                    <div class="section-legend">
+                        <span class="legend-bml">BML</span>
+                        <span class="legend-bdt">BDT</span>
+                        <span class="legend-blb">BLB</span>
+                        <span class="legend-bib">BIB</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="statsGrid" style="display:none">
+                    <div class="stat stat-total"><div class="stat-label">BWEB Total</div><div class="stat-value" id="statTotal">–</div></div>
+                    <div class="stat stat-time"><div class="stat-label">Renderzeit</div><div class="stat-value" id="statTime">–</div></div>
+                    <div class="stat stat-bml"><div class="stat-label">BML (Inhalt)</div><div class="stat-value" id="statBml">–</div></div>
+                    <div class="stat stat-bdt"><div class="stat-label">BDT (Baum)</div><div class="stat-value" id="statBdt">–</div></div>
+                    <div class="stat stat-blb"><div class="stat-label">BLB (Layout)</div><div class="stat-value" id="statBlb">–</div></div>
+                    <div class="stat stat-bib"><div class="stat-label">BIB (Images)</div><div class="stat-value" id="statBib">–</div></div>
+                    <div class="stat stat-ratio"><div class="stat-label">Nodes</div><div class="stat-value" id="statNodes">–</div></div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem">
+                <div class="panel-title">HTML → BWEB Konverter</div>
+                <textarea class="html-input" id="htmlInput" placeholder="<h1>Hallo Welt</h1>&#10;<p>Binäre Webseite</p>"></textarea>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" id="btnConvert">Konvertieren</button>
+                    <button class="btn btn-secondary" id="btnDownload" style="display:none">⬇ .bweb</button>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem; border-color: var(--accent);">
+                <div class="panel-title" style="color: var(--accent);">🤖 AI Website Generator</div>
+                <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="btnGenerate">Website Generieren (BWEB)</button>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem" id="treePanel" style="display:none">
+                <div class="panel-title">BDT Baumstruktur</div>
+                <div class="tree-view" id="treeView"></div>
+            </div>
+        </div>
+
+        <div class="panel" id="bml-viewport">
+            <div class="panel-title">Viewport</div>
+            <div class="viewport-empty" id="viewportEmpty">
+                Lade eine .bweb Datei oder konvertiere HTML
+            </div>
+            <div id="renderTarget"></div>
+        </div>
+    </div>
+
+    <div class="attribution">
+        <a href="https://github.com/Luiguard">Entwickelt von Benjamin Leimer</a> · Binary Web Engine · 2026
+    </div>
+
+<script>
+const TAG_REV={0x01:'div',0x02:'span',0x03:'p',0x04:'a',0x05:'h1',0x06:'h2',0x07:'h3',0x08:'h4',0x09:'h5',0x0A:'h6',0x0B:'img',0x0C:'ul',0x0D:'ol',0x0E:'li',0x0F:'table',0x10:'tr',0x11:'td',0x12:'th',0x13:'thead',0x14:'tbody',0x15:'form',0x16:'input',0x17:'button',0x18:'textarea',0x19:'select',0x1A:'option',0x1B:'label',0x1C:'header',0x1D:'footer',0x1E:'nav',0x1F:'main',0x20:'section',0x21:'article',0x22:'aside',0x23:'strong',0x24:'em',0x25:'code',0x26:'pre',0x27:'br',0x28:'hr',0x29:'video',0x2A:'audio',0x2B:'canvas',0x2C:'svg',0x2D:'iframe',0x2E:'figcaption',0x2F:'figure',0x30:'blockquote',0x31:'small',0x32:'sub',0x33:'sup',0x34:'details',0x35:'summary',0x36:'dialog',0x37:'dl',0x38:'dt',0x39:'dd',0x3A:'mark',0x3B:'time',0x3C:'abbr',0x3D:'cite',0x3E:'b',0x3F:'i',0x40:'u',0xFE:'div',0xFF:'div'};
+const ATTR_REV={0x10:'class',0x11:'id',0x12:'href',0x13:'src',0x14:'style',0x15:'type',0x16:'name',0x17:'value',0x18:'placeholder',0x19:'alt',0x1A:'title',0x1B:'action',0x1C:'method',0x1D:'target',0x1E:'rel',0x1F:'role',0x20:'aria-label',0x21:'data-bind',0x22:'onclick',0x23:'onsubmit',0x24:'width',0x25:'height',0x26:'disabled',0x27:'checked',0x28:'selected',0x29:'required',0x2A:'autofocus',0x2B:'autocomplete',0x2C:'min',0x2D:'max',0x2E:'step',0x2F:'pattern',0x30:'for',0x31:'tabindex',0x32:'content',0x33:'charset',0x34:'http-equiv',0x35:'lang',0x36:'dir',0x37:'hidden'};
+const DISPLAY=['block','inline','flex','grid','none','inline-block','inline-flex'];
+const POSITION=['static','relative','absolute','fixed','sticky'];
+const TEXT_ALIGN=['left','center','right','justify'];
+const FLEX_DIR=['row','column','row-reverse','column-reverse'];
+const JUSTIFY=['flex-start','flex-end','center','space-between','space-around','space-evenly'];
+const ALIGN_ITEMS=['flex-start','flex-end','center','stretch','baseline'];
+const OVERFLOW=['visible','hidden','scroll','auto'];
+const BLB_BLOCK_SIZE=60;
+
+class BMLParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.d=new TextDecoder('utf-8');this.o=offset}
+    parseNode(){
+        if(this.o>=this.v.byteLength)return null;
+        const tag=this.v.getUint8(this.o++);
+        const nAttr=this.v.getUint8(this.o++);
+        const nChild=this.v.getUint16(this.o);this.o+=2;
+        const tLen=this.v.getUint16(this.o);this.o+=2;
+        const tagName=TAG_REV[tag]||'div';
+        const el=document.createElement(tagName);
+        el.classList.add('rendered-node',`bml-tag-${tagName}`);
+        for(let i=0;i<nAttr;i++){
+            const aId=this.v.getUint8(this.o++);
+            const aLen=this.v.getUint16(this.o);this.o+=2;
+            const aVal=this.d.decode(new Uint8Array(this.v.buffer,this.o,aLen));this.o+=aLen;
+            const aName=ATTR_REV[aId];
+            if(aName&&aName!=='style')el.setAttribute(aName,aVal);
+        }
+        if(tLen>0){
+            const txt=this.d.decode(new Uint8Array(this.v.buffer,this.o,tLen));this.o+=tLen;
+            el.textContent=txt;
+        }
+        for(let i=0;i<nChild;i++){const c=this.parseNode();if(c)el.appendChild(c)}
+        return el;
+    }
+}
+
+class BDTParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const nodes=[];
+        for(let i=0;i<count;i++){
+            const nid=this.v.getUint16(this.o);this.o+=2;
+            const pid=this.v.getUint16(this.o);this.o+=2;
+            const fc=this.v.getUint16(this.o);this.o+=2;
+            const ns=this.v.getUint16(this.o);this.o+=2;
+            const nt=this.v.getUint8(this.o++);
+            const tt=this.v.getUint8(this.o++);
+            const depth=this.v.getUint8(this.o++);
+            nodes.push({id:nid,parent:pid,firstChild:fc,nextSibling:ns,type:nt,tag:tt,depth});
+        }
+        return nodes;
+    }
+}
+
+class BLBParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const blocks=[];
+        for(let i=0;i<count;i++){
+            const o=this.o;
+            const nid=this.v.getUint16(o);
+            const display=this.v.getUint8(o+2);
+            const position=this.v.getUint8(o+3);
+            const boxSizing=this.v.getUint8(o+4);
+            const width=this.v.getUint16(o+5);
+            const height=this.v.getUint16(o+7);
+            const mt=this.v.getInt16(o+9),mr=this.v.getInt16(o+11),mb=this.v.getInt16(o+13),ml=this.v.getInt16(o+15);
+            const pt=this.v.getUint16(o+17),pr=this.v.getUint16(o+19),pb=this.v.getUint16(o+21),pl=this.v.getUint16(o+23);
+            const btw=this.v.getUint8(o+25),brw=this.v.getUint8(o+26),bbw=this.v.getUint8(o+27),blw=this.v.getUint8(o+28);
+            const borderColor=this.v.getUint32(o+29);
+            const bgColor=this.v.getUint32(o+33);
+            const color=this.v.getUint32(o+37);
+            const fontSize=this.v.getUint16(o+41);
+            const fontWeight=this.v.getUint16(o+43);
+            const lineHeight=this.v.getUint16(o+45);
+            const textAlign=this.v.getUint8(o+47);
+            const flexDir=this.v.getUint8(o+48);
+            const flexWrap=this.v.getUint8(o+49);
+            const justifyContent=this.v.getUint8(o+50);
+            const alignItems=this.v.getUint8(o+51);
+            const gap=this.v.getUint16(o+52);
+            const borderRadius=this.v.getUint16(o+54);
+            const overflow=this.v.getUint8(o+56);
+            const opacity=this.v.getUint8(o+57);
+            const zIndex=this.v.getInt16(o+58);
+            this.o+=BLB_BLOCK_SIZE;
+            blocks.push({nid,display,position,boxSizing,width,height,
+                margin:{t:mt,r:mr,b:mb,l:ml},padding:{t:pt,r:pr,b:pb,l:pl},
+                borderWidth:{t:btw,r:brw,b:bbw,l:blw},borderColor,bgColor,color,
+                fontSize,fontWeight,lineHeight,textAlign,flexDir,flexWrap,
+                justifyContent,alignItems,gap,borderRadius,overflow,opacity,zIndex});
+        }
+        return blocks;
+    }
+}
+
+class BIBParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const images={};
+        for(let i=0;i<count;i++){
+            const id=this.v.getUint32(this.o);this.o+=4;
+            const w=this.v.getUint16(this.o);this.o+=2;
+            const h=this.v.getUint16(this.o);this.o+=2;
+            const cs=this.v.getUint8(this.o++);
+            const comp=this.v.getUint8(this.o++);
+            this.o+=6; // padding
+            
+            const blockId=this.v.getUint16(this.o);this.o+=2;
+            const dataLen=this.v.getUint32(this.o);this.o+=4;
+            
+            const pxData=new Uint8ClampedArray(this.v.buffer,this.o,dataLen);
+            this.o+=dataLen;
+            
+            images[id]={w,h,data:pxData};
+        }
+        return images;
+    }
+}
+
+function cssVal(v){
+    if(v===0xFFFF)return'auto';
+    if(v&0x8000)return(v&0x7FFF)/10+'%';
+    return v/10+'px';
+}
+function rgba(v){
+    if(v===0)return'transparent';
+    const r=(v>>>24)&0xFF,g=(v>>>16)&0xFF,b=(v>>>8)&0xFF,a=v&0xFF;
+    return`rgba(${r},${g},${b},${(a/255).toFixed(2)})`;
+}
+
+function applyBLB(rootEl,blocks){
+    const allNodes=rootEl.querySelectorAll('.rendered-node');
+    const nodeList=[rootEl,...allNodes];
+    blocks.forEach(bl=>{
+        const el=nodeList[bl.nid];
+        if(!el)return;
+        const s=el.style;
+        if(bl.display!==undefined)s.display=DISPLAY[bl.display]||'';
+        if(bl.position>0)s.position=POSITION[bl.position];
+        if(bl.boxSizing)s.boxSizing='border-box';
+        if(bl.width!==0xFFFF)s.width=cssVal(bl.width);
+        if(bl.height!==0xFFFF)s.height=cssVal(bl.height);
+        if(bl.margin.t)s.marginTop=cssVal(bl.margin.t);
+        if(bl.margin.r)s.marginRight=cssVal(bl.margin.r);
+        if(bl.margin.b)s.marginBottom=cssVal(bl.margin.b);
+        if(bl.margin.l)s.marginLeft=cssVal(bl.margin.l);
+        if(bl.padding.t)s.paddingTop=cssVal(bl.padding.t);
+        if(bl.padding.r)s.paddingRight=cssVal(bl.padding.r);
+        if(bl.padding.b)s.paddingBottom=cssVal(bl.padding.b);
+        if(bl.padding.l)s.paddingLeft=cssVal(bl.padding.l);
+        if(bl.borderWidth.t||bl.borderWidth.r||bl.borderWidth.b||bl.borderWidth.l){
+            s.borderStyle='solid';
+            s.borderTopWidth=bl.borderWidth.t/10+'px';
+            s.borderRightWidth=bl.borderWidth.r/10+'px';
+            s.borderBottomWidth=bl.borderWidth.b/10+'px';
+            s.borderLeftWidth=bl.borderWidth.l/10+'px';
+            if(bl.borderColor)s.borderColor=rgba(bl.borderColor);
+        }
+        if(bl.bgColor)s.backgroundColor=rgba(bl.bgColor);
+        if(bl.color!==0x000000FF&&bl.color!==0)s.color=rgba(bl.color);
+        if(bl.fontSize!==160)s.fontSize=bl.fontSize/10+'px';
+        if(bl.fontWeight!==400)s.fontWeight=bl.fontWeight;
+        if(bl.lineHeight>0)s.lineHeight=bl.lineHeight/10+'px';
+        if(bl.textAlign>0)s.textAlign=TEXT_ALIGN[bl.textAlign];
+        if(bl.display===2||bl.display===6){
+            if(bl.flexDir>0)s.flexDirection=FLEX_DIR[bl.flexDir];
+            if(bl.flexWrap)s.flexWrap='wrap';
+            if(bl.justifyContent>0)s.justifyContent=JUSTIFY[bl.justifyContent];
+            if(bl.alignItems!==3)s.alignItems=ALIGN_ITEMS[bl.alignItems];
+        }
+        if(bl.gap>0)s.gap=bl.gap/10+'px';
+        if(bl.borderRadius>0)s.borderRadius=bl.borderRadius/10+'px';
+        if(bl.overflow>0)s.overflow=OVERFLOW[bl.overflow];
+        if(bl.opacity<255)s.opacity=(bl.opacity/255).toFixed(2);
+        if(bl.zIndex!==0)s.zIndex=bl.zIndex;
+    });
+}
+
+async function applyBIB(rootEl,images){
+    const canvases=rootEl.querySelectorAll('canvas[data-bind]');
+    const promises = Array.from(canvases).map(async cvs=>{
+        const id=parseInt(cvs.getAttribute('data-bind'));
+        const img=images[id];
+        if(img){
+            cvs.width=img.w;
+            cvs.height=img.h;
+            const ctx=cvs.getContext('2d');
+            const imgData=new ImageData(img.data,img.w,img.h);
+            const bitmap=await createImageBitmap(imgData);
+            ctx.drawImage(bitmap,0,0);
+        }
+    });
+    await Promise.all(promises);
+}
+
+function renderBDTTree(nodes){
+    const tv=document.getElementById('treeView');
+    const tp=document.getElementById('treePanel');
+    if(!nodes||!nodes.length){tp.style.display='none';return}
+    tp.style.display='';
+    let html='';
+    nodes.forEach(n=>{
+        const indent='  '.repeat(n.depth);
+        const tag=TAG_REV[n.tag]||'?';
+        html+=`${indent}<span class="tag">&lt;${tag}&gt;</span> <span class="id-ref">#${n.id}</span> <span class="depth">p:${n.parent===0xFFFF?'root':n.parent} fc:${n.firstChild===0xFFFF?'-':n.firstChild} ns:${n.nextSibling===0xFFFF?'-':n.nextSibling}</span>\n`;
+    });
+    tv.innerHTML=html;
+}
+
+function parseBWEB(buf){
+    const u8=new Uint8Array(buf);
+    const magic=String.fromCharCode(u8[0],u8[1],u8[2],u8[3]);
+    if(magic==='BWEB'){
+        const version=u8[4],secCount=u8[5];
+        let off=6;const sections={};
+        for(let i=0;i<secCount;i++){
+            if(off>=u8.length) break;
+            const secType=u8[off++];
+            const secLen=new DataView(buf).getUint32(off);off+=4;
+            sections[secType]=buf.slice(off,off+secLen);
+            off+=secLen;
+        }
+        return sections;
+    }
+    if(u8[0]===0x42&&u8[1]===0x4D&&u8[2]===0x4C) return{1:buf};
+    return{1:buf};
+}
+
+async function renderBinary(buf){
+    const t0=performance.now();
+    const sections=parseBWEB(buf);
+
+    const bmlBuf=sections[1];
+    const bdtBuf=sections[2];
+    const blbBuf=sections[3];
+
+    let rootEl=null,bdtNodes=null,blbBlocks=null;
+
+    if(bmlBuf){
+        const bmlView=new Uint8Array(bmlBuf);
+        let bmlStart=0;
+        if(bmlView[0]===0x42&&bmlView[1]===0x4D&&bmlView[2]===0x4C)bmlStart=4;
+        const parser=new BMLParser(bmlBuf,bmlStart);
+        rootEl=parser.parseNode();
+    }
+
+    if(bdtBuf){
+        const bdtView=new Uint8Array(bdtBuf);
+        let bdtStart=0;
+        if(bdtView[0]===0x42&&bdtView[1]===0x44&&bdtView[2]===0x54)bdtStart=4;
+        bdtNodes=new BDTParser(bdtBuf,bdtStart).parse();
+    }
+
+    if(blbBuf&&rootEl){
+        const blbView=new Uint8Array(blbBuf);
+        let blbStart=0;
+        if(blbView[0]===0x42&&blbView[1]===0x4C&&blbView[2]===0x42)blbStart=4;
+        blbBlocks=new BLBParser(blbBuf,blbStart).parse();
+        applyBLB(rootEl,blbBlocks);
+    }
+
+    if(sections[4]&&rootEl){
+        const bibBuf=sections[4];
+        const bibView=new Uint8Array(bibBuf);
+        let bibStart=0;
+        if(bibView[0]===0x42&&bibView[1]===0x49&&bibView[2]===0x42)bibStart=4;
+        const images=new BIBParser(bibBuf,bibStart).parse();
+        await applyBIB(rootEl,images);
+    }
+
+    const target=document.getElementById('renderTarget');
+    const empty=document.getElementById('viewportEmpty');
+    target.innerHTML='';
+    if(rootEl){
+        target.appendChild(rootEl);
+        empty.style.display='none';
+    }
+
+    const t1=performance.now();
+
+    document.getElementById('statsGrid').style.display='';
+    document.getElementById('statTotal').textContent=buf.byteLength+' B';
+    document.getElementById('statTime').textContent=(t1-t0).toFixed(2)+' ms';
+    document.getElementById('statBml').textContent=bmlBuf?bmlBuf.byteLength+' B':'–';
+    document.getElementById('statBdt').textContent=bdtBuf?bdtBuf.byteLength+' B':'–';
+    document.getElementById('statBlb').textContent=blbBuf?blbBuf.byteLength+' B':'–';
+    document.getElementById('statBib').textContent=sections[4]?sections[4].byteLength+' B':'–';
+    document.getElementById('statNodes').textContent=bdtNodes?bdtNodes.length:'–';
+
+    if(bmlBuf&&bdtBuf&&blbBuf){
+        const total=buf.byteLength;
+        const bibBuf=sections[4];
+        const map=document.getElementById('sectionMap');
+        map.style.display='';
+        const bar=document.getElementById('sectionBar');
+        bar.innerHTML=`<div class="sec-bml" style="width:${bmlBuf.byteLength/total*100}%"></div><div class="sec-bdt" style="width:${bdtBuf.byteLength/total*100}%"></div><div class="sec-blb" style="width:${blbBuf.byteLength/total*100}%"></div>`+(bibBuf?`<div class="sec-bib" style="width:${bibBuf.byteLength/total*100}%"></div>`:'');
+    }
+
+    renderBDTTree(bdtNodes);
+}
+
+let lastBweb=null;
+
+document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change',e=>{
+    const f=e.target.files[0];if(!f)return;
+    f.arrayBuffer().then(async buf=>await renderBinary(buf));
+});
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{
+    e.preventDefault();dz.classList.remove('drag-over');
+    const f=e.dataTransfer.files[0];if(!f)return;
+    f.arrayBuffer().then(async buf=>await renderBinary(buf));
+});
+
+document.getElementById('btnConvert').addEventListener('click',async()=>{
+    const html=document.getElementById('htmlInput').value.trim();
+    if(!html)return;
+    try{
+        const resp=await fetch('/api/html-to-bweb',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({html})
+        });
+        if(resp.ok){
+            const buf=await resp.arrayBuffer();
+            lastBweb=buf;
+            await renderBinary(buf);
+            document.getElementById('btnDownload').style.display='';
+            return;
+        }
+    }catch(e){}
+    const bweb=clientSideConvert(html);
+    lastBweb=bweb;
+    await renderBinary(bweb);
+    document.getElementById('btnDownload').style.display='';
+});
+
+document.getElementById('btnDownload').addEventListener('click',()=>{
+    if(!lastBweb)return;
+    const blob=new Blob([lastBweb],{type:'application/octet-stream'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='page.bweb';a.click();
+});
+
+document.getElementById('btnGenerate').addEventListener('click',async()=>{
+    const prompt=document.getElementById('promptInput').value.trim();
+    if(!prompt)return;
+    
+    const btn=document.getElementById('btnGenerate');
+    const oldText=btn.textContent;
+    btn.textContent='⏳ Generiere KI-Modell...';
+    btn.disabled=true;
+    
+    try{
+        const resp=await fetch('/api/generate-site',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({prompt})
+        });
+        if(resp.ok){
+            const buf=await resp.arrayBuffer();
+            lastBweb=buf;
+            await renderBinary(buf);
+            document.getElementById('btnDownload').style.display='';
+        } else {
+            alert("Fehler bei der KI-Generierung.");
+        }
+    }catch(e){
+        alert("Server nicht erreichbar.");
+    }finally{
+        btn.textContent=oldText;
+        btn.disabled=false;
+    }
+});
+
+function clientSideConvert(html){
+    const parser=new DOMParser();
+    const doc=parser.parseFromString(html,'text/html');
+    const body=doc.body;
+
+    const TAG_FWD={};
+    for(const[k,v]of Object.entries(TAG_REV))TAG_FWD[v]=parseInt(k);
+    const ATTR_FWD={};
+    for(const[k,v]of Object.entries(ATTR_REV))ATTR_FWD[v]=parseInt(k);
+
+    const enc=new TextEncoder();
+    const bmlBuf=[];
+    const flatNodes=[];
+
+    function serNode(el,parentIdx){
+        const tag=el.tagName?el.tagName.toLowerCase():'div';
+        const tagByte=TAG_FWD[tag]||0x01;
+        const nodeIdx=flatNodes.length;
+        flatNodes.push({tag:tagByte,parentIdx,children:[]});
+        if(parentIdx>=0)flatNodes[parentIdx].children.push(nodeIdx);
+
+        const attrs=[];
+        if(el.attributes){
+            for(const attr of el.attributes){
+                const aid=ATTR_FWD[attr.name];
+                if(aid!==undefined&&attr.name!=='style'){
+                    const vb=enc.encode(attr.value);
+                    attrs.push({id:aid,val:vb});
+                }
+            }
+        }
+
+        let textContent='';
+        for(const cn of el.childNodes){
+            if(cn.nodeType===3){
+                const t=cn.textContent.trim();
+                if(t)textContent+=t+' ';
+            }
+        }
+        textContent=textContent.trim();
+        const textBytes=textContent?enc.encode(textContent):new Uint8Array(0);
+
+        const childElements=[];
+        for(const cn of el.childNodes){
+            if(cn.nodeType===1)childElements.push(cn);
+        }
+
+        bmlBuf.push(tagByte);
+        bmlBuf.push(attrs.length);
+        bmlBuf.push((childElements.length>>8)&0xFF,childElements.length&0xFF);
+        bmlBuf.push((textBytes.length>>8)&0xFF,textBytes.length&0xFF);
+
+        for(const a of attrs){
+            bmlBuf.push(a.id);
+            bmlBuf.push((a.val.length>>8)&0xFF,a.val.length&0xFF);
+            for(const b of a.val)bmlBuf.push(b);
+        }
+        for(const b of textBytes)bmlBuf.push(b);
+
+        for(const ce of childElements)serNode(ce,nodeIdx);
+    }
+
+    const topChildren=[...body.children];
+    const wrapDiv=document.createElement('div');
+    for(const c of topChildren)wrapDiv.appendChild(c.cloneNode(true));
+    serNode(wrapDiv,-1);
+
+    const bmlData=new Uint8Array([0x42,0x4D,0x4C,0x02,...bmlBuf]);
+
+    const bdtBuf=new ArrayBuffer(4+4+flatNodes.length*11);
+    const bdtView=new DataView(bdtBuf);
+    bdtView.setUint8(0,0x42);bdtView.setUint8(1,0x44);bdtView.setUint8(2,0x54);bdtView.setUint8(3,0x01);
+    bdtView.setUint32(4,flatNodes.length);
+    for(let i=0;i<flatNodes.length;i++){
+        const off=8+i*11;
+        const n=flatNodes[i];
+        bdtView.setUint16(off,i);
+        bdtView.setUint16(off+2,n.parentIdx>=0?n.parentIdx:0xFFFF);
+        bdtView.setUint16(off+4,n.children.length?n.children[0]:0xFFFF);
+        let ns=0xFFFF;
+        if(n.parentIdx>=0){
+            const siblings=flatNodes[n.parentIdx].children;
+            const myPos=siblings.indexOf(i);
+            if(myPos>=0&&myPos<siblings.length-1)ns=siblings[myPos+1];
+        }
+        bdtView.setUint16(off+6,ns);
+        bdtView.setUint8(off+8,1);
+        bdtView.setUint8(off+9,n.tag);
+        let depth=0,p=n.parentIdx;
+        while(p>=0&&depth<255){depth++;p=flatNodes[p].parentIdx}
+        bdtView.setUint8(off+10,depth);
+    }
+
+    const blbSize=4+4+flatNodes.length*BLB_BLOCK_SIZE;
+    const blbBuf=new ArrayBuffer(blbSize);
+    const blbView=new DataView(blbBuf);
+    blbView.setUint8(0,0x42);blbView.setUint8(1,0x4C);blbView.setUint8(2,0x42);blbView.setUint8(3,0x01);
+    blbView.setUint32(4,flatNodes.length);
+    for(let i=0;i<flatNodes.length;i++){
+        const off=8+i*BLB_BLOCK_SIZE;
+        blbView.setUint16(off,i);
+        blbView.setUint16(off+41,160);
+        blbView.setUint16(off+43,400);
+        blbView.setUint8(off+51,3);
+        blbView.setUint8(off+57,255);
+    }
+
+    const totalSize=6+1+4+bmlData.length+1+4+bdtBuf.byteLength+1+4+blbBuf.byteLength;
+    const out=new ArrayBuffer(totalSize);
+    const ov=new DataView(out);
+    const ou=new Uint8Array(out);
+    let off=0;
+    ou[off++]=0x42;ou[off++]=0x57;ou[off++]=0x45;ou[off++]=0x42;
+    ou[off++]=1;
+    ou[off++]=3;
+
+    ou[off++]=1;
+    ov.setUint32(off,bmlData.length);off+=4;
+    ou.set(bmlData,off);off+=bmlData.length;
+
+    ou[off++]=2;
+    ov.setUint32(off,bdtBuf.byteLength);off+=4;
+    ou.set(new Uint8Array(bdtBuf),off);off+=bdtBuf.byteLength;
+
+    ou[off++]=3;
+    ov.setUint32(off,blbBuf.byteLength);off+=4;
+    ou.set(new Uint8Array(blbBuf),off);off+=blbBuf.byteLength;
+
+    return out;
+}
+
+(async()=>{
+    try{
+        if('serviceWorker' in navigator) {
+            await navigator.serviceWorker.register('/bweb-sw.js');
+        }
+    } catch(e){}
+
+    try{
+        const r=await fetch('page.bweb');
+        if(r.ok){await renderBinary(await r.arrayBuffer());return}
+    }catch(e){}
+    try{
+        const r=await fetch('page.bml');
+        if(r.ok){await renderBinary(await r.arrayBuffer());return}
+    }catch(e){}
+})();
+</script>
+</body>
+</html>

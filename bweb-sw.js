@@ -2,6 +2,7 @@ const CACHE_NAME = 'bweb-cache-v1';
 const BWEB_ASSETS = [
     '/',
     '/index.html',
+    '/converter.html',
     '/server.py' // Just to illustrate caching, though server is backend
 ];
 
