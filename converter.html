@@ -225,6 +225,7 @@
                     <div class="stat stat-blb"><div class="stat-label">BLB (Layout)</div><div class="stat-value" id="statBlb">–</div></div>
                     <div class="stat stat-bib"><div class="stat-label">BIB (Images)</div><div class="stat-value" id="statBib">–</div></div>
                     <div class="stat stat-bvs"><div class="stat-label">BVS (Video)</div><div class="stat-value" id="statBvs">–</div></div>
+                    <div class="stat stat-bas"><div class="stat-label">BAS (Audio)</div><div class="stat-value" id="statBas">–</div></div>
                     <div class="stat stat-ratio"><div class="stat-label">Nodes</div><div class="stat-value" id="statNodes">–</div></div>
                 </div>
             </div>
@@ -471,6 +472,7 @@ async function applyBVS(rootEl, videos) {
             let startRealTime = performance.now();
             let currentChunk = 0;
             let pendingFrames = [];
+            let started = false;
             
             const decoder = new VideoDecoder({
                 output: (frame) => pendingFrames.push(frame),
@@ -490,6 +492,10 @@ async function applyBVS(rootEl, videos) {
                 }
                 
                 if (pendingFrames.length > 0) {
+                    if (!started) {
+                        started = true;
+                        canvas.dispatchEvent(new CustomEvent('bvs-loop-restart', {detail: {time: startRealTime}}));
+                    }
                     const frame = pendingFrames[0];
                     const elapsedRealUs = (performance.now() - startRealTime) * 1000;
                     
@@ -504,12 +510,163 @@ async function applyBVS(rootEl, videos) {
                     await decoder.flush();
                     currentChunk = 0;
                     startRealTime = performance.now(); // Loop video
+                    canvas.dispatchEvent(new CustomEvent('bvs-loop-restart', {detail: {time: startRealTime}}));
                 }
                 
                 await new Promise(r => requestAnimationFrame(r));
             }
         };
         playbackLoop();
+    }
+}
+
+class BASParser {
+    constructor(buf, offset=0) {
+        this.v = new DataView(buf);
+        this.o = offset;
+        this.u8 = new Uint8Array(buf);
+    }
+    parse() {
+        const count = this.v.getUint32(this.o); this.o += 4;
+        const audios = {};
+        for(let i=0; i<count; i++) {
+            const id = this.v.getUint32(this.o); this.o += 4;
+            const codecLen = this.v.getUint8(this.o++);
+            const codecBytes = this.u8.slice(this.o, this.o + codecLen);
+            this.o += codecLen;
+            const codec = new TextDecoder('ascii').decode(codecBytes);
+            const sampleRate = this.v.getUint32(this.o); this.o += 4;
+            const channels = this.v.getUint8(this.o++);
+            const chunkCount = this.v.getUint32(this.o); this.o += 4;
+            
+            const chunks = [];
+            for(let j=0; j<chunkCount; j++) {
+                const flags = this.v.getUint8(this.o++);
+                const isKey = (flags & 1) === 1;
+                const ptsHigh = this.v.getUint32(this.o); this.o += 4;
+                const ptsLow = this.v.getUint32(this.o); this.o += 4;
+                const pts = Number((BigInt(ptsHigh) << 32n) | BigInt(ptsLow));
+                const dur = this.v.getUint32(this.o); this.o += 4;
+                const dataLen = this.v.getUint32(this.o); this.o += 4;
+                const data = this.u8.slice(this.o, this.o + dataLen);
+                this.o += dataLen;
+                
+                chunks.push({
+                    type: isKey ? 'key' : 'delta',
+                    timestamp: pts,
+                    duration: dur,
+                    data: data
+                });
+            }
+            audios[id] = {codec, sampleRate, channels, chunks};
+        }
+        return audios;
+    }
+}
+
+let globalAudioContext = null;
+
+async function applyBAS(rootEl, audios) {
+    if (!('AudioDecoder' in window)) {
+        console.warn('WebCodecs AudioDecoder API not supported.');
+        return;
+    }
+
+    if (!globalAudioContext) {
+        globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    const resumeAudio = () => {
+        if (globalAudioContext.state === 'suspended') {
+            globalAudioContext.resume();
+        }
+        document.removeEventListener('click', resumeAudio);
+        document.removeEventListener('keydown', resumeAudio);
+    };
+    document.addEventListener('click', resumeAudio);
+    document.addEventListener('keydown', resumeAudio);
+
+    const canvases = rootEl.querySelectorAll('canvas[data-bind-audio]');
+    for(const canvas of canvases) {
+        const audId = parseInt(canvas.getAttribute('data-bind-audio'));
+        const aud = audios[audId];
+        if(!aud) continue;
+        
+        let totalSamples = 0;
+        const decodedBuffers = [];
+        
+        const decoder = new AudioDecoder({
+            output: (audioData) => {
+                const planarData = [];
+                for(let c=0; c<audioData.numberOfChannels; c++) {
+                    const chData = new Float32Array(audioData.numberOfFrames);
+                    audioData.copyTo(chData, {planeIndex: c, format: 'f32-planar'});
+                    planarData.push(chData);
+                }
+                decodedBuffers.push({
+                    frames: audioData.numberOfFrames,
+                    data: planarData
+                });
+                totalSamples += audioData.numberOfFrames;
+                audioData.close();
+            },
+            error: (e) => console.error("AudioDecoder error:", e)
+        });
+        
+        decoder.configure({
+            codec: aud.codec,
+            sampleRate: aud.sampleRate,
+            numberOfChannels: aud.channels
+        });
+
+        for (const chunk of aud.chunks) {
+            decoder.decode(new EncodedAudioChunk(chunk));
+        }
+        
+        await decoder.flush();
+        if (decodedBuffers.length === 0) continue;
+        
+        const finalBuffer = globalAudioContext.createBuffer(
+            aud.channels,
+            totalSamples,
+            aud.sampleRate
+        );
+        
+        let offset = 0;
+        for (const db of decodedBuffers) {
+            for (let c=0; c<aud.channels; c++) {
+                finalBuffer.getChannelData(c).set(db.data[c], offset);
+            }
+            offset += db.frames;
+        }
+        
+        let sourceNode = null;
+        let loopDuration = totalSamples / aud.sampleRate;
+        let videoStartTime = performance.now();
+        
+        function playAudio(offsetSec) {
+             if (globalAudioContext.state === 'suspended') return;
+             if (sourceNode) {
+                 try { sourceNode.stop(); } catch(e){}
+             }
+             sourceNode = globalAudioContext.createBufferSource();
+             sourceNode.buffer = finalBuffer;
+             sourceNode.connect(globalAudioContext.destination);
+             sourceNode.start(0, offsetSec);
+        }
+        
+        canvas.addEventListener('bvs-loop-restart', (e) => {
+             videoStartTime = e.detail.time;
+             playAudio(0);
+        });
+        
+        globalAudioContext.addEventListener('statechange', () => {
+             if (globalAudioContext.state === 'running') {
+                  let elapsedSec = (performance.now() - videoStartTime) / 1000;
+                  elapsedSec = elapsedSec % loopDuration;
+                  playAudio(elapsedSec);
+             }
+        });
     }
 }
 
@@ -673,6 +830,15 @@ async function renderBinary(buf){
         await applyBVS(rootEl,videos);
     }
 
+    if(sections[6]&&rootEl){
+        const basBuf=sections[6];
+        const basView=new Uint8Array(basBuf);
+        let basStart=0;
+        if(basView[0]===0x42&&basView[1]===0x41&&basView[2]===0x53)basStart=4;
+        const audios=new BASParser(basBuf,basStart).parse();
+        await applyBAS(rootEl,audios);
+    }
+
     const target=document.getElementById('renderTarget');
     const empty=document.getElementById('viewportEmpty');
     target.innerHTML='';
@@ -691,16 +857,18 @@ async function renderBinary(buf){
     document.getElementById('statBlb').textContent=blbBuf?blbBuf.byteLength+' B':'–';
     document.getElementById('statBib').textContent=sections[4]?sections[4].byteLength+' B':'–';
     document.getElementById('statBvs').textContent=sections[5]?sections[5].byteLength+' B':'–';
+    document.getElementById('statBas').textContent=sections[6]?sections[6].byteLength+' B':'–';
     document.getElementById('statNodes').textContent=bdtNodes?bdtNodes.length:'–';
 
     if(bmlBuf&&bdtBuf&&blbBuf){
         const total=buf.byteLength;
         const bibBuf=sections[4];
         const bvsBuf=sections[5];
+        const basBuf=sections[6];
         const map=document.getElementById('sectionMap');
         map.style.display='';
         const bar=document.getElementById('sectionBar');
-        bar.innerHTML=`<div class="sec-bml" style="width:${bmlBuf.byteLength/total*100}%"></div><div class="sec-bdt" style="width:${bdtBuf.byteLength/total*100}%"></div><div class="sec-blb" style="width:${blbBuf.byteLength/total*100}%"></div>`+(bibBuf?`<div class="sec-bib" style="width:${bibBuf.byteLength/total*100}%"></div>`:'')+(bvsBuf?`<div class="sec-bvs" style="width:${bvsBuf.byteLength/total*100}%; background:#d946ef"></div>`:'');
+        bar.innerHTML=`<div class="sec-bml" style="width:${bmlBuf.byteLength/total*100}%"></div><div class="sec-bdt" style="width:${bdtBuf.byteLength/total*100}%"></div><div class="sec-blb" style="width:${blbBuf.byteLength/total*100}%"></div>`+(bibBuf?`<div class="sec-bib" style="width:${bibBuf.byteLength/total*100}%"></div>`:'')+(bvsBuf?`<div class="sec-bvs" style="width:${bvsBuf.byteLength/total*100}%; background:#d946ef"></div>`:'')+(basBuf?`<div class="sec-bas" style="width:${basBuf.byteLength/total*100}%; background:#eab308"></div>`:'');
     }
 
     renderBDTTree(bdtNodes);

@@ -321,30 +321,55 @@ Video binding: `<canvas data-bind-video="VIDEO_ID">` in BML links to BVS video.
 
 ---
 
-## 8. Versioning
+## 8. BAS — Binary Audio Streams (Section 6)
 
-### 8.1 Rules
+Optimierte Audiostreams für `WebCodecs AudioDecoder` und synchronisierte `Web Audio API` Wiedergabe.
+
+### 8.1 Section Header
+
+| Offset | Size | Type   | Value        |
+|--------|------|--------|--------------|
+| 0      | 3    | ASCII  | `BAS`        |
+| 3      | 1    | Uint8  | `0x01` (v1)  |
+| 4      | 4    | Uint32 | Audio count  |
+
+### 8.2 Audio Record
+
+| Offset | Size | Type   | Description                                       |
+|--------|------|--------|---------------------------------------------------|
+| 0      | 4    | Uint32 | Audio ID                                          |
+| 4      | 1    | Uint8  | Codec string length (`L`)                         |
+| 5      | L    | ASCII  | Codec string (z.B. `mp4a.40.2` oder `opus`)       |
+| 5+L    | 4    | Uint32 | Sample Rate (in Hz, z.B. 44100)                   |
+| 9+L    | 1    | Uint8  | Channel Count (z.B. 2 für Stereo)                 |
+| 10+L   | 4    | Uint32 | Chunk count (`C`)                                 |
+| var    | var  | —      | Array of `C` Chunks (identisch zu BVS-Chunks)     |
+
+Audio binding: `<canvas data-bind-audio="AUDIO_ID">` für synchronisierte Wiedergabe zusammen mit Video, oder auf verstecktem Canvas für Standalone-Audio.
+
+---
+
+## 9. Versioning
+
+### 9.1 Rules
 
 - **Container version** (`BWEB[version]`): Incremented when the section table format changes.
 - **Section version** (per magic, e.g., `BML\x02`): Incremented when that section's internal layout changes.
 - Parsers MUST reject versions they don't understand.
 - Unknown section type IDs SHOULD be silently skipped (forward compatibility).
 
-### 7.2 Extension
-
-New sections can be added with type IDs `7`–`255` without breaking existing parsers. Existing parsers skip unknown section types by reading their length and advancing the offset.
-
 ---
 
-## 9. Security
+## 10. Security
 
 - BML text content MUST be treated as plain text, never as HTML.
 - `onclick`, `onsubmit` attributes (`0x22`, `0x23`) MUST be sanitized or ignored by security-conscious renderers.
 - BIB pixel data MUST be validated: `width × height × 4 == data_length`.
+- WebAudio Autoplay erfordert einen initialen User-Click vor der ersten BAS Wiedergabe.
 
 ---
 
-## 10. MIME Types
+## 11. MIME Types
 
 | Extension | MIME Type            |
 |-----------|----------------------|

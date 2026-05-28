@@ -27,6 +27,7 @@ SEC_BDT = 2
 SEC_BLB = 3
 SEC_BIB = 4
 SEC_BVS = 5
+SEC_BAS = 6
 
 TAG = {
     'div':0x01,'span':0x02,'p':0x03,'a':0x04,
@@ -456,8 +457,8 @@ def serialize_bvs(videos: list) -> bytes:
                 continue
             is_key = packet.is_keyframe
             tb = packet.time_base
-            pts = int(packet.pts * tb * 1000000) if packet.pts is not None else 0
-            dur = int(packet.duration * tb * 1000000) if packet.duration is not None else 0
+            pts = max(0, int(packet.pts * tb * 1000000)) if packet.pts is not None else 0
+            dur = max(0, int(packet.duration * tb * 1000000)) if packet.duration is not None else 0
             data = bytes(packet)
             chunks.append((is_key, pts, dur, data))
             
@@ -478,23 +479,99 @@ def serialize_bvs(videos: list) -> bytes:
     return bytes(buf)
 
 # ═══════════════════════════════════════════════════════════════
+#  BAS Serializer
+# ═══════════════════════════════════════════════════════════════
+
+BAS_MAGIC = b'BAS\x01'
+
+def _get_audio_codec_string(stream):
+    name = stream.codec_context.name
+    if name == 'aac':
+        return "mp4a.40.2"
+    elif name == 'opus':
+        return "opus"
+    elif name == 'mp3':
+        return "mp3"
+    elif name == 'flac':
+        return "flac"
+    return name
+
+def serialize_bas(audios: list) -> bytes:
+    try:
+        import av
+        import io
+    except ImportError:
+        return b''
+        
+    if not audios:
+        return b''
+        
+    buf = bytearray(BAS_MAGIC)
+    buf += _u32(len(audios))
+    
+    for aud in audios:
+        if 'bytes' in aud:
+            container = av.open(io.BytesIO(aud['bytes']))
+        else:
+            container = av.open(aud['path'])
+            
+        stream = next((s for s in container.streams if s.type == 'audio'), None)
+        if not stream:
+            continue
+            
+        codec_str = _get_audio_codec_string(stream).encode('ascii')
+        sample_rate = stream.codec_context.sample_rate
+        channels = stream.codec_context.channels
+        
+        chunks = []
+        for packet in container.demux(stream):
+            if packet.dts is None:
+                continue
+            is_key = packet.is_keyframe
+            tb = packet.time_base
+            pts = max(0, int(packet.pts * tb * 1000000)) if packet.pts is not None else 0
+            dur = max(0, int(packet.duration * tb * 1000000)) if packet.duration is not None else 0
+            data = bytes(packet)
+            chunks.append((is_key, pts, dur, data))
+            
+        buf += _u32(aud['id'])
+        buf.append(len(codec_str))
+        buf += codec_str
+        buf += _u32(sample_rate)
+        buf.append(channels)
+        buf += _u32(len(chunks))
+        
+        for is_key, pts, dur, data in chunks:
+            buf.append(1 if is_key else 0)
+            buf += struct.pack('>Q', pts)
+            buf += _u32(dur)
+            buf += _u32(len(data))
+            buf += data
+            
+    return bytes(buf)
+
+# ═══════════════════════════════════════════════════════════════
 #  BWEB Container
 # ═══════════════════════════════════════════════════════════════
 
-def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes, bib: bytes = b'', bvs: bytes = b'', compress: bool = False) -> bytes:
+def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes, bib: bytes = b'', bvs: bytes = b'', bas: bytes = b'', compress: bool = False) -> bytes:
     import zlib
     buf = bytearray(BWEB_MAGIC)
     buf.append(BWEB_VERSION)
     
-    sections = [(SEC_BML, bml), (SEC_BDT, bdt), (SEC_BLB, blb)]
-    if bib: sections.append((SEC_BIB, bib))
-    if bvs: sections.append((SEC_BVS, bvs))
+    sections = [
+        (SEC_BML, bml, compress),
+        (SEC_BDT, bdt, False),
+        (SEC_BLB, blb, compress)
+    ]
+    if bib: sections.append((SEC_BIB, bib, False))
+    if bvs: sections.append((SEC_BVS, bvs, False))
+    if bas: sections.append((SEC_BAS, bas, False))
     
     buf.append(len(sections))
 
-    compressible = {SEC_BML, SEC_BLB}
-    for sec_type, data in sections:
-        if compress and sec_type in compressible:
+    for sec_type, data, can_compress in sections:
+        if compress and can_compress:
             compressed = zlib.compress(data, level=6)
             if len(compressed) < len(data):
                 buf.append(sec_type | 0x80)
@@ -547,28 +624,43 @@ def html_file_to_bweb(html_path: str, output_path: str = None, compress: bool = 
     dom = html_to_dom(html)
     
     videos = []
+    audios = []
     vid_id = 0
+    aud_id = 0
     def process_node(node):
-        nonlocal vid_id
+        nonlocal vid_id, aud_id
         if node.tag == 'video':
             src_attr = node.attrs.get('src')
             if src_attr:
                 vid_path = src.parent / src_attr
                 if vid_path.exists():
                     videos.append({'id': vid_id, 'path': str(vid_path)})
+                    audios.append({'id': aud_id, 'path': str(vid_path)})
                     node.tag = 'canvas'
                     node.attrs['data-bind-video'] = str(vid_id)
+                    node.attrs['data-bind-audio'] = str(aud_id)
                     vid_id += 1
+                    aud_id += 1
+        elif node.tag == 'audio':
+            src_attr = node.attrs.get('src')
+            if src_attr:
+                aud_path = src.parent / src_attr
+                if aud_path.exists():
+                    audios.append({'id': aud_id, 'path': str(aud_path)})
+                    node.tag = 'canvas'
+                    node.attrs['data-bind-audio'] = str(aud_id)
+                    aud_id += 1
         for child in node.children:
             process_node(child)
             
     process_node(dom)
     bvs_data = serialize_bvs(videos) if videos else b''
+    bas_data = serialize_bas(audios) if audios else b''
     
     bml = serialize_bml(dom)
     bdt = serialize_bdt(dom)
     blb = serialize_blb(dom)
-    bweb = bundle_bweb(bml, bdt, blb, bib=b'', bvs=bvs_data, compress=compress)
+    bweb = bundle_bweb(bml, bdt, blb, bib=b'', bvs=bvs_data, bas=bas_data, compress=compress)
     
     out.write_bytes(bweb)
     return str(out)
@@ -590,6 +682,9 @@ def bweb_stats(data: bytes) -> dict:
     
     bvs = sections.get(SEC_BVS, b'')
     bvs_videos = struct.unpack('>I', bvs[4:8])[0] if len(bvs) >= 8 else 0
+    
+    bas = sections.get(SEC_BAS, b'')
+    bas_audios = struct.unpack('>I', bas[4:8])[0] if len(bas) >= 8 else 0
 
     return {
         'total_bytes': len(data),
@@ -598,10 +693,12 @@ def bweb_stats(data: bytes) -> dict:
         'blb_bytes': len(blb),
         'bib_bytes': len(bib),
         'bvs_bytes': len(bvs),
+        'bas_bytes': len(bas),
         'bdt_nodes': bdt_nodes,
         'blb_blocks': blb_blocks,
         'bib_images': bib_images,
         'bvs_videos': bvs_videos,
+        'bas_audios': bas_audios,
     }
 
 # ═══════════════════════════════════════════════════════════════
@@ -625,4 +722,4 @@ if __name__ == '__main__':
         stats = bweb_stats(data)
         print(f'✅ {out} ({stats["total_bytes"]:,} Bytes)')
         print(f'   BML: {stats["bml_bytes"]:,} B | BDT: {stats["bdt_bytes"]:,} B ({stats["bdt_nodes"]} Nodes) | BLB: {stats["blb_bytes"]:,} B ({stats["blb_blocks"]} Blöcke)')
-        print(f'   BIB: {stats["bib_bytes"]:,} B ({stats["bib_images"]} Images) | BVS: {stats["bvs_bytes"]:,} B ({stats["bvs_videos"]} Videos)')
+        print(f'   BIB: {stats["bib_bytes"]:,} B ({stats["bib_images"]} Images) | BVS: {stats["bvs_bytes"]:,} B ({stats["bvs_videos"]} Videos) | BAS: {stats["bas_bytes"]:,} B ({stats["bas_audios"]} Audios)')

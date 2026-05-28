@@ -116,6 +116,35 @@ def test_bvs_roundtrip():
     assert chunk_count > 0
     print(f"  ✓ bvs_roundtrip: 1 video, {w}x{h}, {codec}, {chunk_count} chunks")
 
+def test_bas_roundtrip():
+    import os
+    if not os.path.exists('dummy.mp4'):
+        print("  ! bas_roundtrip: skipped (no dummy.mp4)")
+        return
+    audios = [{'id': 8, 'path': 'dummy.mp4'}]
+    bas = bf.serialize_bas(audios)
+    if not bas:
+        print("  ! bas_roundtrip: skipped (no av module or no audio track)")
+        return
+        
+    assert bas[:3] == b'BAS', f"BAS magic: {bas[:3]}"
+    aud_count = struct.unpack('>I', bas[4:8])[0]
+    assert aud_count == 1
+    
+    aud_id = struct.unpack('>I', bas[8:12])[0]
+    assert aud_id == 8
+    
+    codec_len = bas[12]
+    codec = bas[13:13+codec_len].decode('ascii')
+    offset = 13 + codec_len
+    
+    sample_rate = struct.unpack('>I', bas[offset:offset+4])[0]
+    channels = bas[offset+4]
+    chunk_count = struct.unpack('>I', bas[offset+5:offset+9])[0]
+    
+    assert chunk_count > 0
+    print(f"  ✓ bas_roundtrip: 1 audio, {codec}, {sample_rate}Hz, {channels}ch, {chunk_count} chunks")
+
 def test_parse_css_value():
     assert bf._parse_css_value('16px') == 160
     assert bf._parse_css_value('1.5rem') == 240
@@ -170,6 +199,7 @@ if __name__ == '__main__':
     test_bdt_parent_links()
     test_bib_roundtrip()
     test_bvs_roundtrip()
+    test_bas_roundtrip()
     test_parse_css_value()
     test_parse_color()
     test_negative_margins()
