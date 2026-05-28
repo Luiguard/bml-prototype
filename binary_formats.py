@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Binary Web Formats: BML, BDT, BLB, BWEB
+"""Binary Web Formats: BML, BDT, BLB, BIB, BVS, BAS, BWEB
 Benjamin Leimer – 2026 – Custom Attribution License
 
 Formate:
   BML  Binary Markup Language   – Inhalt (Tags, Attribute, Text)
   BDT  Binary DOM Tree          – Baumstruktur (Parent/Child/Sibling-Links)
   BLB  Binary Layout Blocks     – Layout/CSS (Box-Model, Flexbox, Farben)
-  BWEB Container                – Bündelt BML+BDT+BLB in eine Datei
+  BIB  Binary Image Blocks      – Rohe Pixeldaten (RGBA)
+  BVS  Binary Video Streams     – Demuxte I/P-Frames für WebCodecs
+  BAS  Binary Audio Streams     – Demuxte Audiopakete für WebAudio
+  BWEB Container                – Bündelt alle Sektionen in eine Datei
 """
 import struct, sys, json
 from pathlib import Path
@@ -64,6 +67,7 @@ ATTR = {
     'pattern':0x2F,'for':0x30,'tabindex':0x31,
     'content':0x32,'charset':0x33,'http-equiv':0x34,
     'lang':0x35,'dir':0x36,'hidden':0x37,
+    'data-bind-video':0x38,'data-bind-audio':0x39,
 }
 ATTR_REV = {v: k for k, v in ATTR.items()}
 
@@ -435,7 +439,9 @@ def serialize_bvs(videos: list) -> bytes:
         return b''
         
     buf = bytearray(BVS_MAGIC)
-    buf += _u32(len(videos))
+    count_offset = len(buf)
+    buf += _u32(0)
+    written = 0
     
     for vid in videos:
         if 'bytes' in vid:
@@ -446,6 +452,7 @@ def serialize_bvs(videos: list) -> bytes:
         stream = next((s for s in container.streams if s.type == 'video'), None)
         if not stream:
             continue
+        written += 1
             
         codec_str = _get_codec_string(stream).encode('ascii')
         width = stream.codec_context.width
@@ -475,7 +482,8 @@ def serialize_bvs(videos: list) -> bytes:
             buf += _u32(dur)
             buf += _u32(len(data))
             buf += data
-            
+    
+    struct.pack_into('>I', buf, count_offset, written)
     return bytes(buf)
 
 # ═══════════════════════════════════════════════════════════════
@@ -507,7 +515,9 @@ def serialize_bas(audios: list) -> bytes:
         return b''
         
     buf = bytearray(BAS_MAGIC)
-    buf += _u32(len(audios))
+    count_offset = len(buf)
+    buf += _u32(0)
+    written = 0
     
     for aud in audios:
         if 'bytes' in aud:
@@ -518,6 +528,7 @@ def serialize_bas(audios: list) -> bytes:
         stream = next((s for s in container.streams if s.type == 'audio'), None)
         if not stream:
             continue
+        written += 1
             
         codec_str = _get_audio_codec_string(stream).encode('ascii')
         sample_rate = stream.codec_context.sample_rate
@@ -547,7 +558,8 @@ def serialize_bas(audios: list) -> bytes:
             buf += _u32(dur)
             buf += _u32(len(data))
             buf += data
-            
+    
+    struct.pack_into('>I', buf, count_offset, written)
     return bytes(buf)
 
 # ═══════════════════════════════════════════════════════════════
@@ -609,12 +621,12 @@ def unbundle_bweb(data: bytes) -> dict:
 #  HTML → BWEB Pipeline
 # ═══════════════════════════════════════════════════════════════
 
-def html_to_bweb(html_str: str, bib: bytes = b'', bvs: bytes = b'', compress: bool = False) -> bytes:
+def html_to_bweb(html_str: str, bib: bytes = b'', bvs: bytes = b'', bas: bytes = b'', compress: bool = False) -> bytes:
     dom = html_to_dom(html_str)
     bml = serialize_bml(dom)
     bdt = serialize_bdt(dom)
     blb = serialize_blb(dom)
-    return bundle_bweb(bml, bdt, blb, bib=bib, bvs=bvs, compress=compress)
+    return bundle_bweb(bml, bdt, blb, bib=bib, bvs=bvs, bas=bas, compress=compress)
 
 
 def html_file_to_bweb(html_path: str, output_path: str = None, compress: bool = False) -> str:

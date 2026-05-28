@@ -28,7 +28,7 @@ The outer container wraps all sections into a single file.
 |--------|------|--------|-------------|----------------------|
 | 0      | 4    | ASCII  | `BWEB`      | Magic bytes          |
 | 4      | 1    | Uint8  | `0x01`      | Container version    |
-| 5      | 1    | Uint8  | 3–6         | Number of sections   |
+| 5      | 1    | Uint8  | 3–N         | Number of sections   |
 
 ### 2.2 Section Table (repeating)
 
@@ -48,8 +48,8 @@ Immediately following the header, each section is stored sequentially:
 | 2  | BDT  | `BDT\x01`| Binary DOM Tree                |
 | 3  | BLB  | `BLB\x01`| Binary Layout Blocks           |
 | 4  | BIB  | `BIB\x01`| Binary Image Blocks            |
-| 5  | BVS  | —        | Binary Video Streams (reserved)|
-| 6  | —    | —        | Reserved (Compression Metadata)|
+| 5  | BVS  | `BVS\x01`| Binary Video Streams           |
+| 6  | BAS  | `BAS\x01`| Binary Audio Streams           |
 
 MIME Type: `application/x-bweb`
 File Extension: `.bweb`
@@ -153,8 +153,10 @@ Tags `0x41`–`0xFD` are reserved for future extensions.
 | `0x21` | `data-bind`   | `0x35` | `lang`        |
 | `0x22` | `onclick`     | `0x36` | `dir`         |
 | `0x23` | `onsubmit`    | `0x37` | `hidden`      |
+|        |               | `0x38` | `data-bind-video` |
+|        |               | `0x39` | `data-bind-audio` |
 
-Attributes `0x38`–`0xFF` are reserved.
+Attributes `0x3A`–`0xFF` are reserved.
 
 ---
 
@@ -343,7 +345,7 @@ Optimierte Audiostreams für `WebCodecs AudioDecoder` und synchronisierte `Web A
 | 5+L    | 4    | Uint32 | Sample Rate (in Hz, z.B. 44100)                   |
 | 9+L    | 1    | Uint8  | Channel Count (z.B. 2 für Stereo)                 |
 | 10+L   | 4    | Uint32 | Chunk count (`C`)                                 |
-| var    | var  | —      | Array of `C` Chunks (identisch zu BVS-Chunks)     |
+| var    | var  | —      | Array of `C` Chunks (see 7.3 Chunk Record)        |
 
 Audio binding: `<canvas data-bind-audio="AUDIO_ID">` für synchronisierte Wiedergabe zusammen mit Video, oder auf verstecktem Canvas für Standalone-Audio.
 
@@ -357,6 +359,10 @@ Audio binding: `<canvas data-bind-audio="AUDIO_ID">` für synchronisierte Wieder
 - **Section version** (per magic, e.g., `BML\x02`): Incremented when that section's internal layout changes.
 - Parsers MUST reject versions they don't understand.
 - Unknown section type IDs SHOULD be silently skipped (forward compatibility).
+
+### 9.2 Extension
+
+New sections can be added with type IDs `7`–`127` without breaking existing parsers. Existing parsers skip unknown section types by reading their length and advancing the offset. Bit 7 (`0x80`) of the type ID is reserved for the compression flag.
 
 ---
 
