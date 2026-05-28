@@ -1,63 +1,46 @@
-const CACHE_NAME = 'bweb-cache-v1';
-const BWEB_ASSETS = [
+const CACHE_NAME = 'bweb-cache-v2';
+const STATIC_ASSETS = [
     '/',
     '/index.html',
-    '/converter.html',
-    '/server.py' // Just to illustrate caching, though server is backend
+    '/converter.html'
 ];
 
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-        .then(cache => cache.addAll(BWEB_ASSETS))
+        .then(cache => cache.addAll(STATIC_ASSETS))
     );
     self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
+        caches.keys().then(names =>
+            Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
+        )
     );
     self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
-    
-    // Cache-First strategy for .bweb files
+
     if (url.pathname.endsWith('.bweb') || url.pathname.endsWith('.bml')) {
         event.respondWith(
-            caches.match(event.request).then(cachedResponse => {
-                if (cachedResponse) {
-                    // Update cache in background (Stale-While-Revalidate pattern for binary files)
-                    fetch(event.request).then(networkResponse => {
-                        caches.open(CACHE_NAME).then(cache => {
-                            cache.put(event.request, networkResponse.clone());
-                        });
-                    }).catch(() => {});
-                    return cachedResponse;
-                }
-                return fetch(event.request).then(networkResponse => {
-                    const cloned = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, cloned);
-                    });
-                    return networkResponse;
-                });
+            caches.match(event.request).then(cached => {
+                const fetchPromise = fetch(event.request).then(resp => {
+                    if (resp.ok) {
+                        const clone = resp.clone();
+                        caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+                    }
+                    return resp;
+                }).catch(() => cached);
+                return cached || fetchPromise;
             })
         );
         return;
     }
 
-    // Default Network-First for other assets
     event.respondWith(
         fetch(event.request).catch(() => caches.match(event.request))
     );

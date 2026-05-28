@@ -1,0 +1,22 @@
+# BWEB MIME Types
+AddType application/x-bweb .bweb
+AddType application/x-bml .bml
+
+# CORS für lokale NVMe-KI Requests
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type"
+</IfModule>
+
+# Kompression für HTML/CSS/JS (BWEB hat eigene Kompression)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript
+</IfModule>
+
+# Cache für Binary Assets (1 Jahr)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType application/x-bweb "access plus 1 year"
+    ExpiresByType application/x-bml "access plus 1 year"
+</IfModule>

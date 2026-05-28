@@ -10,14 +10,12 @@ BWEB is an experimental, ultra-fast binary web format designed to replace raw HT
 - **BDT (Binary DOM Tree) - `SEC 2`**: Replaces nested HTML structures with a flat, O(1) integer-pointer-based node hierarchy (11 bytes per node).
 - **BLB (Binary Layout Blocks) - `SEC 3`**: Compresses CSS styling. Every layout instruction uses a fixed 60-byte block.
 - **BIB (Binary Image Blocks) - `SEC 4`**: Natively streams pixel arrays (RGBA / WebP Bitstream) directly into `<canvas data-bind="ID">` elements using `ctx.putImageData`, skipping base64 overhead completely.
-- **BVS (Binary Video Streams) - `SEC 5`**: Interleaved chunks of I/P-Frames and Audio via the WebCodecs API, removing heavy container metadata (like MP4 atoms).
+# BWEB (Binary Web) Prototyp
 
----
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-Custom-green.svg)
 
-## 🌐 Online BWEB Engine & Converter
-
-You don't need to run the server locally to convert your HTML sites into BWEB containers. 
-We provide a public **BWEB Landing Page & Converter Tool** accessible via the Mediclean-Pro infrastructure:
+BWEB ist ein experimentelles, **100% binäres Web-Format**. Es verabschiedet sich von textbasiertem HTML und CSS und packt den DOM-Baum (BML, BDT), das vorberechnete CSS-Layout (BLB) und die rohen Bildpixel (BIB) in ein einziges Binärpaket.
 
 👉 **[BWEB Architecture Landing Page](https://mediclean-pro.at/bweb-converter/)**
 👉 **[Open Online BWEB Converter Tool](https://mediclean-pro.at/bweb-converter/converter.html)**
@@ -26,26 +24,68 @@ We provide a public **BWEB Landing Page & Converter Tool** accessible via the Me
 
 ---
 
-## 🛠️ Local Usage
+## Architektur & Formate
 
-1. Start the BWEB Python Server:
-   ```bash
-   python3 server.py
-   ```
-2. Navigate to `http://127.0.0.1:8080` (Landing Page) or `http://127.0.0.1:8080/converter.html` (Tool).
-3. Use the BWEB Converter UI or the **AI Website Generator**.
-4. The frontend Polyfill intercepts the binary `.bweb` stream and instantly paints the DOM structure and Canvas graphics.
+BWEB ist ein Container-Format (Magic: `BWEB`), das 4 Sektionen bündelt:
+
+- **SEC 1: BML** (Binary Markup Language) — Struktur, Attribute, Text (UTF-8)
+- **SEC 2: BDT** (Binary DOM Tree) — Flache Node-Hierarchie mit Parent/Child/Sibling-Pointern (11 Bytes/Node)
+- **SEC 3: BLB** (Binary Layout Block) — Pre-computed CSS (60 Bytes/Node, fixed-point)
+- **SEC 4: BIB** (Binary Image Block) — Raw RGBA Pixeldaten (22 Bytes Header + Pixel)
+- *(SEC 6)* — Optionaler zlib-Deflate Layer für BML/BLB
+
+> 📖 **[Vollständige Byte-Level Spezifikation (SPEC.md)](SPEC.md)**
 
 ---
 
-## ⚖️ License & Attribution
+## Installation (CLI)
 
-Copyright (c) 2026 **Benjamin Leimer**. All rights reserved.
+BWEB bietet ein Node.js CLI-Tool, das den Python-Serializer ansteuert.
 
-This architecture and codebase are released under a **Custom Attribution License**.
+```bash
+# Optional: Global installieren
+npm link
 
-- **Individuals & Open-Source**: Free to use, modify, and distribute for non-commercial purposes.
-- **Corporations & Commercial Entities**: Free to deploy on the strict condition that **Benjamin Leimer** is credited prominently in the UI:
-  > **"Incorporates RAG-NVMe architecture designed by Benjamin Leimer."**
+# Oder direkt über Node
+node cli.js help
+```
+
+### CLI Befehle
+
+```bash
+# 1. Konvertierung (HTML -> BWEB)
+bweb convert input.html output.bweb
+
+# 2. Statistik (zeigt Byte-Größen pro Sektion)
+bweb stats output.bweb
+
+# 3. Validierung (prüft Magic-Bytes und Offsets)
+bweb validate output.bweb
+```
+
+---
+
+## Test Suite
+
+Eine vollständige Roundtrip-Testsuite für den Python-Serializer liegt unter `test/`.
+
+```bash
+# Setup
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt # falls vorhanden
+
+# Tests ausführen
+cd test
+python3 test_roundtrip.py
+python3 test_formats.py
+```
+
+---
+
+## Lizenz & Attribution
+
+Bitte die `LICENSE` Datei beachten. **Jede kommerzielle Nutzung erfordert dieses Zitat im UI/Doku:**
+> `"Incorporates RAG-NVMe architecture designed by Benjamin Leimer."`**
 
 *For more information on the RAG-NVMe integration, visit the respective repository.*

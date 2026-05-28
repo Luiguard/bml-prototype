@@ -407,7 +407,8 @@ def serialize_bib(images: list) -> bytes:
 #  BWEB Container
 # ═══════════════════════════════════════════════════════════════
 
-def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes, bib: bytes = b'', bvs: bytes = b'') -> bytes:
+def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes, bib: bytes = b'', bvs: bytes = b'', compress: bool = False) -> bytes:
+    import zlib
     buf = bytearray(BWEB_MAGIC)
     buf.append(BWEB_VERSION)
     
@@ -417,7 +418,15 @@ def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes, bib: bytes = b'', bvs: bytes
     
     buf.append(len(sections))
 
+    compressible = {SEC_BML, SEC_BLB}
     for sec_type, data in sections:
+        if compress and sec_type in compressible:
+            compressed = zlib.compress(data, level=6)
+            if len(compressed) < len(data):
+                buf.append(sec_type | 0x80)
+                buf += _u32(len(compressed))
+                buf += compressed
+                continue
         buf.append(sec_type)
         buf += _u32(len(data))
         buf += data
@@ -426,6 +435,7 @@ def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes, bib: bytes = b'', bvs: bytes
 
 
 def unbundle_bweb(data: bytes) -> dict:
+    import zlib
     if data[:4] != BWEB_MAGIC:
         raise ValueError('Ungültiges BWEB-Format')
     version = data[4]
@@ -433,22 +443,27 @@ def unbundle_bweb(data: bytes) -> dict:
     offset = 6
     sections = {}
     for _ in range(sec_count):
-        sec_type = data[offset]; offset += 1
+        raw_type = data[offset]; offset += 1
         sec_len = struct.unpack('>I', data[offset:offset+4])[0]; offset += 4
-        sections[sec_type] = data[offset:offset+sec_len]
+        payload = data[offset:offset+sec_len]
         offset += sec_len
+        is_compressed = bool(raw_type & 0x80)
+        sec_type = raw_type & 0x7F
+        if is_compressed:
+            payload = zlib.decompress(payload)
+        sections[sec_type] = payload
     return sections
 
 # ═══════════════════════════════════════════════════════════════
 #  HTML → BWEB Pipeline
 # ═══════════════════════════════════════════════════════════════
 
-def html_to_bweb(html_str: str, bib: bytes = b'', bvs: bytes = b'') -> bytes:
+def html_to_bweb(html_str: str, bib: bytes = b'', bvs: bytes = b'', compress: bool = False) -> bytes:
     dom = html_to_dom(html_str)
     bml = serialize_bml(dom)
     bdt = serialize_bdt(dom)
     blb = serialize_blb(dom)
-    return bundle_bweb(bml, bdt, blb, bib=bib, bvs=bvs)
+    return bundle_bweb(bml, bdt, blb, bib=bib, bvs=bvs, compress=compress)
 
 
 def html_file_to_bweb(html_path: str, output_path: str = None) -> str:
