@@ -195,10 +195,10 @@ Pre-computed CSS layout as fixed-size blocks. Eliminates CSS cascade computation
 | Offset | Size | Type   | Value        |
 |--------|------|--------|--------------|
 | 0      | 3    | ASCII  | `BLB`        |
-| 3      | 1    | Uint8  | `0x01` (v1)  |
+| 3      | 1    | Uint8  | `0x02` (v2)  |
 | 4      | 4    | Uint32 | Block count  |
 
-### 5.2 Layout Block (60 Bytes per node)
+### 5.2 Layout Block (96 Bytes per node)
 
 All dimensional values are stored as **fixed-point × 10** (e.g., `16px` → `160`).
 Special value `0xFFFF` = `auto`.
@@ -240,6 +240,27 @@ Percentage values use bit 15 as flag: `value | 0x8000` (e.g., `50%` → `500 | 0
 | 56     | 1    | Uint8  | overflow             | 0=visible,1=hidden,2=scroll,3=auto |
 | 57     | 1    | Uint8  | opacity              | 0–255 (255 = fully opaque)      |
 | 58     | 2    | Int16  | z-index              | −32768 to 32767 (0 = auto)      |
+| 60     | 1    | Uint8  | text-decoration      | 0=none,1=underline,2=line-through,3=overline |
+| 61     | 1    | Uint8  | cursor               | 0=default,1=pointer,2=text,3=move,4=not-allowed,5=grab,6=crosshair,7=wait,8=help |
+| 62     | 1    | Uint8  | white-space          | 0=normal,1=nowrap,2=pre,3=pre-wrap,4=pre-line |
+| 63     | 1    | Uint8  | visibility           | 0=visible,1=hidden,2=collapse   |
+| 64     | 2    | Uint16 | min-width            | ×10, 0xFFFF=none                |
+| 66     | 2    | Uint16 | max-width            | ×10, 0xFFFF=none                |
+| 68     | 2    | Uint16 | min-height           | ×10, 0xFFFF=none                |
+| 70     | 2    | Uint16 | max-height           | ×10, 0xFFFF=none                |
+| 72     | 2    | Uint16 | flex-grow            | ×100 (z.B. 1.0 → 100)           |
+| 74     | 2    | Uint16 | flex-shrink          | ×100                            |
+| 76     | 2    | Uint16 | flex-basis           | ×10, 0xFFFF=auto                |
+| 78     | 1    | Int8   | order                | -128 bis 127                    |
+| 79     | 1    | Uint8  | align-self           | 0=auto,1=flex-start,2=flex-end,3=center,4=stretch,5=baseline |
+| 80     | 4    | Uint32 | box-shadow-color     | RGBA packed                     |
+| 84     | 2    | Int16  | box-shadow-x         | ×10                             |
+| 86     | 2    | Int16  | box-shadow-y         | ×10                             |
+| 88     | 2    | Uint16 | box-shadow-blur      | ×10                             |
+| 90     | 2    | Uint16 | box-shadow-spread    | ×10                             |
+| 92     | 2    | Uint16 | font-family-id       | Matches BFS ID (0xFFFF=default) |
+| 94     | 1    | Uint8  | font-style           | 0=normal,1=italic,2=oblique     |
+| 95     | 1    | Uint8  | animation-id         | Matches BAM ID (0xFF=none)      |
 
 **Color Encoding** (Uint32 RGBA):
 ```
@@ -249,9 +270,34 @@ Bits 15–8:  Blue  (0–255)
 Bits 7–0:   Alpha (0–255, 255 = opaque)
 ```
 
+## 6. BCS — Binary Class Styles (Section 13)
+
+Introduced as a higher-efficiency alternative to BLB (Section 3). Instead of storing a 96-byte layout block for every single BDT node, BCS deduplicates blocks. Many DOM nodes share identical styles. BCS drastically reduces file size and network transmission by mapping node indices to a dictionary of unique 96-byte blocks.
+
+### 6.1 Section Header
+
+| Offset | Size | Type   | Value       |
+|--------|------|--------|-------------|
+| 0      | 3    | ASCII  | `BCS`       |
+| 3      | 1    | Uint8  | `0x01` (v1) |
+| 4      | 4    | Uint32 | Unique Block Count (`U`) |
+| 8      | 4    | Uint32 | Node Mapping Count (`N`) |
+
+### 6.2 Data Layout
+
+Following the header, the section contains two arrays sequentially:
+
+1. **Unique Blocks Array**: `U` contiguous blocks of 96 bytes each (identical to BLB v2 format).
+   - *Size:* `U * 96` bytes.
+2. **Node Mapping Array**: `N` indices mapping each sequential BDT Node to a Unique Block.
+   - *Size:* `N * 2` bytes (Array of `Uint16`).
+   - If Node `i` has Style ID `S`, then the block at index `S` from the Unique Blocks Array is applied to Node `i`.
+
+*Parser Note:* If a BWEB container provides a `BCS` section, modern parsers MUST use it for styling and MAY ignore the `BLB` section if present. When converting HTML to BWEB, it is highly recommended to ONLY include `BCS` to maximize CO2 savings.
+
 ---
 
-## 6. BIB — Binary Image Blocks (Section 4)
+## 7. Media and Asset Sections (Sections 4-12)
 
 Raw pixel data for images, rendered via Canvas API.
 
@@ -351,22 +397,238 @@ Audio binding: `<canvas data-bind-audio="AUDIO_ID">` für synchronisierte Wieder
 
 ---
 
-## 9. Versioning
+## 9. BFS — Binary Font Streams (Section 7)
 
-### 9.1 Rules
+Embedded font files (WOFF2/TTF) loaded via FontFace API.
+
+### 9.1 Section Header
+
+| Offset | Size | Type   | Value        |
+|--------|------|--------|--------------|
+| 0      | 3    | ASCII  | `BFS`        |
+| 3      | 1    | Uint8  | `0x01` (v1)  |
+| 4      | 4    | Uint32 | Font count   |
+
+### 9.2 Font Record
+
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 2    | Uint16 | Font ID (matches BLB `font-family-id`)         |
+| 2      | 1    | Uint8  | Family Name Length (N)                         |
+| 3      | N    | UTF-8  | Family Name (e.g., "Open Sans")                |
+| 3+N    | 2    | Uint16 | Font Weight (e.g., 400, 700)                   |
+| 5+N    | 1    | Uint8  | Font Style (0=normal,1=italic,2=oblique)       |
+| 6+N    | 1    | Uint8  | Format (0=woff2, 1=woff, 2=ttf, 3=otf)         |
+| 7+N    | 4    | Uint32 | Data Length (D)                                |
+| 11+N   | D    | Bytes  | Raw Font binary data                           |
+
+---
+
+## 10. BAM — Binary Animation Map (Section 8)
+
+CSS Animations and Transitions.
+
+### 10.1 Section Header
+
+| Offset | Size | Type   | Value        |
+|--------|------|--------|--------------|
+| 0      | 3    | ASCII  | `BAM`        |
+| 3      | 1    | Uint8  | `0x01` (v1)  |
+| 4      | 4    | Uint32 | Anim count   |
+
+### 10.2 Animation Record
+
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 1    | Uint8  | Anim ID (matches BLB `animation-id`)           |
+| 1      | 1    | Uint8  | Type (0=transition, 1=keyframes)               |
+| 2      | 1    | Uint8  | Name Length (N)                                |
+| 3      | N    | ASCII  | Name (e.g., "fade-in")                         |
+| 3+N    | 4    | Uint32 | Duration (ms)                                  |
+| 7+N    | 4    | Uint32 | Delay (ms)                                     |
+| 11+N   | 1    | Uint8  | Timing (0=ease,1=linear,2=ease-in,3=ease-out,4=ease-in-out) |
+| 12+N   | 2    | Uint16 | Iterations (0xFFFF=infinite)                   |
+| 14+N   | 1    | Uint8  | Direction (0=normal,1=reverse,2=alternate)     |
+| 15+N   | 1    | Uint8  | Fill Mode (0=none,1=forwards,2=backwards,3=both) |
+| 16+N   | 2    | Uint16 | Keyframe Count (K)                             |
+| 18+N   | var  | —      | Array of K Keyframes                           |
+
+### 10.3 Keyframe Record
+
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 1    | Uint8  | Percentage (0–100)                             |
+| 1      | 1    | Uint8  | Property Count (P)                             |
+| 2      | var  | —      | Array of P Properties                          |
+
+### 10.4 Property Record
+
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 1    | Uint8  | Property ID (e.g., 1=translateX, 16=opacity)   |
+| 1      | 2    | Uint16 | Value Length (V)                               |
+| 3      | V    | UTF-8  | Value (e.g., "100px", "0")                     |
+
+---
+
+## 11. BRS — Binary Responsive Specs (Section 9)
+
+Media Queries and conditional layout overrides.
+
+### 11.1 Section Header
+
+| Offset | Size | Type   | Value        |
+|--------|------|--------|--------------|
+| 0      | 3    | ASCII  | `BRS`        |
+| 3      | 1    | Uint8  | `0x01` (v1)  |
+| 4      | 4    | Uint32 | Query count  |
+
+### 11.2 Query Record
+
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 1    | Uint8  | Query Length (Q)                               |
+| 1      | Q    | ASCII  | Query String (e.g., "(max-width: 600px)")      |
+| 1+Q    | 4    | Uint32 | Block count (B)                                |
+| 5+Q    | B*96 | Bytes  | Array of `B` BLB v2 blocks (96 bytes each)     |
+
+---
+
+## 12. BSG — Binary SVG Graphics (Section 10)
+
+Vector graphics parsed into a binary path format and rendered via `CanvasRenderingContext2D` or `<svg>`.
+
+### 12.1 Section Header
+
+| Offset | Size | Type   | Value        |
+|--------|------|--------|--------------|
+| 0      | 3    | ASCII  | `BSG`        |
+| 3      | 1    | Uint8  | `0x01` (v1)  |
+| 4      | 4    | Uint32 | Graphic count|
+
+### 12.2 Graphic Record
+
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 4    | Uint32 | Graphic ID (binds to `<canvas data-bind-svg="ID">`) |
+| 4      | 2    | Uint16 | Canvas Width                                   |
+| 6      | 2    | Uint16 | Canvas Height                                  |
+| 8      | 2    | Uint16 | Path Count (P)                                 |
+| 10     | var  | —      | Array of P Path Records                        |
+
+### 12.3 Path Record
+
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 4    | Uint32 | Fill Color (RGBA)                              |
+| 4      | 4    | Uint32 | Stroke Color (RGBA)                            |
+| 8      | 2    | Uint16 | Stroke Width (px * 10)                         |
+| 10     | 4    | Uint32 | Data Length (D)                                |
+| 14     | D    | ASCII  | SVG Path Data (e.g., "M10 10 L90 90 Z")        |
+
+## 13. BJS — Binary JavaScript Source (Section 11)
+
+JavaScript payload for interactivity.
+
+### 13.1 Section Header
+
+| Offset | Size | Type   | Value        |
+|--------|------|--------|--------------|
+| 0      | 3    | ASCII  | `BJS`        |
+| 3      | 1    | Uint8  | `0x01` (v1)  |
+| 4      | 4    | Uint32 | Script count |
+
+### 13.2 Script Record
+
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 4    | Uint32 | Script ID (binds to `<script data-bind-js="ID">`) |
+| 4      | 4    | Uint32 | Data Length (D)                                |
+| 8      | D    | UTF-8  | JS Source Code                                 |
+
+---
+
+## 14. BPR — Binary Page Routes (Section 12)
+
+Client-side router paths mapped to BDT nodes.
+### 14.1 Section Header
+
+| Offset | Size | Type   | Value        |
+|--------|------|--------|--------------|
+| 0      | 3    | ASCII  | `BPR`        |
+| 3      | 1    | Uint8  | `0x01` (v1)  |
+| 4      | 4    | Uint32 | Route count  |
+
+### 14.2 Route Record
+
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 2    | Uint16 | Route ID                                       |
+| 2      | 1    | Uint8  | Path Length (P)                                |
+| 3      | P    | ASCII  | Route Path (e.g., "/about")                    |
+| 3+P    | 2    | Uint16 | Target BDT Node ID (displayed when active)     |
+
+---
+
+## 15. BWA — Binary WebAssembly (Section 14)
+
+Embeds compiled WebAssembly bytecode directly within the BWEB container. Allows high-performance computing without separate network requests.
+
+### 15.1 Section Header
+| Offset | Size | Type   | Value       |
+|--------|------|--------|-------------|
+| 0      | 3    | ASCII  | `BWA`       |
+| 3      | 1    | Uint8  | `0x01` (v1) |
+| 4      | 1    | Uint8  | Module Count|
+
+### 15.2 Module Record
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 1    | Uint8  | Module ID                                      |
+| 1      | 1    | Uint8  | Name Length (`L`)                              |
+| 2      | L    | ASCII  | Module Name                                    |
+| 2+L    | 4    | Uint32 | Bytecode Length (`C`)                          |
+| 6+L    | C    | Bytes  | WASM Bytecode                                  |
+
+---
+
+## 16. B3D — Binary 3D Shaders (Section 15)
+
+Embeds WebGL/WebGPU shader source code for instant 3D rendering.
+
+### 16.1 Section Header
+| Offset | Size | Type   | Value       |
+|--------|------|--------|-------------|
+| 0      | 3    | ASCII  | `B3D`       |
+| 3      | 1    | Uint8  | `0x01` (v1) |
+| 4      | 1    | Uint8  | Shader Count|
+
+### 16.2 Shader Record
+| Offset | Size | Type   | Description                                    |
+|--------|------|--------|------------------------------------------------|
+| 0      | 1    | Uint8  | Shader ID                                      |
+| 1      | 1    | Uint8  | Type (0=Vertex, 1=Fragment, 2=Compute)         |
+| 2      | 4    | Uint32 | Data Length (`D`)                              |
+| 6      | D    | Bytes  | Shader Source (UTF-8 GLSL)                     |
+
+---
+
+## 17. Versioning
+
+### 17.1 Rules
 
 - **Container version** (`BWEB[version]`): Incremented when the section table format changes.
 - **Section version** (per magic, e.g., `BML\x02`): Incremented when that section's internal layout changes.
 - Parsers MUST reject versions they don't understand.
 - Unknown section type IDs SHOULD be silently skipped (forward compatibility).
 
-### 9.2 Extension
+### 17.2 Extension
 
 New sections can be added with type IDs `7`–`127` without breaking existing parsers. Existing parsers skip unknown section types by reading their length and advancing the offset. Bit 7 (`0x80`) of the type ID is reserved for the compression flag.
 
 ---
 
-## 10. Security
+## 18. Security
 
 - BML text content MUST be treated as plain text, never as HTML.
 - `onclick`, `onsubmit` attributes (`0x22`, `0x23`) MUST be sanitized or ignored by security-conscious renderers.
@@ -375,12 +637,20 @@ New sections can be added with type IDs `7`–`127` without breaking existing pa
 
 ---
 
-## 11. MIME Types
+## 19. MIME Types
 
 | Extension | MIME Type            |
 |-----------|----------------------|
 | `.bweb`   | `application/x-bweb` |
 | `.bml`    | `application/x-bml`  |
+
+---
+
+## 20. Attribution
+
+Every commercial usage of BWEB or its parsers must include the following attribution string in their documentation or about page:
+
+> "Incorporates RAG-NVMe architecture designed by Benjamin Leimer."
 
 ---
 

@@ -251,17 +251,19 @@
 
             <div class="panel" style="margin-top:1rem; border-color: var(--accent);">
                 <div class="panel-title" style="color: var(--accent);">🤖 AI Website Generator</div>
-                <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
-                    <select id="aiBackendSelect" class="html-input" style="min-height:30px; margin-top:0; padding: 0.4rem; flex: 1;">
-                        <option value="nvme">Lokale NVMe-KI (http://127.0.0.1:8090)</option>
-                        <option value="gemini">Google Gemini API (Key benötigt)</option>
-                    </select>
-                    <input type="password" id="geminiApiKey" class="html-input" style="min-height:30px; margin-top:0; font-family: sans-serif; flex: 1; display:none;" placeholder="Dein Gemini API-Key">
-                </div>
-                <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
-                <div class="btn-row">
-                    <button class="btn btn-primary" id="btnGenerate">Website Generieren (BWEB)</button>
-                </div>
+                <form onsubmit="event.preventDefault();" style="margin:0; padding:0;">
+                    <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
+                        <select id="aiBackendSelect" class="html-input" style="min-height:30px; margin-top:0; padding: 0.4rem; flex: 1;">
+                            <option value="nvme">Lokale NVMe-KI (http://127.0.0.1:8090)</option>
+                            <option value="gemini">Google Gemini API (Key benötigt)</option>
+                        </select>
+                        <input type="password" id="geminiApiKey" class="html-input" autocomplete="off" style="min-height:30px; margin-top:0; font-family: sans-serif; flex: 1; display:none;" placeholder="Dein Gemini API-Key">
+                    </div>
+                    <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
+                    <div class="btn-row">
+                        <button type="button" class="btn btn-primary" id="btnGenerate">Website Generieren (BWEB)</button>
+                    </div>
+                </form>
             </div>
 
             <div class="panel" id="treePanel" style="margin-top:1rem; display:none">
@@ -293,7 +295,8 @@ const FLEX_DIR=['row','column','row-reverse','column-reverse'];
 const JUSTIFY=['flex-start','flex-end','center','space-between','space-around','space-evenly'];
 const ALIGN_ITEMS=['flex-start','flex-end','center','stretch','baseline'];
 const OVERFLOW=['visible','hidden','scroll','auto'];
-const BLB_BLOCK_SIZE=60;
+const BLB_BLOCK_SIZE=96;
+const BLB_BLOCK_SIZE_V1=60;
 
 class BMLParser{
     constructor(buf,offset=0){this.v=new DataView(buf);this.d=new TextDecoder('utf-8');this.o=offset}
@@ -342,9 +345,10 @@ class BDTParser{
 }
 
 class BLBParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    constructor(buf,offset=0,version=2){this.v=new DataView(buf);this.o=offset;this.ver=version}
     parse(){
         const count=this.v.getUint32(this.o);this.o+=4;
+        const bs=this.ver>=2?BLB_BLOCK_SIZE:BLB_BLOCK_SIZE_V1;
         const blocks=[];
         for(let i=0;i<count;i++){
             const o=this.o;
@@ -373,39 +377,266 @@ class BLBParser{
             const overflow=this.v.getUint8(o+56);
             const opacity=this.v.getUint8(o+57);
             const zIndex=this.v.getInt16(o+58);
-            this.o+=BLB_BLOCK_SIZE;
+            let ext={};
+            if(this.ver>=2){
+                ext.textDecoration=this.v.getUint8(o+60);
+                ext.cursor=this.v.getUint8(o+61);
+                ext.whiteSpace=this.v.getUint8(o+62);
+                ext.visibility=this.v.getUint8(o+63);
+                ext.minWidth=this.v.getUint16(o+64);
+                ext.maxWidth=this.v.getUint16(o+66);
+                ext.minHeight=this.v.getUint16(o+68);
+                ext.maxHeight=this.v.getUint16(o+70);
+                ext.flexGrow=this.v.getUint16(o+72);
+                ext.flexShrink=this.v.getUint16(o+74);
+                ext.flexBasis=this.v.getUint16(o+76);
+                ext.order=this.v.getInt8(o+78);
+                ext.alignSelf=this.v.getUint8(o+79);
+                ext.shadowColor=this.v.getUint32(o+80);
+                ext.shadowX=this.v.getInt16(o+84);
+                ext.shadowY=this.v.getInt16(o+86);
+                ext.shadowBlur=this.v.getUint16(o+88);
+                ext.shadowSpread=this.v.getUint16(o+90);
+                ext.fontFamilyId=this.v.getUint16(o+92);
+                ext.fontStyle=this.v.getUint8(o+94);
+                ext.animationId=this.v.getUint8(o+95);
+            }
+            this.o+=bs;
             blocks.push({nid,display,position,boxSizing,width,height,
                 margin:{t:mt,r:mr,b:mb,l:ml},padding:{t:pt,r:pr,b:pb,l:pl},
                 borderWidth:{t:btw,r:brw,b:bbw,l:blw},borderColor,bgColor,color,
                 fontSize,fontWeight,lineHeight,textAlign,flexDir,flexWrap,
-                justifyContent,alignItems,gap,borderRadius,overflow,opacity,zIndex});
+                justifyContent,alignItems,gap,borderRadius,overflow,opacity,zIndex,...ext});
         }
         return blocks;
     }
 }
 
-class BIBParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+class BCSParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;}
+    parse(){
+        const blockCount=this.v.getUint32(this.o);this.o+=4;
+        const mapCount=this.v.getUint32(this.o);this.o+=4;
+        
+        const uniqueBlocks = [];
+        const bs = 96; 
+        
+        for(let i=0;i<blockCount;i++){
+            const o=this.o;
+            const nid=this.v.getUint16(o);
+            const display=this.v.getUint8(o+2);
+            const position=this.v.getUint8(o+3);
+            const boxSizing=this.v.getUint8(o+4);
+            const width=this.v.getUint16(o+5);
+            const height=this.v.getUint16(o+7);
+            const mt=this.v.getInt16(o+9),mr=this.v.getInt16(o+11),mb=this.v.getInt16(o+13),ml=this.v.getInt16(o+15);
+            const pt=this.v.getUint16(o+17),pr=this.v.getUint16(o+19),pb=this.v.getUint16(o+21),pl=this.v.getUint16(o+23);
+            const btw=this.v.getUint8(o+25),brw=this.v.getUint8(o+26),bbw=this.v.getUint8(o+27),blw=this.v.getUint8(o+28);
+            const borderColor=this.v.getUint32(o+29);
+            const bgColor=this.v.getUint32(o+33);
+            const color=this.v.getUint32(o+37);
+            const fontSize=this.v.getUint16(o+41);
+            const fontWeight=this.v.getUint16(o+43);
+            const lineHeight=this.v.getUint16(o+45);
+            const textAlign=this.v.getUint8(o+47);
+            const flexDir=this.v.getUint8(o+48);
+            const flexWrap=this.v.getUint8(o+49);
+            const justifyContent=this.v.getUint8(o+50);
+            const alignItems=this.v.getUint8(o+51);
+            const gap=this.v.getUint16(o+52);
+            const borderRadius=this.v.getUint16(o+54);
+            const overflow=this.v.getUint8(o+56);
+            const opacity=this.v.getUint8(o+57);
+            const zIndex=this.v.getInt16(o+58);
+            let ext={};
+            ext.textDecoration=this.v.getUint8(o+60);
+            ext.cursor=this.v.getUint8(o+61);
+            ext.minWidth=this.v.getUint16(o+62);
+            ext.maxWidth=this.v.getUint16(o+64);
+            ext.minHeight=this.v.getUint16(o+66);
+            ext.maxHeight=this.v.getUint16(o+68);
+            ext.flexGrow=this.v.getUint16(o+70)/100;
+            ext.flexShrink=this.v.getUint16(o+72)/100;
+            ext.boxShadowX=this.v.getInt16(o+74);
+            ext.boxShadowY=this.v.getInt16(o+76);
+            ext.boxShadowBlur=this.v.getUint16(o+78);
+            ext.boxShadowSpread=this.v.getInt16(o+80);
+            ext.boxShadowColor=this.v.getUint32(o+82);
+            ext.fontStyle=this.v.getUint8(o+86);
+            
+            uniqueBlocks.push({nid,display,position,boxSizing,width,height,mt,mr,mb,ml,pt,pr,pb,pl,btw,brw,bbw,blw,borderColor,bgColor,color,fontSize,fontWeight,lineHeight,textAlign,flexDir,flexWrap,justifyContent,alignItems,gap,borderRadius,overflow,opacity,zIndex,ext});
+            this.o += bs;
+        }
+        
+        const mappedBlocks = [];
+        for(let i=0;i<mapCount;i++){
+            const sid = this.v.getUint16(this.o); this.o+=2;
+            const b = uniqueBlocks[sid];
+            mappedBlocks.push({...b, nid: i});
+        }
+        
+        return mappedBlocks;
+    }
+}
+
+class BRSParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
     parse(){
         const count=this.v.getUint32(this.o);this.o+=4;
-        const images={};
+        const queries=[];
+        const td=new TextDecoder('ascii');
+        for(let i=0;i<count;i++){
+            const qLen=this.u8[this.o++];
+            const query=td.decode(this.u8.slice(this.o,this.o+qLen));
+            this.o+=qLen;
+            const bCount=this.v.getUint32(this.o);
+            const blbParser = new BLBParser(this.v.buffer, this.o, 2);
+            const blocks = blbParser.parse();
+            this.o = blbParser.o;
+            queries.push({query, blocks});
+        }
+        return queries;
+    }
+}
+
+class BSGParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const graphics=[];
+        const td=new TextDecoder('ascii');
         for(let i=0;i<count;i++){
             const id=this.v.getUint32(this.o);this.o+=4;
-            const w=this.v.getUint16(this.o);this.o+=2;
-            const h=this.v.getUint16(this.o);this.o+=2;
-            const cs=this.v.getUint8(this.o++);
-            const comp=this.v.getUint8(this.o++);
-            this.o+=6; // padding
-            
-            const blockId=this.v.getUint16(this.o);this.o+=2;
-            const dataLen=this.v.getUint32(this.o);this.o+=4;
-            
-            const pxData=new Uint8ClampedArray(this.v.buffer,this.o,dataLen);
-            this.o+=dataLen;
-            
-            images[id]={w,h,data:pxData};
+            const width=this.v.getUint16(this.o);this.o+=2;
+            const height=this.v.getUint16(this.o);this.o+=2;
+            const pCount=this.v.getUint16(this.o);this.o+=2;
+            const paths=[];
+            for(let j=0;j<pCount;j++){
+                const fill=this.v.getUint32(this.o);this.o+=4;
+                const stroke=this.v.getUint32(this.o);this.o+=4;
+                const strokeWidth=this.v.getUint16(this.o);this.o+=2;
+                const dLen=this.v.getUint32(this.o);this.o+=4;
+                const d=td.decode(this.u8.slice(this.o,this.o+dLen));
+                this.o+=dLen;
+                paths.push({fill,stroke,strokeWidth,d});
+            }
+            graphics.push({id,width,height,paths});
         }
-        return images;
+        return graphics;
+    }
+}
+
+class BJSParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const scripts=[];
+        const td=new TextDecoder('utf-8');
+        for(let i=0;i<count;i++){
+            const id=this.v.getUint32(this.o);this.o+=4;
+            const cLen=this.v.getUint32(this.o);this.o+=4;
+            const content=td.decode(this.u8.slice(this.o,this.o+cLen));
+            this.o+=cLen;
+            scripts.push({id,content});
+        }
+        return scripts;
+    }
+}
+
+class BPRParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const routes=[];
+        const td=new TextDecoder('ascii');
+        for(let i=0;i<count;i++){
+            const id=this.v.getUint16(this.o);this.o+=2;
+            const pLen=this.u8[this.o++];
+            const path=td.decode(this.u8.slice(this.o,this.o+pLen));
+            this.o+=pLen;
+            const nodeId=this.v.getUint16(this.o);this.o+=2;
+            routes.push({id,path,nodeId});
+        }
+        return routes;
+    }
+}
+
+class BWAParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
+    parse(){
+        const count=this.u8[this.o++];
+        const wasms=[];
+        const td=new TextDecoder('ascii');
+        for(let i=0;i<count;i++){
+            const id=this.u8[this.o++];
+            const nameLen=this.u8[this.o++];
+            const name=td.decode(this.u8.slice(this.o,this.o+nameLen));
+            this.o+=nameLen;
+            const dataLen=this.v.getUint32(this.o);this.o+=4;
+            const data=this.u8.slice(this.o,this.o+dataLen);
+            this.o+=dataLen;
+            wasms.push({id,name,data});
+        }
+        return wasms;
+    }
+}
+
+class B3DParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
+    parse(){
+        const count=this.u8[this.o++];
+        const shaders=[];
+        const td=new TextDecoder('utf-8');
+        for(let i=0;i<count;i++){
+            const id=this.u8[this.o++];
+            const type=this.u8[this.o++];
+            const dataLen=this.v.getUint32(this.o);this.o+=4;
+            const data=td.decode(this.u8.slice(this.o,this.o+dataLen));
+            this.o+=dataLen;
+            shaders.push({id,type,data});
+        }
+        return shaders;
+    }
+}
+
+class BAMParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const anims={};
+        const td=new TextDecoder('ascii');
+        const tdutf=new TextDecoder('utf-8');
+        for(let i=0;i<count;i++){
+            const id=this.u8[this.o++];
+            const type=this.u8[this.o++];
+            const nameLen=this.u8[this.o++];
+            const name=td.decode(this.u8.slice(this.o,this.o+nameLen));
+            this.o+=nameLen;
+            const duration=this.v.getUint32(this.o);this.o+=4;
+            const delay=this.v.getUint32(this.o);this.o+=4;
+            const timing=this.u8[this.o++];
+            const iters=this.v.getUint16(this.o);this.o+=2;
+            const dir=this.u8[this.o++];
+            const fill=this.u8[this.o++];
+            
+            const kfCount=this.v.getUint16(this.o);this.o+=2;
+            const keyframes=[];
+            for(let j=0;j<kfCount;j++){
+                const pct=this.u8[this.o++];
+                const propCount=this.u8[this.o++];
+                const props=[];
+                for(let k=0;k<propCount;k++){
+                    const pid=this.u8[this.o++];
+                    const valLen=this.v.getUint16(this.o);this.o+=2;
+                    const val=tdutf.decode(this.u8.slice(this.o,this.o+valLen));
+                    this.o+=valLen;
+                    props.push({pid,val});
+                }
+                keyframes.push({pct,props});
+            }
+            anims[id]={type,name,duration,delay,timing,iters,dir,fill,keyframes};
+        }
+        return anims;
     }
 }
 
@@ -682,7 +913,14 @@ function rgba(v){
     return`rgba(${r},${g},${b},${(a/255).toFixed(2)})`;
 }
 
-function applyBLB(rootEl,blocks){
+const TEXT_DECO=['none','underline','line-through','overline'];
+const CURSOR_CSS=['default','pointer','text','move','not-allowed','grab','crosshair','wait','help'];
+const WHITE_SPACE=['normal','nowrap','pre','pre-wrap','pre-line'];
+const VISIBILITY_CSS=['visible','hidden','collapse'];
+const ALIGN_SELF=['auto','flex-start','flex-end','center','stretch','baseline'];
+const FONT_STYLE=['normal','italic','oblique'];
+
+function applyBLB(rootEl,blocks,anims=null){
     const allNodes=rootEl.querySelectorAll('.rendered-node');
     const nodeList=[rootEl,...allNodes];
     blocks.forEach(bl=>{
@@ -727,6 +965,37 @@ function applyBLB(rootEl,blocks){
         if(bl.overflow>0)s.overflow=OVERFLOW[bl.overflow];
         if(bl.opacity<255)s.opacity=(bl.opacity/255).toFixed(2);
         if(bl.zIndex!==0)s.zIndex=bl.zIndex;
+        // === BLB v2 Extended ===
+        if(bl.textDecoration>0)s.textDecoration=TEXT_DECO[bl.textDecoration]||'';
+        if(bl.cursor>0)s.cursor=CURSOR_CSS[bl.cursor]||'';
+        if(bl.whiteSpace>0)s.whiteSpace=WHITE_SPACE[bl.whiteSpace]||'';
+        if(bl.visibility>0)s.visibility=VISIBILITY_CSS[bl.visibility]||'';
+        if(bl.minWidth!==undefined&&bl.minWidth!==0xFFFF)s.minWidth=cssVal(bl.minWidth);
+        if(bl.maxWidth!==undefined&&bl.maxWidth!==0xFFFF)s.maxWidth=cssVal(bl.maxWidth);
+        if(bl.minHeight!==undefined&&bl.minHeight!==0xFFFF)s.minHeight=cssVal(bl.minHeight);
+        if(bl.maxHeight!==undefined&&bl.maxHeight!==0xFFFF)s.maxHeight=cssVal(bl.maxHeight);
+        if(bl.flexGrow!==undefined&&bl.flexGrow>0)s.flexGrow=(bl.flexGrow/100).toFixed(2);
+        if(bl.flexShrink!==undefined&&bl.flexShrink!==100)s.flexShrink=(bl.flexShrink/100).toFixed(2);
+        if(bl.flexBasis!==undefined&&bl.flexBasis!==0xFFFF)s.flexBasis=cssVal(bl.flexBasis);
+        if(bl.order!==undefined&&bl.order!==0)s.order=bl.order;
+        if(bl.alignSelf!==undefined&&bl.alignSelf>0)s.alignSelf=ALIGN_SELF[bl.alignSelf]||'';
+        if(bl.shadowColor&&bl.shadowColor!==0){
+            s.boxShadow=`${bl.shadowX/10}px ${bl.shadowY/10}px ${bl.shadowBlur/10}px ${bl.shadowSpread/10}px ${rgba(bl.shadowColor)}`;
+        }
+        if(bl.fontStyle!==undefined&&bl.fontStyle>0)s.fontStyle=FONT_STYLE[bl.fontStyle]||'';
+        
+        if(bl.animationId!==undefined&&bl.animationId!==255&&anims){
+            const anim = anims[bl.animationId];
+            if(anim){
+                s.animationName = anim.name;
+                s.animationDuration = (anim.duration/1000) + 's';
+                s.animationDelay = (anim.delay/1000) + 's';
+                s.animationTimingFunction = BAM_TIMING_REV[anim.timing]||'ease';
+                s.animationIterationCount = anim.iters===0xFFFF ? 'infinite' : anim.iters;
+                s.animationDirection = BAM_DIR_REV[anim.dir]||'normal';
+                s.animationFillMode = BAM_FILL_REV[anim.fill]||'none';
+            }
+        }
     });
 }
 
@@ -745,6 +1014,149 @@ async function applyBIB(rootEl,images){
         }
     });
     await Promise.all(promises);
+}
+
+async function applyBFS(fonts){
+    for(const font of Object.values(fonts)){
+        try{
+            const style = font.style === 1 ? 'italic' : font.style === 2 ? 'oblique' : 'normal';
+            const face = new FontFace(font.family, font.data, {
+                weight: font.weight,
+                style: style
+            });
+            await face.load();
+            document.fonts.add(face);
+        }catch(e){
+            console.error('Failed to load font:', font.family, e);
+        }
+    }
+}
+
+const BAM_PROP_REV = {
+    1: 'transform:translateX', 2: 'transform:translateY', 3: 'transform:translateZ',
+    4: 'transform:rotate', 5: 'transform:rotateX', 6: 'transform:rotateY',
+    7: 'transform:scaleX', 8: 'transform:scaleY', 9: 'transform:skewX', 10: 'transform:skewY',
+    16: 'opacity', 17: 'background-color', 18: 'color', 19: 'width', 20: 'height'
+};
+
+const BAM_TIMING_REV = ['ease','linear','ease-in','ease-out','ease-in-out'];
+const BAM_DIR_REV = ['normal','reverse','alternate'];
+const BAM_FILL_REV = ['none','forwards','backwards','both'];
+
+function applyBAM(rootEl, anims){
+    let styleText = '';
+    for(const anim of Object.values(anims)){
+        styleText += `@keyframes ${anim.name} {\n`;
+        for(const kf of anim.keyframes){
+            styleText += `  ${kf.pct}% {\n`;
+            let transforms = [];
+            for(const p of kf.props){
+                const pName = BAM_PROP_REV[p.pid] || 'unknown';
+                if(pName.startsWith('transform:')){
+                    transforms.push(`${pName.split(':')[1]}(${p.val})`);
+                } else {
+                    styleText += `    ${pName}: ${p.val};\n`;
+                }
+            }
+            if(transforms.length > 0){
+                styleText += `    transform: ${transforms.join(' ')};\n`;
+            }
+            styleText += `  }\n`;
+        }
+        styleText += `}\n`;
+    }
+    if(styleText){
+        let style = document.createElement('style');
+        style.textContent = styleText;
+        document.head.appendChild(style);
+    }
+}
+
+function applyBRS(rootEl, queries, blbBlocks, anims){
+    const update = () => {
+        applyBLB(rootEl, blbBlocks, anims);
+        for(const mq of queries){
+            if(window.matchMedia(mq.query).matches){
+                applyBLB(rootEl, mq.blocks, anims);
+            }
+        }
+    };
+
+    for(const mq of queries){
+        window.matchMedia(mq.query).addEventListener('change', update);
+    }
+    update();
+}
+
+function applyBSG(rootEl, graphics){
+    graphics.forEach(g => {
+        const canvases = rootEl.querySelectorAll(`canvas[data-bind-svg="${g.id}"]`);
+        canvases.forEach(canvas => {
+            canvas.width = g.width || canvas.clientWidth || 300;
+            canvas.height = g.height || canvas.clientHeight || 150;
+            const ctx = canvas.getContext('2d');
+            g.paths.forEach(p => {
+                const path2d = new Path2D(p.d);
+                if(p.fill){
+                    ctx.fillStyle = '#' + p.fill.toString(16).padStart(8,'0');
+                    ctx.fill(path2d);
+                }
+                if(p.stroke && p.strokeWidth){
+                    ctx.strokeStyle = '#' + p.stroke.toString(16).padStart(8,'0');
+                    ctx.lineWidth = p.strokeWidth / 10;
+                    ctx.stroke(path2d);
+                }
+            });
+        });
+    });
+}
+
+function applyBJS(rootEl, scripts){
+    scripts.forEach(s => {
+        const scriptEls = rootEl.querySelectorAll(`script[data-bind-js="${s.id}"]`);
+        scriptEls.forEach(el => {
+            const newScript = document.createElement('script');
+            newScript.textContent = s.content;
+            document.body.appendChild(newScript);
+        });
+    });
+}
+
+function applyBPR(rootEl, routes, nodes){
+    const updateRoute = () => {
+        const hash = window.location.hash.replace('#', '') || '/';
+        const activeRoute = routes.find(r => r.path === hash) || routes[0];
+        if(!activeRoute) return;
+        
+        Array.from(rootEl.children).forEach(child => {
+            if(child.getAttribute('data-bdt-id') == activeRoute.nodeId) {
+                child.style.display = '';
+            } else {
+                child.style.display = 'none';
+            }
+        });
+    };
+
+    window.addEventListener('hashchange', updateRoute);
+    updateRoute();
+}
+
+function applyBWA(rootEl, wasms){
+    wasms.forEach(w => {
+        const module = new WebAssembly.Module(w.data);
+        const instance = new WebAssembly.Instance(module, {});
+        // In a real implementation, we would expose this instance to JS (BJS) via a global registry
+        window[`_bwa_${w.id}`] = instance.exports;
+    });
+}
+
+function applyB3D(rootEl, shaders){
+    // B3D requires WebGL context to compile and attach shaders.
+    // For MVP, we expose the shader sources to a global registry so BJS or inline scripts can use them
+    window._b3d = shaders.reduce((acc, s) => {
+        acc[s.id] = s;
+        return acc;
+    }, {});
 }
 
 function renderBDTTree(nodes){
@@ -785,10 +1197,8 @@ async function renderBinary(buf){
     const sections=parseBWEB(buf);
 
     const bmlBuf=sections[1];
-    const bdtBuf=sections[2];
-    const blbBuf=sections[3];
 
-    let rootEl=null,bdtNodes=null,blbBlocks=null;
+    let rootEl=null;
 
     if(bmlBuf){
         const bmlView=new Uint8Array(bmlBuf);
@@ -798,19 +1208,13 @@ async function renderBinary(buf){
         rootEl=parser.parseNode();
     }
 
-    if(bdtBuf){
+    let bdtNodes = [];
+    if(sections[2]){
+        const bdtBuf=sections[2];
         const bdtView=new Uint8Array(bdtBuf);
         let bdtStart=0;
         if(bdtView[0]===0x42&&bdtView[1]===0x44&&bdtView[2]===0x54)bdtStart=4;
         bdtNodes=new BDTParser(bdtBuf,bdtStart).parse();
-    }
-
-    if(blbBuf&&rootEl){
-        const blbView=new Uint8Array(blbBuf);
-        let blbStart=0;
-        if(blbView[0]===0x42&&blbView[1]===0x4C&&blbView[2]===0x42)blbStart=4;
-        blbBlocks=new BLBParser(blbBuf,blbStart).parse();
-        applyBLB(rootEl,blbBlocks);
     }
 
     if(sections[4]&&rootEl){
@@ -840,6 +1244,101 @@ async function renderBinary(buf){
         await applyBAS(rootEl,audios);
     }
 
+    if(sections[7]){
+        const bfsBuf=sections[7];
+        const bfsView=new Uint8Array(bfsBuf);
+        let bfsStart=0;
+        if(bfsView[0]===0x42&&bfsView[1]===0x46&&bfsView[2]===0x53)bfsStart=4;
+        const fonts=new BFSParser(bfsBuf,bfsStart).parse();
+        await applyBFS(fonts);
+    }
+
+    let anims = null;
+    if(sections[8]){
+        const bamBuf=sections[8];
+        const bamView=new Uint8Array(bamBuf);
+        let bamStart=0;
+        if(bamView[0]===0x42&&bamView[1]===0x41&&bamView[2]===0x4D)bamStart=4;
+        anims=new BAMParser(bamBuf,bamStart).parse();
+        applyBAM(rootEl,anims);
+    }
+
+    let blbBlocks = [];
+    
+    if(sections[13]) {
+        const bcsBuf=sections[13];
+        const bcsView=new Uint8Array(bcsBuf);
+        let bcsStart=0;
+        if(bcsView[0]===0x42&&bcsView[1]===0x43&&bcsView[2]===0x53)bcsStart=4;
+        blbBlocks = new BCSParser(bcsBuf,bcsStart).parse();
+    } else if(sections[3]){
+        const blbBuf=sections[3];
+        const blbView=new Uint8Array(blbBuf);
+        let blbStart=0;
+        let blbVer=2;
+        if(blbView[0]===0x42&&blbView[1]===0x4C&&blbView[2]===0x42){blbVer=blbView[3];blbStart=4;}
+        blbBlocks=new BLBParser(blbBuf,blbStart,blbVer).parse();
+    }
+
+    if(bdtNodes.length>0 && blbBlocks.length>0 && rootEl){
+        applyBLB(rootEl,blbBlocks,anims);
+    }
+
+    if(sections[9]&&rootEl){
+        const brsBuf=sections[9];
+        const brsView=new Uint8Array(brsBuf);
+        let brsStart=0;
+        if(brsView[0]===0x42&&brsView[1]===0x52&&brsView[2]===0x53)brsStart=4;
+        const queries=new BRSParser(brsBuf,brsStart).parse();
+        applyBRS(rootEl, queries, blbBlocks, anims);
+    }
+
+    if(sections[10]&&rootEl){
+        const bsgBuf=sections[10];
+        const bsgView=new Uint8Array(bsgBuf);
+        let bsgStart=0;
+        if(bsgView[0]===0x42&&bsgView[1]===0x53&&bsgView[2]===0x47)bsgStart=4;
+        const graphics=new BSGParser(bsgBuf,bsgStart).parse();
+        applyBSG(rootEl, graphics);
+    }
+
+    if(sections[11]&&rootEl){
+        const bjsBuf=sections[11];
+        const bjsView=new Uint8Array(bjsBuf);
+        let bjsStart=0;
+        if(bjsView[0]===0x42&&bjsView[1]===0x4A&&bjsView[2]===0x53)bjsStart=4;
+        const scripts=new BJSParser(bjsBuf,bjsStart).parse();
+        applyBJS(rootEl, scripts);
+    }
+
+    if(sections[12]&&rootEl){
+        const bprBuf=sections[12];
+        const bprView=new Uint8Array(bprBuf);
+        let bprStart=0;
+        if(bprView[0]===0x42&&bprView[1]===0x50&&bprView[2]===0x52)bprStart=4;
+        const routes=new BPRParser(bprBuf,bprStart).parse();
+        applyBPR(rootEl, routes, bdtNodes);
+    }
+
+    if(sections[14]){
+        const bwaBuf=sections[14];
+        const bwaView=new Uint8Array(bwaBuf);
+        let bwaStart=0;
+        if(bwaView[0]===0x42&&bwaView[1]===0x57&&bwaView[2]===0x41)bwaStart=4;
+        const wasms=new BWAParser(bwaBuf,bwaStart).parse();
+        applyBWA(rootEl, wasms);
+    }
+
+    if(sections[15]){
+        const b3dBuf=sections[15];
+        const b3dView=new Uint8Array(b3dBuf);
+        let b3dStart=0;
+        if(b3dView[0]===0x42&&b3dView[1]===0x33&&b3dView[2]===0x44)b3dStart=4;
+        const shaders=new B3DParser(b3dBuf,b3dStart).parse();
+        applyB3D(rootEl, shaders);
+    }
+
+    const t1=performance.now();
     const target=document.getElementById('renderTarget');
     const empty=document.getElementById('viewportEmpty');
     target.innerHTML='';
@@ -847,8 +1346,6 @@ async function renderBinary(buf){
         target.appendChild(rootEl);
         empty.style.display='none';
     }
-
-    const t1=performance.now();
 
     document.getElementById('statsGrid').style.display='';
     document.getElementById('statTotal').textContent=buf.byteLength+' B';
