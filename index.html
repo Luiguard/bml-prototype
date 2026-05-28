@@ -60,13 +60,28 @@
         body::before {
             content: '';
             position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+            z-index: -2;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: absolute;
             top: 0; left: 50%;
             transform: translateX(-50%);
             width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle 800px at 50% -200px, rgba(16, 185, 129, 0.12), transparent 80%),
-                        radial-gradient(circle 600px at 10% 40%, rgba(59, 130, 246, 0.06), transparent 75%),
-                        radial-gradient(circle 800px at 90% 80%, rgba(6, 182, 212, 0.06), transparent 75%);
+            height: 800px;
+            background: radial-gradient(circle 800px at 50% -200px, rgba(16, 185, 129, 0.15), transparent 80%),
+                        radial-gradient(circle 600px at 10% 40%, rgba(59, 130, 246, 0.08), transparent 75%),
+                        radial-gradient(circle 800px at 90% 80%, rgba(6, 182, 212, 0.08), transparent 75%);
             pointer-events: none;
             z-index: -1;
         }
@@ -160,8 +175,23 @@
         .btn-primary {
             background: var(--gradient);
             color: #030712;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 40px rgba(6, 182, 212, 0.2);
             font-weight: 700;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s ease;
+            z-index: -1;
+        }
+        .btn-primary:hover::before {
+            left: 100%;
         }
         .btn-primary:hover {
             transform: translateY(-2px);
