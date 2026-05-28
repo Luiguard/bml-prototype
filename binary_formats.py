@@ -774,7 +774,7 @@ def extract_animations_from_html(html_path: str) -> list:
         }
         
         # Split body into frames by matching "XX% {" or "from {" or "to {"
-        frame_re = re.compile(r'([\d\.]+%)|from|to\s*\{([^}]+)\}', re.IGNORECASE)
+        frame_re = re.compile(r'(?:([\d\.]+%)\s*|from\s*|to\s*)\{([^}]+)\}', re.IGNORECASE)
         for f_match in frame_re.finditer(body):
             pct_str = (f_match.group(1) or '').lower()
             if not pct_str:
