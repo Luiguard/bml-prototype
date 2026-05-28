@@ -404,6 +404,80 @@ def serialize_bib(images: list) -> bytes:
     return bytes(buf)
 
 # ═══════════════════════════════════════════════════════════════
+#  BVS Serializer
+# ═══════════════════════════════════════════════════════════════
+
+BVS_MAGIC = b'BVS\x01'
+
+def _get_codec_string(video_stream):
+    name = video_stream.codec_context.name
+    if name == 'h264':
+        extradata = video_stream.codec_context.extradata
+        if extradata and len(extradata) >= 4 and extradata[0] == 1:
+            return f"avc1.{extradata[1:4].hex()}"
+        return "avc1.42E01E"
+    elif name == 'vp8':
+        return "vp8"
+    elif name == 'vp9':
+        return "vp09.00.10.08"
+    return name
+
+def serialize_bvs(videos: list) -> bytes:
+    try:
+        import av
+        import io
+    except ImportError:
+        print("Warning: 'av' package not installed. BVS serialization skipped.")
+        return b''
+        
+    if not videos:
+        return b''
+        
+    buf = bytearray(BVS_MAGIC)
+    buf += _u32(len(videos))
+    
+    for vid in videos:
+        if 'bytes' in vid:
+            container = av.open(io.BytesIO(vid['bytes']))
+        else:
+            container = av.open(vid['path'])
+            
+        stream = next((s for s in container.streams if s.type == 'video'), None)
+        if not stream:
+            continue
+            
+        codec_str = _get_codec_string(stream).encode('ascii')
+        width = stream.codec_context.width
+        height = stream.codec_context.height
+        
+        chunks = []
+        for packet in container.demux(stream):
+            if packet.dts is None:
+                continue
+            is_key = packet.is_keyframe
+            tb = packet.time_base
+            pts = int(packet.pts * tb * 1000000) if packet.pts is not None else 0
+            dur = int(packet.duration * tb * 1000000) if packet.duration is not None else 0
+            data = bytes(packet)
+            chunks.append((is_key, pts, dur, data))
+            
+        buf += _u32(vid['id'])
+        buf += _u16(width)
+        buf += _u16(height)
+        buf.append(len(codec_str))
+        buf += codec_str
+        buf += _u32(len(chunks))
+        
+        for is_key, pts, dur, data in chunks:
+            buf.append(1 if is_key else 0)
+            buf += struct.pack('>Q', pts)
+            buf += _u32(dur)
+            buf += _u32(len(data))
+            buf += data
+            
+    return bytes(buf)
+
+# ═══════════════════════════════════════════════════════════════
 #  BWEB Container
 # ═══════════════════════════════════════════════════════════════
 
@@ -466,11 +540,36 @@ def html_to_bweb(html_str: str, bib: bytes = b'', bvs: bytes = b'', compress: bo
     return bundle_bweb(bml, bdt, blb, bib=bib, bvs=bvs, compress=compress)
 
 
-def html_file_to_bweb(html_path: str, output_path: str = None) -> str:
+def html_file_to_bweb(html_path: str, output_path: str = None, compress: bool = False) -> str:
     src = Path(html_path)
     out = Path(output_path) if output_path else src.with_suffix('.bweb')
     html = src.read_text('utf-8')
-    bweb = html_to_bweb(html)
+    dom = html_to_dom(html)
+    
+    videos = []
+    vid_id = 0
+    def process_node(node):
+        nonlocal vid_id
+        if node.tag == 'video':
+            src_attr = node.attrs.get('src')
+            if src_attr:
+                vid_path = src.parent / src_attr
+                if vid_path.exists():
+                    videos.append({'id': vid_id, 'path': str(vid_path)})
+                    node.tag = 'canvas'
+                    node.attrs['data-bind-video'] = str(vid_id)
+                    vid_id += 1
+        for child in node.children:
+            process_node(child)
+            
+    process_node(dom)
+    bvs_data = serialize_bvs(videos) if videos else b''
+    
+    bml = serialize_bml(dom)
+    bdt = serialize_bdt(dom)
+    blb = serialize_blb(dom)
+    bweb = bundle_bweb(bml, bdt, blb, bib=b'', bvs=bvs_data, compress=compress)
+    
     out.write_bytes(bweb)
     return str(out)
 
@@ -488,6 +587,9 @@ def bweb_stats(data: bytes) -> dict:
     bdt_nodes = struct.unpack('>I', bdt[4:8])[0] if len(bdt) >= 8 else 0
     blb_blocks = struct.unpack('>I', blb[4:8])[0] if len(blb) >= 8 else 0
     bib_images = struct.unpack('>I', bib[4:8])[0] if len(bib) >= 8 else 0
+    
+    bvs = sections.get(SEC_BVS, b'')
+    bvs_videos = struct.unpack('>I', bvs[4:8])[0] if len(bvs) >= 8 else 0
 
     return {
         'total_bytes': len(data),
@@ -495,9 +597,11 @@ def bweb_stats(data: bytes) -> dict:
         'bdt_bytes': len(bdt),
         'blb_bytes': len(blb),
         'bib_bytes': len(bib),
+        'bvs_bytes': len(bvs),
         'bdt_nodes': bdt_nodes,
         'blb_blocks': blb_blocks,
         'bib_images': bib_images,
+        'bvs_videos': bvs_videos,
     }
 
 # ═══════════════════════════════════════════════════════════════
@@ -516,8 +620,9 @@ if __name__ == '__main__':
         for k, v in stats.items():
             print(f'  {k}: {v:,}')
     else:
-        out = html_file_to_bweb(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
+        out = html_file_to_bweb(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None, compress=True)
         data = Path(out).read_bytes()
         stats = bweb_stats(data)
         print(f'✅ {out} ({stats["total_bytes"]:,} Bytes)')
         print(f'   BML: {stats["bml_bytes"]:,} B | BDT: {stats["bdt_bytes"]:,} B ({stats["bdt_nodes"]} Nodes) | BLB: {stats["blb_bytes"]:,} B ({stats["blb_blocks"]} Blöcke)')
+        print(f'   BIB: {stats["bib_bytes"]:,} B ({stats["bib_images"]} Images) | BVS: {stats["bvs_bytes"]:,} B ({stats["bvs_videos"]} Videos)')

@@ -213,6 +213,7 @@
                         <span class="legend-bdt">BDT</span>
                         <span class="legend-blb">BLB</span>
                         <span class="legend-bib">BIB</span>
+                        <span class="legend-bvs" style="color:#d946ef">BVS</span>
                     </div>
                 </div>
 
@@ -223,6 +224,7 @@
                     <div class="stat stat-bdt"><div class="stat-label">BDT (Baum)</div><div class="stat-value" id="statBdt">–</div></div>
                     <div class="stat stat-blb"><div class="stat-label">BLB (Layout)</div><div class="stat-value" id="statBlb">–</div></div>
                     <div class="stat stat-bib"><div class="stat-label">BIB (Images)</div><div class="stat-value" id="statBib">–</div></div>
+                    <div class="stat stat-bvs"><div class="stat-label">BVS (Video)</div><div class="stat-value" id="statBvs">–</div></div>
                     <div class="stat stat-ratio"><div class="stat-label">Nodes</div><div class="stat-value" id="statNodes">–</div></div>
                 </div>
             </div>
@@ -405,6 +407,112 @@ class BIBParser{
     }
 }
 
+class BVSParser {
+    constructor(buf, offset=0) {
+        this.v = new DataView(buf);
+        this.o = offset;
+        this.u8 = new Uint8Array(buf);
+    }
+    parse() {
+        const count = this.v.getUint32(this.o); this.o += 4;
+        const videos = {};
+        for(let i=0; i<count; i++) {
+            const id = this.v.getUint32(this.o); this.o += 4;
+            const w = this.v.getUint16(this.o); this.o += 2;
+            const h = this.v.getUint16(this.o); this.o += 2;
+            const codecLen = this.v.getUint8(this.o++);
+            const codecBytes = this.u8.slice(this.o, this.o + codecLen);
+            this.o += codecLen;
+            const codec = new TextDecoder('ascii').decode(codecBytes);
+            const chunkCount = this.v.getUint32(this.o); this.o += 4;
+            
+            const chunks = [];
+            for(let j=0; j<chunkCount; j++) {
+                const flags = this.v.getUint8(this.o++);
+                const isKey = (flags & 1) === 1;
+                const ptsHigh = this.v.getUint32(this.o); this.o += 4;
+                const ptsLow = this.v.getUint32(this.o); this.o += 4;
+                const pts = Number((BigInt(ptsHigh) << 32n) | BigInt(ptsLow));
+                const dur = this.v.getUint32(this.o); this.o += 4;
+                const dataLen = this.v.getUint32(this.o); this.o += 4;
+                const data = this.u8.slice(this.o, this.o + dataLen);
+                this.o += dataLen;
+                
+                chunks.push({
+                    type: isKey ? 'key' : 'delta',
+                    timestamp: pts,
+                    duration: dur,
+                    data: data
+                });
+            }
+            videos[id] = {w, h, codec, chunks};
+        }
+        return videos;
+    }
+}
+
+async function applyBVS(rootEl, videos) {
+    if (!('VideoDecoder' in window)) {
+        console.warn('WebCodecs API not supported.');
+        return;
+    }
+
+    const canvases = rootEl.querySelectorAll('canvas[data-bind-video]');
+    for(const canvas of canvases) {
+        const vidId = parseInt(canvas.getAttribute('data-bind-video'));
+        const vid = videos[vidId];
+        if(!vid) continue;
+        
+        canvas.width = vid.w;
+        canvas.height = vid.h;
+        const ctx = canvas.getContext('2d');
+        
+        const playbackLoop = async () => {
+            let startRealTime = performance.now();
+            let currentChunk = 0;
+            let pendingFrames = [];
+            
+            const decoder = new VideoDecoder({
+                output: (frame) => pendingFrames.push(frame),
+                error: (e) => console.error("VideoDecoder error:", e)
+            });
+            
+            decoder.configure({
+                codec: vid.codec,
+                codedWidth: vid.w,
+                codedHeight: vid.h,
+                hardwareAcceleration: 'prefer-hardware'
+            });
+
+            while(true) {
+                while(decoder.decodeQueueSize < 10 && currentChunk < vid.chunks.length) {
+                    decoder.decode(new EncodedVideoChunk(vid.chunks[currentChunk++]));
+                }
+                
+                if (pendingFrames.length > 0) {
+                    const frame = pendingFrames[0];
+                    const elapsedRealUs = (performance.now() - startRealTime) * 1000;
+                    
+                    if (frame.timestamp <= elapsedRealUs) {
+                        ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+                        frame.close();
+                        pendingFrames.shift();
+                    }
+                }
+                
+                if (currentChunk >= vid.chunks.length && pendingFrames.length === 0) {
+                    await decoder.flush();
+                    currentChunk = 0;
+                    startRealTime = performance.now(); // Loop video
+                }
+                
+                await new Promise(r => requestAnimationFrame(r));
+            }
+        };
+        playbackLoop();
+    }
+}
+
 function cssVal(v){
     if(v===0xFFFF)return'auto';
     if(v&0x8000)return(v&0x7FFF)/10+'%';
@@ -556,6 +664,15 @@ async function renderBinary(buf){
         await applyBIB(rootEl,images);
     }
 
+    if(sections[5]&&rootEl){
+        const bvsBuf=sections[5];
+        const bvsView=new Uint8Array(bvsBuf);
+        let bvsStart=0;
+        if(bvsView[0]===0x42&&bvsView[1]===0x56&&bvsView[2]===0x53)bvsStart=4;
+        const videos=new BVSParser(bvsBuf,bvsStart).parse();
+        await applyBVS(rootEl,videos);
+    }
+
     const target=document.getElementById('renderTarget');
     const empty=document.getElementById('viewportEmpty');
     target.innerHTML='';
@@ -573,15 +690,17 @@ async function renderBinary(buf){
     document.getElementById('statBdt').textContent=bdtBuf?bdtBuf.byteLength+' B':'–';
     document.getElementById('statBlb').textContent=blbBuf?blbBuf.byteLength+' B':'–';
     document.getElementById('statBib').textContent=sections[4]?sections[4].byteLength+' B':'–';
+    document.getElementById('statBvs').textContent=sections[5]?sections[5].byteLength+' B':'–';
     document.getElementById('statNodes').textContent=bdtNodes?bdtNodes.length:'–';
 
     if(bmlBuf&&bdtBuf&&blbBuf){
         const total=buf.byteLength;
         const bibBuf=sections[4];
+        const bvsBuf=sections[5];
         const map=document.getElementById('sectionMap');
         map.style.display='';
         const bar=document.getElementById('sectionBar');
-        bar.innerHTML=`<div class="sec-bml" style="width:${bmlBuf.byteLength/total*100}%"></div><div class="sec-bdt" style="width:${bdtBuf.byteLength/total*100}%"></div><div class="sec-blb" style="width:${blbBuf.byteLength/total*100}%"></div>`+(bibBuf?`<div class="sec-bib" style="width:${bibBuf.byteLength/total*100}%"></div>`:'');
+        bar.innerHTML=`<div class="sec-bml" style="width:${bmlBuf.byteLength/total*100}%"></div><div class="sec-bdt" style="width:${bdtBuf.byteLength/total*100}%"></div><div class="sec-blb" style="width:${blbBuf.byteLength/total*100}%"></div>`+(bibBuf?`<div class="sec-bib" style="width:${bibBuf.byteLength/total*100}%"></div>`:'')+(bvsBuf?`<div class="sec-bvs" style="width:${bvsBuf.byteLength/total*100}%; background:#d946ef"></div>`:'');
     }
 
     renderBDTTree(bdtNodes);

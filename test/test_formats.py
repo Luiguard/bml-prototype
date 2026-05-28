@@ -87,6 +87,35 @@ def test_bib_roundtrip():
     assert bib[30:30+16] == pixels, "Pixel data mismatch"
     print("  ✓ bib_roundtrip: 2×2 RGBA verified")
 
+def test_bvs_roundtrip():
+    import os
+    if not os.path.exists('dummy.mp4'):
+        print("  ! bvs_roundtrip: skipped (no dummy.mp4)")
+        return
+    videos = [{'id': 7, 'path': 'dummy.mp4'}]
+    bvs = bf.serialize_bvs(videos)
+    if not bvs:
+        print("  ! bvs_roundtrip: skipped (no av module)")
+        return
+        
+    assert bvs[:3] == b'BVS', f"BVS magic: {bvs[:3]}"
+    vid_count = struct.unpack('>I', bvs[4:8])[0]
+    assert vid_count == 1
+    
+    vid_id = struct.unpack('>I', bvs[8:12])[0]
+    assert vid_id == 7
+    w = struct.unpack('>H', bvs[12:14])[0]
+    h = struct.unpack('>H', bvs[14:16])[0]
+    assert w > 0 and h > 0
+    codec_len = bvs[16]
+    codec = bvs[17:17+codec_len].decode('ascii')
+    assert codec.startswith('avc1.')
+    
+    offset = 17 + codec_len
+    chunk_count = struct.unpack('>I', bvs[offset:offset+4])[0]
+    assert chunk_count > 0
+    print(f"  ✓ bvs_roundtrip: 1 video, {w}x{h}, {codec}, {chunk_count} chunks")
+
 def test_parse_css_value():
     assert bf._parse_css_value('16px') == 160
     assert bf._parse_css_value('1.5rem') == 240
@@ -140,6 +169,7 @@ if __name__ == '__main__':
     test_bdt_node_size()
     test_bdt_parent_links()
     test_bib_roundtrip()
+    test_bvs_roundtrip()
     test_parse_css_value()
     test_parse_color()
     test_negative_margins()

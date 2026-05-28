@@ -279,9 +279,51 @@ Image binding: `<canvas data-bind="IMAGE_ID">` in BML links to BIB image.
 
 ---
 
-## 7. Versioning
+## 7. BVS — Binary Video Streams (Section 5)
 
-### 7.1 Rules
+Interleaved chunks of I/P-Frames (Video-only) optimized for WebCodecs `VideoDecoder`.
+
+### 7.1 Section Header
+
+| Offset | Size | Type   | Value        |
+|--------|------|--------|--------------|
+| 0      | 3    | ASCII  | `BVS`        |
+| 3      | 1    | Uint8  | `0x01` (v1)  |
+| 4      | 4    | Uint32 | Video count  |
+
+### 7.2 Video Record
+
+Each video is stored consecutively.
+
+| Offset | Size | Type   | Description                                       |
+|--------|------|--------|---------------------------------------------------|
+| 0      | 4    | Uint32 | Video ID                                          |
+| 4      | 2    | Uint16 | Width in pixels                                   |
+| 6      | 2    | Uint16 | Height in pixels                                  |
+| 8      | 1    | Uint8  | Codec string length (`L`)                         |
+| 9      | L    | ASCII  | Codec string (e.g. `avc1.64000c`)                 |
+| 9+L    | 4    | Uint32 | Chunk count (`C`)                                 |
+| var    | var  | —      | Array of `C` Chunks (see below)                   |
+
+### 7.3 Chunk Record
+
+Chunks represent `EncodedVideoChunk` units for WebCodecs.
+
+| Offset | Size | Type   | Description                                       |
+|--------|------|--------|---------------------------------------------------|
+| 0      | 1    | Uint8  | Flags (Bit 0: `1` = Keyframe, `0` = Delta frame)  |
+| 1      | 8    | Uint64 | Presentation Timestamp (PTS) in microseconds      |
+| 9      | 4    | Uint32 | Duration in microseconds                          |
+| 13     | 4    | Uint32 | Data length in bytes (`D`)                        |
+| 17     | D    | Bytes  | Raw chunk data (e.g., NAL units)                  |
+
+Video binding: `<canvas data-bind-video="VIDEO_ID">` in BML links to BVS video.
+
+---
+
+## 8. Versioning
+
+### 8.1 Rules
 
 - **Container version** (`BWEB[version]`): Incremented when the section table format changes.
 - **Section version** (per magic, e.g., `BML\x02`): Incremented when that section's internal layout changes.
@@ -294,7 +336,7 @@ New sections can be added with type IDs `7`–`255` without breaking existing pa
 
 ---
 
-## 8. Security
+## 9. Security
 
 - BML text content MUST be treated as plain text, never as HTML.
 - `onclick`, `onsubmit` attributes (`0x22`, `0x23`) MUST be sanitized or ignored by security-conscious renderers.
@@ -302,7 +344,7 @@ New sections can be added with type IDs `7`–`255` without breaking existing pa
 
 ---
 
-## 9. MIME Types
+## 10. MIME Types
 
 | Extension | MIME Type            |
 |-----------|----------------------|
