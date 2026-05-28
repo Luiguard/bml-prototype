@@ -260,7 +260,7 @@
                 </div>
             </div>
 
-            <div class="panel" style="margin-top:1rem" id="treePanel" style="display:none">
+            <div class="panel" id="treePanel" style="margin-top:1rem; display:none">
                 <div class="panel-title">BDT Baumstruktur</div>
                 <div class="tree-view" id="treeView"></div>
             </div>
@@ -606,26 +606,13 @@ dz.addEventListener('drop',e=>{
 document.getElementById('btnConvert').addEventListener('click',async()=>{
     const html=document.getElementById('htmlInput').value.trim();
     if(!html)return;
-    try{
-        const resp=await fetch('/api/html-to-bweb',{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({html})
-        });
-        if(resp.ok){
-            const buf=await resp.arrayBuffer();
-            lastBweb=buf;
-            await renderBinary(buf);
-            document.getElementById('btnDownload').style.display='';
-            return;
-        }
-    }catch(e){}
     try {
         const bweb=await clientSideConvert(html);
         lastBweb=bweb;
         await renderBinary(bweb);
         document.getElementById('btnDownload').style.display='';
     } catch(err) {
-        alert("Fehler bei der Iframe-Konvertierung: " + err);
+        alert("Fehler bei der Konvertierung: " + err);
     }
 });
 
@@ -726,7 +713,7 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
             if (resp.ok) {
                 const data = await resp.json();
                 let html = data.answer || '';
-                html = html.replace(/^```html/i, '').replace(/```$/i, '').trim();
+                html = html.replace(/^```html?\n?/i, '').replace(/\n?```\s*$/i, '').trim();
                 
                 btn.textContent = 'Kompiliere NVMe-Resultat...';
                 const bweb = await clientSideConvert(html);
@@ -756,7 +743,7 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
             if (aiResp.ok) {
                 const data = await aiResp.json();
                 let html = data.candidates[0].content.parts[0].text;
-                html = html.replace(/^```html/i, '').replace(/```$/i, '').trim();
+                html = html.replace(/^```html?\n?/i, '').replace(/\n?```\s*$/i, '').trim();
                 
                 btn.textContent = 'Kompiliere in BWEB...';
                 const bweb = await clientSideConvert(html);
@@ -802,13 +789,21 @@ async function clientSideConvert(html){
                 const flatNodes=[];
                 const extractedImages = [];
 
-                function parseColor(c) {
-                    const m = c.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-                    if (m) {
-                        return {r: parseInt(m[1]), g: parseInt(m[2]), b: parseInt(m[3]), a: 255};
-                    }
-                    return {r: 255, g: 255, b: 255, a: 255};
+                function colorToU32(c) {
+                    const m = c.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+                    if (!m) return 0;
+                    const r=parseInt(m[1]),g=parseInt(m[2]),b=parseInt(m[3]);
+                    const a=m[4]!==undefined?Math.round(parseFloat(m[4])*255):255;
+                    return((r<<24)|(g<<16)|(b<<8)|a)>>>0;
                 }
+                function cssV(v){if(!v||v==='auto'||v==='none')return 0xFFFF;const n=parseFloat(v);return isNaN(n)?0xFFFF:Math.round(n*10)}
+                const DM={'block':0,'inline':1,'flex':2,'grid':3,'none':4,'inline-block':5,'inline-flex':6};
+                const PM_={'static':0,'relative':1,'absolute':2,'fixed':3,'sticky':4};
+                const TAM={'left':0,'start':0,'center':1,'right':2,'end':2,'justify':3};
+                const FDM={'row':0,'column':1,'row-reverse':2,'column-reverse':3};
+                const JCM={'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'space-between':3,'space-around':4,'space-evenly':5};
+                const AIM={'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'stretch':3,'baseline':4};
+                const OFM={'visible':0,'hidden':1,'scroll':2,'auto':3};
 
                 function serNode(el,parentIdx){
                     // Ensure it is an element
@@ -847,27 +842,26 @@ async function clientSideConvert(html){
                     const tagByte=TAG_FWD[tag]||0x01;
                     const nodeIdx=flatNodes.length;
                     
-                    // Extract Computed Style
-                    const style = iframe.contentWindow.getComputedStyle(el);
-                    const bg = parseColor(style.backgroundColor);
-                    const fg = parseColor(style.color);
-                    
+                    const cs=iframe.contentWindow.getComputedStyle(el);
                     flatNodes.push({
-                        tag: tagByte, 
-                        parentIdx, 
-                        children: [],
-                        computed: {
-                            mt: parseFloat(style.marginTop) || 0,
-                            mr: parseFloat(style.marginRight) || 0,
-                            mb: parseFloat(style.marginBottom) || 0,
-                            ml: parseFloat(style.marginLeft) || 0,
-                            pt: parseFloat(style.paddingTop) || 0,
-                            pr: parseFloat(style.paddingRight) || 0,
-                            pb: parseFloat(style.paddingBottom) || 0,
-                            pl: parseFloat(style.paddingLeft) || 0,
-                            w: parseFloat(style.width) || 0,
-                            h: parseFloat(style.height) || 0,
-                            bg, fg
+                        tag: tagByte, parentIdx, children: [],
+                        cs:{
+                            display:cs.display,position:cs.position,boxSizing:cs.boxSizing,
+                            width:cs.width,height:cs.height,
+                            marginTop:cs.marginTop,marginRight:cs.marginRight,
+                            marginBottom:cs.marginBottom,marginLeft:cs.marginLeft,
+                            paddingTop:cs.paddingTop,paddingRight:cs.paddingRight,
+                            paddingBottom:cs.paddingBottom,paddingLeft:cs.paddingLeft,
+                            borderTopWidth:cs.borderTopWidth,borderRightWidth:cs.borderRightWidth,
+                            borderBottomWidth:cs.borderBottomWidth,borderLeftWidth:cs.borderLeftWidth,
+                            borderColor:cs.borderTopColor,
+                            backgroundColor:cs.backgroundColor,color:cs.color,
+                            fontSize:cs.fontSize,fontWeight:cs.fontWeight,
+                            lineHeight:cs.lineHeight,textAlign:cs.textAlign,
+                            flexDirection:cs.flexDirection,flexWrap:cs.flexWrap,
+                            justifyContent:cs.justifyContent,alignItems:cs.alignItems,
+                            gap:cs.rowGap||'0px',borderRadius:cs.borderTopLeftRadius||'0px',
+                            overflow:cs.overflowY||'visible',opacity:cs.opacity,zIndex:cs.zIndex,
                         }
                     });
                     
@@ -952,60 +946,68 @@ async function clientSideConvert(html){
                 blbView.setUint32(4,flatNodes.length);
                 for(let i=0;i<flatNodes.length;i++){
                     const off=8+i*BLB_BLOCK_SIZE;
-                    const c = flatNodes[i].computed;
+                    const s=flatNodes[i].cs;
                     blbView.setUint16(off,i);
-                    
-                    // Margins
-                    blbView.setUint16(off+2, Math.max(0, c.mt));
-                    blbView.setUint16(off+4, Math.max(0, c.mr));
-                    blbView.setUint16(off+6, Math.max(0, c.mb));
-                    blbView.setUint16(off+8, Math.max(0, c.ml));
-                    // Padding
-                    blbView.setUint16(off+10, Math.max(0, c.pt));
-                    blbView.setUint16(off+12, Math.max(0, c.pr));
-                    blbView.setUint16(off+14, Math.max(0, c.pb));
-                    blbView.setUint16(off+16, Math.max(0, c.pl));
-                    // Width & Height
-                    blbView.setUint16(off+41, Math.max(0, c.w));
-                    blbView.setUint16(off+43, Math.max(0, c.h));
-                    
-                    // Background Color
-                    blbView.setUint8(off+54, c.bg.r);
-                    blbView.setUint8(off+55, c.bg.g);
-                    blbView.setUint8(off+56, c.bg.b);
-                    blbView.setUint8(off+57, c.bg.a);
+                    blbView.setUint8(off+2,DM[s.display]??0);
+                    blbView.setUint8(off+3,PM_[s.position]??0);
+                    blbView.setUint8(off+4,s.boxSizing==='border-box'?1:0);
+                    blbView.setUint16(off+5,cssV(s.width));
+                    blbView.setUint16(off+7,cssV(s.height));
+                    blbView.setInt16(off+9,Math.round((parseFloat(s.marginTop)||0)*10));
+                    blbView.setInt16(off+11,Math.round((parseFloat(s.marginRight)||0)*10));
+                    blbView.setInt16(off+13,Math.round((parseFloat(s.marginBottom)||0)*10));
+                    blbView.setInt16(off+15,Math.round((parseFloat(s.marginLeft)||0)*10));
+                    blbView.setUint16(off+17,Math.max(0,Math.round((parseFloat(s.paddingTop)||0)*10)));
+                    blbView.setUint16(off+19,Math.max(0,Math.round((parseFloat(s.paddingRight)||0)*10)));
+                    blbView.setUint16(off+21,Math.max(0,Math.round((parseFloat(s.paddingBottom)||0)*10)));
+                    blbView.setUint16(off+23,Math.max(0,Math.round((parseFloat(s.paddingLeft)||0)*10)));
+                    blbView.setUint8(off+25,Math.min(Math.round((parseFloat(s.borderTopWidth)||0)*10),255));
+                    blbView.setUint8(off+26,Math.min(Math.round((parseFloat(s.borderRightWidth)||0)*10),255));
+                    blbView.setUint8(off+27,Math.min(Math.round((parseFloat(s.borderBottomWidth)||0)*10),255));
+                    blbView.setUint8(off+28,Math.min(Math.round((parseFloat(s.borderLeftWidth)||0)*10),255));
+                    blbView.setUint32(off+29,colorToU32(s.borderColor));
+                    blbView.setUint32(off+33,colorToU32(s.backgroundColor));
+                    blbView.setUint32(off+37,colorToU32(s.color));
+                    blbView.setUint16(off+41,Math.round((parseFloat(s.fontSize)||16)*10));
+                    blbView.setUint16(off+43,parseInt(s.fontWeight)||400);
+                    blbView.setUint16(off+45,Math.max(0,Math.round((parseFloat(s.lineHeight)||0)*10)));
+                    blbView.setUint8(off+47,TAM[s.textAlign]??0);
+                    blbView.setUint8(off+48,FDM[s.flexDirection]??0);
+                    blbView.setUint8(off+49,s.flexWrap==='wrap'?1:0);
+                    blbView.setUint8(off+50,JCM[s.justifyContent]??0);
+                    blbView.setUint8(off+51,AIM[s.alignItems]??3);
+                    blbView.setUint16(off+52,Math.max(0,Math.round((parseFloat(s.gap)||0)*10)));
+                    blbView.setUint16(off+54,Math.max(0,Math.round((parseFloat(s.borderRadius)||0)*10)));
+                    blbView.setUint8(off+56,OFM[s.overflow]??0);
+                    blbView.setUint8(off+57,Math.round(parseFloat(s.opacity)*255));
+                    const zi=parseInt(s.zIndex);blbView.setInt16(off+58,isNaN(zi)?0:Math.max(-32768,Math.min(32767,zi)));
                 }
 
-                // BIB Generation
-                let bibData = new Uint8Array(0);
-                let bibLen = 0;
-                if (extractedImages.length > 0) {
-                    const bibHeader = new Uint8Array([0x42, 0x49, 0x42, 0x01]);
-                    const bibChunks = [bibHeader];
-                    bibLen += 4;
-                    
-                    const dv4 = new DataView(new ArrayBuffer(4));
-                    dv4.setUint32(0, extractedImages.length);
+                let bibData=new Uint8Array(0);
+                let bibLen=0;
+                if(extractedImages.length>0){
+                    const bibChunks=[new Uint8Array([0x42,0x49,0x42,0x01])];
+                    bibLen+=4;
+                    const dv4=new DataView(new ArrayBuffer(4));
+                    dv4.setUint32(0,extractedImages.length);
                     bibChunks.push(new Uint8Array(dv4.buffer));
-                    bibLen += 4;
-                    
-                    for (const img of extractedImages) {
-                        const h = new DataView(new ArrayBuffer(12));
-                        h.setUint16(0, img.id);
-                        h.setUint16(2, img.w);
-                        h.setUint16(4, img.h);
-                        h.setUint8(6, 1); // Format RGBA
-                        h.setUint32(7, img.data.length);
+                    bibLen+=4;
+                    for(const img of extractedImages){
+                        const h=new DataView(new ArrayBuffer(22));
+                        h.setUint32(0,img.id);
+                        h.setUint16(4,img.w);
+                        h.setUint16(6,img.h);
+                        h.setUint8(8,1);
+                        h.setUint8(9,0);
+                        h.setUint16(16,0);
+                        h.setUint32(18,img.data.length);
                         bibChunks.push(new Uint8Array(h.buffer));
                         bibChunks.push(img.data);
-                        bibLen += 12 + img.data.length;
+                        bibLen+=22+img.data.length;
                     }
-                    bibData = new Uint8Array(bibLen);
-                    let offset = 0;
-                    for (const chunk of bibChunks) {
-                        bibData.set(chunk, offset);
-                        offset += chunk.length;
-                    }
+                    bibData=new Uint8Array(bibLen);
+                    let offset=0;
+                    for(const chunk of bibChunks){bibData.set(chunk,offset);offset+=chunk.length;}
                 }
 
                 let secCount = 3;
@@ -1059,12 +1061,6 @@ async function clientSideConvert(html){
 }
 
 (async()=>{
-    try{
-        if('serviceWorker' in navigator) {
-            await navigator.serviceWorker.register('/bweb-sw.js');
-        }
-    } catch(e){}
-
     try{
         const r=await fetch('page.bweb');
         if(r.ok){await renderBinary(await r.arrayBuffer());return}

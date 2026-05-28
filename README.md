@@ -22,7 +22,7 @@ We provide a public **BWEB Landing Page & Converter Tool** accessible via the Me
 👉 **[BWEB Architecture Landing Page](https://mediclean-pro.at/bweb-converter/)**
 👉 **[Open Online BWEB Converter Tool](https://mediclean-pro.at/bweb-converter/converter.html)**
 
-*(Allows ZIP uploads of entire website folders to instantly convert them into `.bweb` binary structures).*
+*(Select entire website folders to instantly convert them into `.bweb` binary structures — no ZIP needed, no upload to any server).*
 
 ---
 
