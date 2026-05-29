@@ -1172,8 +1172,8 @@ async function compileFilesList(files) {
             updateLoader(pct, `Inlining: ${path}`, `Ersetze Pfad ${replaceCount}/${totalPaths}: ${path}`);
             
             const escapedPath = path.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-            // Matches src="path", src='./path', url(path) etc.
-            const regex = new RegExp(`(["'\\(])(?:\\.\\/)?${escapedPath}(["'\\)])`, 'g');
+            // Matches src="path", src='./path', src='/path', src='path?v=1' etc.
+            const regex = new RegExp(`(["'\\(])(?:\\.\\/|\\/)?${escapedPath}(?:\\?[^"'\\)]*)?(?:#[^"'\\)]*)?(["'\\)])`, 'g');
             htmlContent = htmlContent.replace(regex, `$1${dataUrl}$2`);
         }
 
