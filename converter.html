@@ -1816,7 +1816,8 @@ async function clientSideConvert(html){
                     blbView.setUint16(off+52,Math.max(0,Math.round((parseFloat(s.gap)||0)*10)));
                     blbView.setUint16(off+54,Math.max(0,Math.round((parseFloat(s.borderRadius)||0)*10)));
                     blbView.setUint8(off+56,OFM[s.overflow]??0);
-                    blbView.setUint8(off+57,Math.round(parseFloat(s.opacity)*255));
+                    const op = parseFloat(s.opacity);
+                    blbView.setUint8(off+57, isNaN(op) ? 255 : Math.round(op * 255));
                     const zi=parseInt(s.zIndex);blbView.setInt16(off+58,isNaN(zi)?0:Math.max(-32768,Math.min(32767,zi)));
                 }
 
