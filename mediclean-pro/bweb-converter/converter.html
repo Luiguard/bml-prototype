@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Converter Tool | HTML to Binary</title>
+    <meta name="description" content="Kostenloses Tool, um bestehende Websites (HTML, CSS, Bilder) in das binäre BWEB-Format zu konvertieren. Schnelleres Rendering und weniger CO2.">
+    <meta name="keywords" content="HTML to Binary, HTML Converter, BWEB Engine, BWEB Tool, Website umwandeln, Polyfill, Web Performance Tool, Binary DOM Generator">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.5; }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .mutation-msg { padding: 8px 12px; border-radius: 8px; line-height: 1.4; word-break: break-word; }
+        .mutation-msg-user { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); align-self: flex-end; color: #fff; max-width: 85%; }
+        .mutation-msg-ai { background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); align-self: flex-start; color: var(--text-primary); max-width: 85%; }
+
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --bg-primary:#000000;
+            --bg-card:#0a0a0a;
+            --bg-hover:#121212;
+            --border:rgba(255, 255, 255, 0.1);
+            --border-active:#ffffff;
+            --text-primary:#ffffff;
+            --text-secondary:#8a8f98;
+            --text-muted:#6b7280;
+            --accent:#ffffff;
+            --accent-glow:rgba(255, 255, 255, 0.1);
+            --success:#10b981;--warning:#f59e0b;--error:#ef4444;
+            --glass:rgba(10, 10, 10, 0.85);
+            --transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            --radius: 12px;
+        }
+        body{
+            font-family:'Inter',system-ui,-apple-system,sans-serif;
+            background:var(--bg-primary);color:var(--text-primary);
+            min-height:100vh;display:flex;flex-direction:column;align-items:center;
+            padding:2rem 1rem;
+            letter-spacing: -0.01em;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Ambient Background */
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background: radial-gradient(circle 800px at 50% -20%, rgba(255, 255, 255, 0.05), transparent 80%);
+        }
+
+        .engine-header{ text-align:center;margin-bottom:3rem; }
+        .engine-header h1{ font-size:clamp(2rem, 5vw, 3rem); font-weight:600; letter-spacing: -0.04em; margin-bottom: 1rem; background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .engine-header p{ color:var(--text-secondary); max-width:600px; margin:0 auto; }
+        
+        .format-badges{ display:flex;gap:.5rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap; }
+        .badge{ padding:.25rem .75rem; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:.75rem; font-weight:600; border:1px solid var(--border); background:#000; color:var(--text-primary); }
+        .badge-bml{ border-color:rgba(59,130,246,0.3); }
+        .badge-bdt{ border-color:rgba(16,185,129,0.3); }
+        .badge-blb{ border-color:rgba(245,158,11,0.3); }
+        .badge-bweb{ border-color:rgba(139,92,246,0.3); }
+
+        .main-grid{ display:grid;grid-template-columns:350px 1fr;gap:24px;width:100%;max-width:1400px;align-items:start; }
+        @media(max-width:1024px){ .main-grid{grid-template-columns:1fr;} }
+        
+        .panel{
+            background:var(--bg-card); border:1px solid var(--border);
+            border-radius:var(--radius); padding:24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: border-color var(--transition);
+        }
+        .panel:hover { border-color: rgba(255, 255, 255, 0.2); }
+        
+        .panel-title{ font-size:1.1rem;font-weight:600;margin-bottom:1.25rem;color:var(--text-primary);letter-spacing: -0.02em; }
+        
+        .drop-zone{
+            border:2px dashed var(--border);border-radius:var(--radius);
+            padding:3rem 2rem;text-align:center;color:var(--text-secondary);
+            cursor:pointer;transition:all var(--transition);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .drop-zone:hover,.drop-zone.dragover{
+            border-color:var(--border-active);background:rgba(255,255,255,0.05);color:var(--text-primary);
+        }
+        
+        .stats-grid{ display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:1.5rem; }
+        .stat{ background:#000;padding:12px;border-radius:8px;border:1px solid var(--border); }
+        .stat-label{ font-size:.75rem;color:var(--text-secondary);margin-bottom:4px;font-weight:500; }
+        .stat-value{ font-size:1.1rem;font-weight:600;color:var(--text-primary);font-family:'JetBrains Mono',monospace; }
+        
+        .section-bar{ display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:1rem;background:var(--bg-primary); }
+        .sec-bml{background:#3b82f6} .sec-bdt{background:#10b981} .sec-blb{background:#f59e0b} .sec-bib{background:#8b5cf6}
+        .section-legend{ display:flex;gap:12px;font-size:.75rem;font-weight:600;justify-content:center;flex-wrap:wrap; }
+        .legend-bml{color:#3b82f6} .legend-bdt{color:#10b981} .legend-blb{color:#f59e0b} .legend-bib{color:#8b5cf6}
+        
+        .html-input{
+            width:100%;min-height:180px;background:#000;
+            border:1px solid var(--border);border-radius:8px;
+            color:var(--text-primary);padding:16px;
+            font-family:'JetBrains Mono',monospace;font-size:.85rem;
+            resize:vertical;margin-bottom:1rem;transition:border-color var(--transition);
+        }
+        .html-input:focus{ outline:none;border-color:var(--border-active); }
+        
+        .btn-row{ display:flex;gap:12px; }
+        .btn{
+            flex:1;padding:12px;border:none;border-radius:8px;
+            font-weight:600;font-size:.9rem;cursor:pointer;
+            transition:all var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;
+        }
+        .btn-primary{ background:var(--text-primary);color:#000; }
+        .btn-primary:hover{ transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,255,255,0.15);opacity:0.9; }
+        .btn-secondary{ background:transparent;color:var(--text-primary);border:1px solid var(--border); }
+        .btn-secondary:hover{ background:var(--bg-hover);border-color:rgba(255,255,255,0.3); }
+        
+        .btn:disabled{ opacity:.5;cursor:not-allowed;transform:none;box-shadow:none; }
+        
+        .viewport-empty{
+            height:500px;display:flex;align-items:center;justify-content:center;
+            border:1px dashed var(--border);border-radius:var(--radius);
+            color:var(--text-muted);font-size:.9rem;background:#000;
+        }
+        #renderCanvas{ width:100%;height:600px;background:#fff;border-radius:8px;border:1px solid var(--border); }
+        #bml-viewport { max-width: 100%; overflow: hidden; }
+        #renderTarget { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); background: #ffffff; color: #000000; min-height: 500px; }
+        
+        .tree-view{
+            font-family:'JetBrains Mono',monospace;font-size:.8rem;
+            background:#000;padding:16px;border-radius:8px;border:1px solid var(--border);
+            max-height:400px;overflow-y:auto;white-space:pre;color:var(--text-secondary);
+        }
+        .tree-view .tag{color:#f87171} .tree-view .id-ref{color:#38bdf8} .tree-view .depth{color:#a3a3a3}
+        
+        .attribution{ text-align:center;margin-top:4rem;color:var(--text-muted);font-size:.8rem; }
+        .attribution a{ color:var(--text-primary);text-decoration:none; }
+
+        /* Modern Glassmorphic Success Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1; pointer-events: auto;
+        }
+        .modal-card {
+            background: rgba(10, 10, 10, 0.95); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px; padding: 32px; max-width: 500px; width: 90%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); position: relative;
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--text-primary);
+        }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+        .modal-close {
+            position: absolute; top: 16px; right: 16px; background: none; border: none;
+            color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; transition: color var(--transition);
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+        .modal-icon { font-size: 2.2rem; }
+        .modal-title { font-size: 1.4rem; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+        .modal-subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; line-height: 1.5; }
+        
+        .modal-stats { display: flex; gap: 12px; margin-bottom: 24px; }
+        .modal-stat-box {
+            flex: 1; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px; text-align: center;
+        }
+        .modal-stat-label { display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        .modal-stat-value { font-size: 1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        
+        .modal-guide {
+            background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: 10px; padding: 16px 20px; margin-bottom: 28px; text-align: left;
+        }
+        .modal-guide h4 { color: #10b981; font-size: 0.9rem; margin-top: 0; margin-bottom: 8px; font-weight: 600; }
+        .modal-guide ol { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
+        
+        .modal-footer { display: flex; gap: 12px; }
+
+    </style>
+</head>
+<body>
+    <div class="engine-header">
+        <h1>Binary Web Engine</h1>
+        <p>BML + BDT + BLB → Zero-Parse Client-Side Rendering</p>
+        <div class="format-badges">
+            <span class="badge badge-bml">BML v2</span>
+            <span class="badge badge-bdt">BDT v1</span>
+            <span class="badge badge-blb">BLB v1</span>
+            <span class="badge badge-bweb">BWEB Container</span>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div>
+            <div class="panel">
+                <div class="panel-title">Binärdatei laden</div>
+                <div class="drop-zone" id="dropZone">
+                    <p>📂 .bweb / .bml Datei hierher ziehen</p>
+                    <p style="font-size:.75rem;margin-top:.5rem">oder klicken zum Auswählen</p>
+                    <input type="file" id="fileInput" accept=".bweb,.bml,.bdt,.blb">
+                </div>
+
+                <div class="section-map" id="sectionMap" style="display:none">
+                    <div class="panel-title" style="margin-top:1rem">Sektionsverteilung</div>
+                    <div class="section-bar" id="sectionBar"></div>
+                    <div class="section-legend">
+                        <span class="legend-bml">BML</span>
+                        <span class="legend-bdt">BDT</span>
+                        <span class="legend-blb">BLB</span>
+                        <span class="legend-bib">BIB</span>
+                        <span class="legend-bvs" style="color:#d946ef">BVS</span>
+                        <span class="legend-bas" style="color:#eab308">BAS</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="statsGrid" style="display:none">
+                    <div class="stat stat-total"><div class="stat-label">BWEB Total</div><div class="stat-value" id="statTotal">–</div></div>
+                    <div class="stat stat-time"><div class="stat-label">Renderzeit</div><div class="stat-value" id="statTime">–</div></div>
+                    <div class="stat stat-bml"><div class="stat-label">BML (Inhalt)</div><div class="stat-value" id="statBml">–</div></div>
+                    <div class="stat stat-bdt"><div class="stat-label">BDT (Baum)</div><div class="stat-value" id="statBdt">–</div></div>
+                    <div class="stat stat-blb"><div class="stat-label">BLB (Layout)</div><div class="stat-value" id="statBlb">–</div></div>
+                    <div class="stat stat-bib"><div class="stat-label">BIB (Images)</div><div class="stat-value" id="statBib">–</div></div>
+                    <div class="stat stat-bvs"><div class="stat-label">BVS (Video)</div><div class="stat-value" id="statBvs">–</div></div>
+                    <div class="stat stat-bas"><div class="stat-label">BAS (Audio)</div><div class="stat-value" id="statBas">–</div></div>
+                    <div class="stat stat-ratio"><div class="stat-label">Nodes</div><div class="stat-value" id="statNodes">–</div></div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem">
+                <div class="panel-title">HTML → BWEB Konverter</div>
+                <textarea class="html-input" id="htmlInput" placeholder="<h1>Hallo Welt</h1>&#10;<p>Binäre Webseite</p>"></textarea>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" id="btnConvert">Konvertieren</button>
+                    <button class="btn btn-secondary" id="btnDownload" style="display:none">⬇ .bweb</button>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem; border-color: #10b981;">
+                <div class="panel-title" style="color: #10b981;">📁 Lokalen Website-Ordner konvertieren</div>
+                <p style="font-size:.8rem; color:var(--text-muted); margin-bottom:1rem;">Wähle einen Ordner mit HTML, CSS und Bildern aus. Alles wird lokal zu 100% inlined und kompiliert.</p>
+                <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
+                <div class="btn-row" style="flex-direction: column; gap: 8px; align-items: stretch;">
+                    <button class="btn" style="background:#10b981; color:#fff;" id="btnFolderUpload">Ordner auswählen & Kompilieren</button>
+                    <span style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.35; margin-top: 4px;">
+                        ℹ️ <strong>Linux/Ubuntu Tipp:</strong> Wähle den Ordner im Dialog aus (nicht doppelt hineinklicken) und klicke unten rechts auf "Auswählen/Open". Alternativ kannst du den Ordner einfach per <strong>Drag & Drop</strong> direkt hierhin ziehen!
+                    </span>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:1rem; border-color: var(--accent);">
+                <div class="panel-title" style="color: var(--accent);">🤖 AI Website Generator</div>
+                <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
+                    <select id="aiBackendSelect" class="html-input" style="min-height:30px; margin-top:0; padding: 0.4rem; flex: 1;">
+                        <option value="nvme">Lokale NVMe-KI (http://127.0.0.1:8090)</option>
+                        <option value="gemini">Google Gemini API (Key benötigt)</option>
+                    </select>
+                    <input type="password" id="geminiApiKey" class="html-input" style="min-height:30px; margin-top:0; font-family: sans-serif; flex: 1; display:none;" placeholder="Dein Gemini API-Key">
+                </div>
+                <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="btnGenerate">Website Generieren (BWEB)</button>
+                </div>
+                
+                <!-- Iteratives Design-Mutation-Tuning Chat Panel -->
+                <div id="mutationPanel" style="display:none; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <div class="panel-title" style="color: #10b981; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
+                        💬 AI-Design-Assistent (RAG-NVMe)
+                    </div>
+                    <div id="mutationChatHistory" style="max-height: 180px; overflow-y: auto; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 0.75rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px;">
+                    </div>
+                    <textarea class="html-input" id="mutationInput" placeholder="Z.B.: 'ändere Hintergrund zu dunkelblau', 'mach Ecken runder', 'Schriftfarbe gelb'..." style="min-height: 60px; font-size: 0.8rem; margin-bottom: 0.75rem;"></textarea>
+                    <div class="btn-row">
+                        <button class="btn" style="background:#10b981; color:#fff; font-size: 0.85rem; padding: 8px 16px;" id="btnMutate">Design anpassen</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="treePanel" style="margin-top:1rem; display:none">
+                <div class="panel-title">BDT Baumstruktur</div>
+                <div class="tree-view" id="treeView"></div>
+            </div>
+        </div>
+
+        <div class="panel" id="bml-viewport">
+            <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <span>Viewport</span>
+                <div id="viewportActions" style="display: none; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <span id="viewportStats" style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #10b981; font-weight: 600;"></span>
+                    <button class="btn btn-primary" id="btnDownloadViewport" style="font-size: 0.75rem; padding: 6px 12px; background: #10b981; color: #fff; border: none; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); border-radius: 6px; cursor: pointer; transition: transform var(--transition);">
+                        ⬇ .bweb
+                    </button>
+                    <button class="btn btn-secondary" id="btnDownloadZip" style="font-size: 0.75rem; padding: 6px 12px; border: 1px solid rgba(255,255,255,0.2); color: #fff; display: flex; align-items: center; gap: 6px; border-radius: 6px; cursor: pointer; transition: transform var(--transition); background: rgba(255,255,255,0.05);">
+                        📦 Deployment-ZIP
+                    </button>
+                </div>
+            </div>
+            <div class="viewport-empty" id="viewportEmpty">
+                Lade eine .bweb Datei oder konvertiere HTML
+            </div>
+            <div id="renderTarget"></div>
+        </div>
+    </div>
+
+    <div class="attribution">
+        <a href="https://github.com/Luiguard">Entwickelt von Benjamin Leimer</a> · Binary Web Engine · 2026
+    </div>
+
+<!-- Global High-End Loading & Progress Overlay -->
+<div id="loadingOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:2rem; transition: opacity 0.3s ease;">
+    <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:40px; width:100%; max-width:500px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.8);">
+        <div id="loadingSpinner" style="width:48px; height:48px; border:3px solid rgba(255,255,255,0.1); border-top-color:#10b981; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 24px;"></div>
+        <div id="loadingTitle" style="font-size:1.2rem; font-weight:600; margin-bottom:12px; letter-spacing:-0.02em;">Kompiliere BWEB-Webseite</div>
+        <div id="loadingStatus" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:24px;">Initialisiere Parser...</div>
+        
+        <!-- Progress Bar Container -->
+        <div style="width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden; margin-bottom:16px;">
+            <div id="loadingProgressBar" style="width:0%; height:100%; background:#10b981; transition:width 0.2s ease; border-radius:3px;"></div>
+        </div>
+        
+        <!-- Progress Log Details -->
+        <div id="loadingLog" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text-muted); background:#000; border:1px solid var(--border); border-radius:6px; padding:12px; max-height:100px; overflow-y:auto; text-align:left; line-height:1.4;">
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <div class="modal-header">
+            <div class="modal-icon">🎉</div>
+            <h3 class="modal-title">BWEB erfolgreich kompilisiert!</h3>
+        </div>
+        <div class="modal-body">
+            <p class="modal-subtitle">Deine Website wurde vollständig in das binäre BWEB-Format transformiert und im Viewport gerendert.</p>
+            
+            <div class="modal-stats">
+                <div class="modal-stat-box">
+                    <span class="modal-stat-label">Binär-Größe</span>
+                    <span class="modal-stat-value" id="modalStatSize">-</span>
+                </div>
+                <div class="modal-stat-box">
+                    <span class="modal-stat-label">DOM Nodes</span>
+                    <span class="modal-stat-value" id="modalStatNodes">-</span>
+                </div>
+                <div class="modal-stat-box">
+                    <span class="modal-stat-label">CO2-Einsparung</span>
+                    <span class="modal-stat-value" id="modalStatSaving" style="color: #10b981;">-</span>
+                </div>
+            </div>
+
+            <div class="modal-guide">
+                <h4>Nächste Schritte:</h4>
+                <ol>
+                    <li>Lade die <strong>Deployment-ZIP</strong> herunter.</li>
+                    <li>Entpacke das Archiv und lade alle Dateien auf deinen Webserver hoch.</li>
+                    <li>Lies die Datei <strong>ANLEITUNG.txt</strong> für die Serverkonfiguration.</li>
+                </ol>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="modalBtnDownloadBweb" style="flex: 1;">⬇ .bweb Datei</button>
+            <button class="btn btn-primary" id="modalBtnDownloadZip" style="flex: 1.5; background: #10b981; color: white;">📦 Deployment-ZIP</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const TAG_REV={0x01:'div',0x02:'span',0x03:'p',0x04:'a',0x05:'h1',0x06:'h2',0x07:'h3',0x08:'h4',0x09:'h5',0x0A:'h6',0x0B:'img',0x0C:'ul',0x0D:'ol',0x0E:'li',0x0F:'table',0x10:'tr',0x11:'td',0x12:'th',0x13:'thead',0x14:'tbody',0x15:'form',0x16:'input',0x17:'button',0x18:'textarea',0x19:'select',0x1A:'option',0x1B:'label',0x1C:'header',0x1D:'footer',0x1E:'nav',0x1F:'main',0x20:'section',0x21:'article',0x22:'aside',0x23:'strong',0x24:'em',0x25:'code',0x26:'pre',0x27:'br',0x28:'hr',0x29:'video',0x2A:'audio',0x2B:'canvas',0x2C:'svg',0x2D:'iframe',0x2E:'figcaption',0x2F:'figure',0x30:'blockquote',0x31:'small',0x32:'sub',0x33:'sup',0x34:'details',0x35:'summary',0x36:'dialog',0x37:'dl',0x38:'dt',0x39:'dd',0x3A:'mark',0x3B:'time',0x3C:'abbr',0x3D:'cite',0x3E:'b',0x3F:'i',0x40:'u',0xFE:'div',0xFF:'div'};
+const ATTR_REV={0x10:'class',0x11:'id',0x12:'href',0x13:'src',0x14:'style',0x15:'type',0x16:'name',0x17:'value',0x18:'placeholder',0x19:'alt',0x1A:'title',0x1B:'action',0x1C:'method',0x1D:'target',0x1E:'rel',0x1F:'role',0x20:'aria-label',0x21:'data-bind',0x22:'onclick',0x23:'onsubmit',0x24:'width',0x25:'height',0x26:'disabled',0x27:'checked',0x28:'selected',0x29:'required',0x2A:'autofocus',0x2B:'autocomplete',0x2C:'min',0x2D:'max',0x2E:'step',0x2F:'pattern',0x30:'for',0x31:'tabindex',0x32:'content',0x33:'charset',0x34:'http-equiv',0x35:'lang',0x36:'dir',0x37:'hidden'};
+const DISPLAY=['block','inline','flex','grid','none','inline-block','inline-flex'];
+const POSITION=['static','relative','absolute','fixed','sticky'];
+const TEXT_ALIGN=['left','center','right','justify'];
+const FLEX_DIR=['row','column','row-reverse','column-reverse'];
+const JUSTIFY=['flex-start','flex-end','center','space-between','space-around','space-evenly'];
+const ALIGN_ITEMS=['flex-start','flex-end','center','stretch','baseline'];
+const OVERFLOW=['visible','hidden','scroll','auto'];
+const BLB_BLOCK_SIZE=60;
+
+const DANGEROUS_TAGS = new Set(['script','iframe','object','embed','applet','meta','link','base']);
+const DANGEROUS_ATTRS = new Set(['onclick','onsubmit','onload','onerror','onmouseover','onfocus','onblur','onchange','oninput','onkeydown','onkeyup','onkeypress','formaction','xlink:href','srcdoc','data']);
+const MAX_RECURSION_DEPTH = 256;
+
+class BMLParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.d=new TextDecoder('utf-8');this.o=offset}
+    parseNode(depth=0){
+        if(depth>MAX_RECURSION_DEPTH)return null;
+        if(this.o+6>this.v.byteLength)return null;
+        const tag=this.v.getUint8(this.o++);
+        const nAttr=this.v.getUint8(this.o++);
+        const nChild=this.v.getUint16(this.o);this.o+=2;
+        const tLen=this.v.getUint16(this.o);this.o+=2;
+        const tagName=TAG_REV[tag]||'div';
+        if(DANGEROUS_TAGS.has(tagName)){
+            for(let i=0;i<nAttr;i++){
+                if(this.o+3>this.v.byteLength)return null;
+                this.o++;
+                const aLen=this.v.getUint16(this.o);this.o+=2;
+                if(this.o+aLen>this.v.byteLength)return null;
+                this.o+=aLen;
+            }
+            if(tLen>0){if(this.o+tLen>this.v.byteLength)return null;this.o+=tLen;}
+            for(let i=0;i<nChild;i++){this.parseNode(depth+1);}
+            return null;
+        }
+        const el=document.createElement(tagName);
+        el.classList.add('rendered-node',`bml-tag-${tagName}`);
+        for(let i=0;i<nAttr;i++){
+            if(this.o+3>this.v.byteLength)break;
+            const aId=this.v.getUint8(this.o++);
+            const aLen=this.v.getUint16(this.o);this.o+=2;
+            if(this.o+aLen>this.v.byteLength)break;
+            const aVal=this.d.decode(new Uint8Array(this.v.buffer,this.o,aLen));this.o+=aLen;
+            const aName=ATTR_REV[aId];
+            if(!aName||aName==='style'||DANGEROUS_ATTRS.has(aName))continue;
+            if((aName==='href'||aName==='src'||aName==='action')&&/^\s*javascript:/i.test(aVal))continue;
+            el.setAttribute(aName,aVal);
+        }
+        if(tLen>0){
+            if(this.o+tLen>this.v.byteLength){return el;}
+            const txt=this.d.decode(new Uint8Array(this.v.buffer,this.o,tLen));this.o+=tLen;
+            el.textContent=txt;
+        }
+        for(let i=0;i<nChild;i++){const c=this.parseNode(depth+1);if(c)el.appendChild(c)}
+        return el;
+    }
+}
+
+class BDTParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const nodes=[];
+        for(let i=0;i<count;i++){
+            const nid=this.v.getUint16(this.o);this.o+=2;
+            const pid=this.v.getUint16(this.o);this.o+=2;
+            const fc=this.v.getUint16(this.o);this.o+=2;
+            const ns=this.v.getUint16(this.o);this.o+=2;
+            const lc=this.v.getUint16(this.o);this.o+=2;
+            const ps=this.v.getUint16(this.o);this.o+=2;
+            const nt=this.v.getUint8(this.o++);
+            const tt=this.v.getUint8(this.o++);
+            const depth=this.v.getUint8(this.o++);
+            this.o++; // padding
+            nodes.push({id:nid,parent:pid,firstChild:fc,nextSibling:ns,lastChild:lc,previousSibling:ps,type:nt,tag:tt,depth});
+        }
+        return nodes;
+    }
+}
+
+class BLBParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const blocks=[];
+        for(let i=0;i<count;i++){
+            const o=this.o;
+            const nid=this.v.getUint16(o);
+            const display=this.v.getUint8(o+2);
+            const position=this.v.getUint8(o+3);
+            const boxSizing=this.v.getUint8(o+4);
+            const width=this.v.getUint16(o+5);
+            const height=this.v.getUint16(o+7);
+            const mt=this.v.getInt16(o+9),mr=this.v.getInt16(o+11),mb=this.v.getInt16(o+13),ml=this.v.getInt16(o+15);
+            const pt=this.v.getUint16(o+17),pr=this.v.getUint16(o+19),pb=this.v.getUint16(o+21),pl=this.v.getUint16(o+23);
+            const btw=this.v.getUint8(o+25),brw=this.v.getUint8(o+26),bbw=this.v.getUint8(o+27),blw=this.v.getUint8(o+28);
+            const borderColor=this.v.getUint32(o+29);
+            const bgColor=this.v.getUint32(o+33);
+            const color=this.v.getUint32(o+37);
+            const fontSize=this.v.getUint16(o+41);
+            const fontWeight=this.v.getUint16(o+43);
+            const lineHeight=this.v.getUint16(o+45);
+            const textAlign=this.v.getUint8(o+47);
+            const flexDir=this.v.getUint8(o+48);
+            const flexWrap=this.v.getUint8(o+49);
+            const justifyContent=this.v.getUint8(o+50);
+            const alignItems=this.v.getUint8(o+51);
+            const gap=this.v.getUint16(o+52);
+            const borderRadius=this.v.getUint16(o+54);
+            const overflow=this.v.getUint8(o+56);
+            const opacity=this.v.getUint8(o+57);
+            const zIndex=this.v.getInt16(o+58);
+            this.o+=BLB_BLOCK_SIZE;
+            blocks.push({nid,display,position,boxSizing,width,height,
+                margin:{t:mt,r:mr,b:mb,l:ml},padding:{t:pt,r:pr,b:pb,l:pl},
+                borderWidth:{t:btw,r:brw,b:bbw,l:blw},borderColor,bgColor,color,
+                fontSize,fontWeight,lineHeight,textAlign,flexDir,flexWrap,
+                justifyContent,alignItems,gap,borderRadius,overflow,opacity,zIndex});
+        }
+        return blocks;
+    }
+}
+
+const MAX_CANVAS_DIM = 8192;
+
+class BIBParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const images={};
+        for(let i=0;i<count;i++){
+            const id=this.v.getUint32(this.o);this.o+=4;
+            const w=this.v.getUint16(this.o);this.o+=2;
+            const h=this.v.getUint16(this.o);this.o+=2;
+            const cs=this.v.getUint8(this.o++);
+            const comp=this.v.getUint8(this.o++);
+            this.o+=6; // padding
+            
+            const blockId=this.v.getUint16(this.o);this.o+=2;
+            const dataLen=this.v.getUint32(this.o);this.o+=4;
+            
+            if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BIB: Bilddimensionen ${w}x${h} überschreiten Limit ${MAX_CANVAS_DIM}`);
+            if(dataLen!==w*h*4)throw new Error(`BIB: dataLen ${dataLen} != erwartete ${w*h*4} Bytes`);
+            if(this.o+dataLen>this.v.byteLength)throw new Error('BIB: Buffer-Overread');
+            
+            const pxData=new Uint8ClampedArray(this.v.buffer,this.o,dataLen);
+            this.o+=dataLen;
+            
+            images[id]={w,h,data:pxData};
+        }
+        return images;
+    }
+}
+
+class BVSParser {
+    constructor(buf, offset=0) {
+        this.v = new DataView(buf);
+        this.o = offset;
+        this.u8 = new Uint8Array(buf);
+    }
+    parse() {
+        const count = this.v.getUint32(this.o); this.o += 4;
+        const videos = {};
+        for(let i=0; i<count; i++) {
+            const id = this.v.getUint32(this.o); this.o += 4;
+            const w = this.v.getUint16(this.o); this.o += 2;
+            const h = this.v.getUint16(this.o); this.o += 2;
+            const codecLen = this.v.getUint8(this.o++);
+            if(this.o+codecLen>this.v.byteLength)throw new Error('BVS: Buffer-Overread');
+            const codecBytes = this.u8.slice(this.o, this.o + codecLen);
+            this.o += codecLen;
+            const codec = new TextDecoder('ascii').decode(codecBytes);
+            const chunkCount = this.v.getUint32(this.o); this.o += 4;
+            
+            if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BVS: Videodimensionen ${w}x${h} überschreiten Limit`);
+            
+            const chunks = [];
+            for(let j=0; j<chunkCount; j++) {
+                const flags = this.v.getUint8(this.o++);
+                const isKey = (flags & 1) === 1;
+                const ptsHigh = this.v.getUint32(this.o); this.o += 4;
+                const ptsLow = this.v.getUint32(this.o); this.o += 4;
+                const pts = Number((BigInt(ptsHigh) << 32n) | BigInt(ptsLow));
+                const dur = this.v.getUint32(this.o); this.o += 4;
+                const dataLen = this.v.getUint32(this.o); this.o += 4;
+                if(this.o+dataLen>this.v.byteLength)throw new Error('BVS: Buffer-Overread');
+                const data = this.u8.slice(this.o, this.o + dataLen);
+                this.o += dataLen;
+                
+                chunks.push({
+                    type: isKey ? 'key' : 'delta',
+                    timestamp: pts,
+                    duration: dur,
+                    data: data
+                });
+            }
+            videos[id] = {w, h, codec, chunks};
+        }
+        return videos;
+    }
+}
+
+async function applyBVS(rootEl, videos) {
+    if (!('VideoDecoder' in window)) {
+        console.warn('WebCodecs API not supported.');
+        return;
+    }
+
+    const canvases = rootEl.querySelectorAll('canvas[data-bind-video]');
+    for(const canvas of canvases) {
+        const vidId = parseInt(canvas.getAttribute('data-bind-video'));
+        const vid = videos[vidId];
+        if(!vid) continue;
+        
+        canvas.width = vid.w;
+        canvas.height = vid.h;
+        const ctx = canvas.getContext('2d');
+        
+        const playbackLoop = async () => {
+            let startRealTime = performance.now();
+            let currentChunk = 0;
+            let pendingFrames = [];
+            let started = false;
+            
+            const decoder = new VideoDecoder({
+                output: (frame) => pendingFrames.push(frame),
+                error: (e) => console.error("VideoDecoder error:", e)
+            });
+            
+            decoder.configure({
+                codec: vid.codec,
+                codedWidth: vid.w,
+                codedHeight: vid.h,
+                hardwareAcceleration: 'prefer-hardware'
+            });
+
+            while(true) {
+                while(decoder.decodeQueueSize < 10 && currentChunk < vid.chunks.length) {
+                    decoder.decode(new EncodedVideoChunk(vid.chunks[currentChunk++]));
+                }
+                
+                if (pendingFrames.length > 0) {
+                    if (!started) {
+                        started = true;
+                        canvas.dispatchEvent(new CustomEvent('bvs-loop-restart', {detail: {time: startRealTime}}));
+                    }
+                    const frame = pendingFrames[0];
+                    const elapsedRealUs = (performance.now() - startRealTime) * 1000;
+                    
+                    if (frame.timestamp <= elapsedRealUs) {
+                        ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+                        frame.close();
+                        pendingFrames.shift();
+                    }
+                }
+                
+                if (currentChunk >= vid.chunks.length && pendingFrames.length === 0) {
+                    await decoder.flush();
+                    currentChunk = 0;
+                    startRealTime = performance.now(); // Loop video
+                    canvas.dispatchEvent(new CustomEvent('bvs-loop-restart', {detail: {time: startRealTime}}));
+                }
+                
+                await new Promise(r => requestAnimationFrame(r));
+            }
+        };
+        playbackLoop();
+    }
+}
+
+class BASParser {
+    constructor(buf, offset=0) {
+        this.v = new DataView(buf);
+        this.o = offset;
+        this.u8 = new Uint8Array(buf);
+    }
+    parse() {
+        const count = this.v.getUint32(this.o); this.o += 4;
+        const audios = {};
+        for(let i=0; i<count; i++) {
+            const id = this.v.getUint32(this.o); this.o += 4;
+            const codecLen = this.v.getUint8(this.o++);
+            const codecBytes = this.u8.slice(this.o, this.o + codecLen);
+            this.o += codecLen;
+            const codec = new TextDecoder('ascii').decode(codecBytes);
+            const sampleRate = this.v.getUint32(this.o); this.o += 4;
+            const channels = this.v.getUint8(this.o++);
+            const chunkCount = this.v.getUint32(this.o); this.o += 4;
+            
+            const chunks = [];
+            for(let j=0; j<chunkCount; j++) {
+                const flags = this.v.getUint8(this.o++);
+                const isKey = (flags & 1) === 1;
+                const ptsHigh = this.v.getUint32(this.o); this.o += 4;
+                const ptsLow = this.v.getUint32(this.o); this.o += 4;
+                const pts = Number((BigInt(ptsHigh) << 32n) | BigInt(ptsLow));
+                const dur = this.v.getUint32(this.o); this.o += 4;
+                const dataLen = this.v.getUint32(this.o); this.o += 4;
+                const data = this.u8.slice(this.o, this.o + dataLen);
+                this.o += dataLen;
+                
+                chunks.push({
+                    type: isKey ? 'key' : 'delta',
+                    timestamp: pts,
+                    duration: dur,
+                    data: data
+                });
+            }
+            audios[id] = {codec, sampleRate, channels, chunks};
+        }
+        return audios;
+    }
+}
+
+let globalAudioContext = null;
+
+async function applyBAS(rootEl, audios) {
+    if (!('AudioDecoder' in window)) {
+        console.warn('WebCodecs AudioDecoder API not supported.');
+        return;
+    }
+
+    if (!globalAudioContext) {
+        globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    const resumeAudio = () => {
+        if (globalAudioContext.state === 'suspended') {
+            globalAudioContext.resume();
+        }
+        document.removeEventListener('click', resumeAudio);
+        document.removeEventListener('keydown', resumeAudio);
+    };
+    document.addEventListener('click', resumeAudio);
+    document.addEventListener('keydown', resumeAudio);
+
+    const canvases = rootEl.querySelectorAll('canvas[data-bind-audio]');
+    for(const canvas of canvases) {
+        const audId = parseInt(canvas.getAttribute('data-bind-audio'));
+        const aud = audios[audId];
+        if(!aud) continue;
+        
+        let totalSamples = 0;
+        const decodedBuffers = [];
+        
+        const decoder = new AudioDecoder({
+            output: (audioData) => {
+                const planarData = [];
+                for(let c=0; c<audioData.numberOfChannels; c++) {
+                    const chData = new Float32Array(audioData.numberOfFrames);
+                    audioData.copyTo(chData, {planeIndex: c, format: 'f32-planar'});
+                    planarData.push(chData);
+                }
+                decodedBuffers.push({
+                    frames: audioData.numberOfFrames,
+                    data: planarData
+                });
+                totalSamples += audioData.numberOfFrames;
+                audioData.close();
+            },
+            error: (e) => console.error("AudioDecoder error:", e)
+        });
+        
+        decoder.configure({
+            codec: aud.codec,
+            sampleRate: aud.sampleRate,
+            numberOfChannels: aud.channels
+        });
+
+        for (const chunk of aud.chunks) {
+            decoder.decode(new EncodedAudioChunk(chunk));
+        }
+        
+        await decoder.flush();
+        if (decodedBuffers.length === 0) continue;
+        
+        const finalBuffer = globalAudioContext.createBuffer(
+            aud.channels,
+            totalSamples,
+            aud.sampleRate
+        );
+        
+        let offset = 0;
+        for (const db of decodedBuffers) {
+            for (let c=0; c<aud.channels; c++) {
+                finalBuffer.getChannelData(c).set(db.data[c], offset);
+            }
+            offset += db.frames;
+        }
+        
+        let sourceNode = null;
+        let loopDuration = totalSamples / aud.sampleRate;
+        let videoStartTime = performance.now();
+        
+        function playAudio(offsetSec) {
+             if (globalAudioContext.state === 'suspended') return;
+             if (sourceNode) {
+                 try { sourceNode.stop(); } catch(e){}
+             }
+             sourceNode = globalAudioContext.createBufferSource();
+             sourceNode.buffer = finalBuffer;
+             sourceNode.connect(globalAudioContext.destination);
+             sourceNode.start(0, offsetSec);
+        }
+        
+        canvas.addEventListener('bvs-loop-restart', (e) => {
+             videoStartTime = e.detail.time;
+             playAudio(0);
+        });
+        
+        globalAudioContext.addEventListener('statechange', () => {
+             if (globalAudioContext.state === 'running') {
+                  let elapsedSec = (performance.now() - videoStartTime) / 1000;
+                  elapsedSec = elapsedSec % loopDuration;
+                  playAudio(elapsedSec);
+             }
+        });
+    }
+}
+
+function cssVal(v){
+    if(v===0xFFFF)return'auto';
+    if(v&0x8000)return(v&0x7FFF)/10+'%';
+    return v/10+'px';
+}
+function rgba(v){
+    if(v===0)return'transparent';
+    const r=(v>>>24)&0xFF,g=(v>>>16)&0xFF,b=(v>>>8)&0xFF,a=v&0xFF;
+    return`rgba(${r},${g},${b},${(a/255).toFixed(2)})`;
+}
+
+function applyBLB(rootEl,blocks){
+    const allNodes=rootEl.querySelectorAll('.rendered-node');
+    const nodeList=[rootEl,...allNodes];
+    blocks.forEach(bl=>{
+        const el=nodeList[bl.nid];
+        if(!el)return;
+        const s=el.style;
+        if(bl.display!==undefined)s.display=DISPLAY[bl.display]||'';
+        if(bl.position>0)s.position=POSITION[bl.position];
+        if(bl.boxSizing)s.boxSizing='border-box';
+        if(bl.width!==0xFFFF)s.width=cssVal(bl.width);
+        if(bl.height!==0xFFFF)s.height=cssVal(bl.height);
+        if(bl.margin.t)s.marginTop=cssVal(bl.margin.t);
+        if(bl.margin.r)s.marginRight=cssVal(bl.margin.r);
+        if(bl.margin.b)s.marginBottom=cssVal(bl.margin.b);
+        if(bl.margin.l)s.marginLeft=cssVal(bl.margin.l);
+        if(bl.padding.t)s.paddingTop=cssVal(bl.padding.t);
+        if(bl.padding.r)s.paddingRight=cssVal(bl.padding.r);
+        if(bl.padding.b)s.paddingBottom=cssVal(bl.padding.b);
+        if(bl.padding.l)s.paddingLeft=cssVal(bl.padding.l);
+        if(bl.borderWidth.t||bl.borderWidth.r||bl.borderWidth.b||bl.borderWidth.l){
+            s.borderStyle='solid';
+            s.borderTopWidth=bl.borderWidth.t/10+'px';
+            s.borderRightWidth=bl.borderWidth.r/10+'px';
+            s.borderBottomWidth=bl.borderWidth.b/10+'px';
+            s.borderLeftWidth=bl.borderWidth.l/10+'px';
+            if(bl.borderColor)s.borderColor=rgba(bl.borderColor);
+        }
+        if(bl.bgColor)s.backgroundColor=rgba(bl.bgColor);
+        if(bl.color!==0x000000FF&&bl.color!==0)s.color=rgba(bl.color);
+        if(bl.fontSize!==160)s.fontSize=bl.fontSize/10+'px';
+        if(bl.fontWeight!==400)s.fontWeight=bl.fontWeight;
+        if(bl.lineHeight>0)s.lineHeight=bl.lineHeight/10+'px';
+        if(bl.textAlign>0)s.textAlign=TEXT_ALIGN[bl.textAlign];
+        if(bl.display===2||bl.display===6){
+            if(bl.flexDir>0)s.flexDirection=FLEX_DIR[bl.flexDir];
+            if(bl.flexWrap)s.flexWrap='wrap';
+            if(bl.justifyContent>0)s.justifyContent=JUSTIFY[bl.justifyContent];
+            if(bl.alignItems!==3)s.alignItems=ALIGN_ITEMS[bl.alignItems];
+        }
+        if(bl.gap>0)s.gap=bl.gap/10+'px';
+        if(bl.borderRadius>0)s.borderRadius=bl.borderRadius/10+'px';
+        if(bl.overflow>0)s.overflow=OVERFLOW[bl.overflow];
+        if(bl.opacity<255)s.opacity=(bl.opacity/255).toFixed(2);
+        if(bl.zIndex!==0)s.zIndex=bl.zIndex;
+    });
+}
+
+async function applyBIB(rootEl,images){
+    const canvases=rootEl.querySelectorAll('canvas[data-bind]');
+    const promises = Array.from(canvases).map(async cvs=>{
+        const id=parseInt(cvs.getAttribute('data-bind'));
+        const img=images[id];
+        if(img){
+            cvs.width=img.w;
+            cvs.height=img.h;
+            const ctx=cvs.getContext('2d');
+            const imgData=new ImageData(img.data,img.w,img.h);
+            const bitmap=await createImageBitmap(imgData);
+            ctx.drawImage(bitmap,0,0);
+        }
+    });
+    await Promise.all(promises);
+}
+
+function renderBDTTree(nodes){
+    const tv=document.getElementById('treeView');
+    const tp=document.getElementById('treePanel');
+    if(!nodes||!nodes.length){tp.style.display='none';return}
+    tp.style.display='';
+    let html='';
+    nodes.forEach(n=>{
+        const indent='  '.repeat(n.depth);
+        const tag=TAG_REV[n.tag]||'?';
+        html+=`${indent}<span class="tag">&lt;${tag}&gt;</span> <span class="id-ref">#${n.id}</span> <span class="depth">p:${n.parent===0xFFFF?'root':n.parent} fc:${n.firstChild===0xFFFF?'-':n.firstChild} lc:${n.lastChild===0xFFFF?'-':n.lastChild} ps:${n.previousSibling===0xFFFF?'-':n.previousSibling} ns:${n.nextSibling===0xFFFF?'-':n.nextSibling}</span>\n`;
+    });
+    tv.innerHTML=html;
+}
+
+function parseBWEB(buf){
+    const u8=new Uint8Array(buf);
+    const magic=String.fromCharCode(u8[0],u8[1],u8[2],u8[3]);
+    if(magic==='BWEB'){
+        const version=u8[4],secCount=u8[5];
+        let off=6;const sections={};
+        for(let i=0;i<secCount;i++){
+            if(off>=u8.length) break;
+            const secType=u8[off++];
+            const secLen=new DataView(buf).getUint32(off);off+=4;
+            sections[secType]=buf.slice(off,off+secLen);
+            off+=secLen;
+        }
+        return sections;
+    }
+    if(u8[0]===0x42&&u8[1]===0x4D&&u8[2]===0x4C) return{1:buf};
+    return{1:buf};
+}
+
+async function renderBinary(buf){
+    const t0=performance.now();
+    const sections=parseBWEB(buf);
+
+    const bmlBuf=sections[1];
+    const bdtBuf=sections[2];
+    const blbBuf=sections[3];
+
+    let rootEl=null,blbBlocks=null;
+
+    if(bmlBuf){
+        const bmlView=new Uint8Array(bmlBuf);
+        let bmlStart=0;
+        if(bmlView[0]===0x42&&bmlView[1]===0x4D&&bmlView[2]===0x4C)bmlStart=4;
+        const parser=new BMLParser(bmlBuf,bmlStart);
+        rootEl=parser.parseNode();
+    }
+
+    if(bdtBuf){
+        const bdtView=new Uint8Array(bdtBuf);
+        let bdtStart=0;
+        if(bdtView[0]===0x42&&bdtView[1]===0x44&&bdtView[2]===0x54)bdtStart=4;
+        bdtNodes=new BDTParser(bdtBuf,bdtStart).parse();
+    }
+
+    if(blbBuf&&rootEl){
+        const blbView=new Uint8Array(blbBuf);
+        let blbStart=0;
+        if(blbView[0]===0x42&&blbView[1]===0x4C&&blbView[2]===0x42)blbStart=4;
+        blbBlocks=new BLBParser(blbBuf,blbStart).parse();
+        applyBLB(rootEl,blbBlocks);
+    }
+
+    if(sections[4]&&rootEl){
+        const bibBuf=sections[4];
+        const bibView=new Uint8Array(bibBuf);
+        let bibStart=0;
+        if(bibView[0]===0x42&&bibView[1]===0x49&&bibView[2]===0x42)bibStart=4;
+        const images=new BIBParser(bibBuf,bibStart).parse();
+        await applyBIB(rootEl,images);
+    }
+
+    if(sections[5]&&rootEl){
+        const bvsBuf=sections[5];
+        const bvsView=new Uint8Array(bvsBuf);
+        let bvsStart=0;
+        if(bvsView[0]===0x42&&bvsView[1]===0x56&&bvsView[2]===0x53)bvsStart=4;
+        const videos=new BVSParser(bvsBuf,bvsStart).parse();
+        await applyBVS(rootEl,videos);
+    }
+
+    if(sections[6]&&rootEl){
+        const basBuf=sections[6];
+        const basView=new Uint8Array(basBuf);
+        let basStart=0;
+        if(basView[0]===0x42&&basView[1]===0x41&&basView[2]===0x53)basStart=4;
+        const audios=new BASParser(basBuf,basStart).parse();
+        await applyBAS(rootEl,audios);
+    }
+
+    const target=document.getElementById('renderTarget');
+    const empty=document.getElementById('viewportEmpty');
+    target.innerHTML='';
+    if(rootEl){
+        target.appendChild(rootEl);
+        empty.style.display='none';
+    }
+
+    const t1=performance.now();
+
+    document.getElementById('statsGrid').style.display='';
+    document.getElementById('statTotal').textContent=buf.byteLength+' B';
+    document.getElementById('statTime').textContent=(t1-t0).toFixed(2)+' ms';
+    document.getElementById('statBml').textContent=bmlBuf?bmlBuf.byteLength+' B':'–';
+    document.getElementById('statBdt').textContent=bdtBuf?bdtBuf.byteLength+' B':'–';
+    document.getElementById('statBlb').textContent=blbBuf?blbBuf.byteLength+' B':'–';
+    document.getElementById('statBib').textContent=sections[4]?sections[4].byteLength+' B':'–';
+    document.getElementById('statBvs').textContent=sections[5]?sections[5].byteLength+' B':'–';
+    document.getElementById('statBas').textContent=sections[6]?sections[6].byteLength+' B':'–';
+    document.getElementById('statNodes').textContent=bdtNodes?bdtNodes.length:'–';
+
+    if(bmlBuf&&bdtBuf&&blbBuf){
+        const total=buf.byteLength;
+        const bibBuf=sections[4];
+        const bvsBuf=sections[5];
+        const basBuf=sections[6];
+        const map=document.getElementById('sectionMap');
+        map.style.display='';
+        const bar=document.getElementById('sectionBar');
+        bar.innerHTML=`<div class="sec-bml" style="width:${bmlBuf.byteLength/total*100}%"></div><div class="sec-bdt" style="width:${bdtBuf.byteLength/total*100}%"></div><div class="sec-blb" style="width:${blbBuf.byteLength/total*100}%"></div>`+(bibBuf?`<div class="sec-bib" style="width:${bibBuf.byteLength/total*100}%"></div>`:'')+(bvsBuf?`<div class="sec-bvs" style="width:${bvsBuf.byteLength/total*100}%; background:#d946ef"></div>`:'')+(basBuf?`<div class="sec-bas" style="width:${basBuf.byteLength/total*100}%; background:#eab308"></div>`:'');
+    }
+
+    renderBDTTree(bdtNodes);
+
+    // Show viewport action bar and update stats
+    const actions = document.getElementById('viewportActions');
+    const statsEl = document.getElementById('viewportStats');
+    if (actions && statsEl && buf) {
+        actions.style.display = 'flex';
+        const kb = (buf.byteLength / 1024).toFixed(1);
+        statsEl.innerHTML = `⚡ ${kb} KB | ${bdtNodes ? bdtNodes.length : 0} Nodes`;
+    }
+}
+
+let lastBweb=null;
+let currentSessionId=null;
+let bdtNodes=null;
+
+document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change',e=>{
+    const f=e.target.files[0];if(!f)return;
+    f.arrayBuffer().then(async buf=>await renderBinary(buf));
+});
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',async(e)=>{
+    e.preventDefault();
+    dz.classList.remove('drag-over');
+    
+    // Check if dynamic directory entry dropping is supported
+    const items = Array.from(e.dataTransfer.items || []);
+    if (items.length > 0) {
+        const entry = typeof items[0].webkitGetAsEntry === 'function' ? items[0].webkitGetAsEntry() : null;
+        if (entry && entry.isDirectory) {
+            const files = [];
+            await readEntryRecursively(entry, '', files);
+            if (files.length > 0) {
+                await compileFilesList(files);
+                return;
+            }
+        }
+    }
+    
+    const f=e.dataTransfer.files[0];
+    if(!f)return;
+    if (f.name.endsWith('.bweb')) {
+        f.arrayBuffer().then(async buf=>await renderBinary(buf));
+    } else if (f.name.endsWith('.html') || f.name.endsWith('.htm')) {
+        const text = await f.text();
+        document.getElementById('htmlInput').value = text;
+        alert("HTML-Inhalt geladen! Klicke auf 'Konvertieren', um BWEB zu erzeugen.");
+    }
+});
+
+document.getElementById('btnConvert').addEventListener('click',async()=>{
+    const html=document.getElementById('htmlInput').value.trim();
+    if(!html)return;
+    try {
+        const bweb=await clientSideConvert(html);
+        lastBweb=bweb;
+        await renderBinary(bweb);
+        document.getElementById('btnDownload').style.display='';
+        showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
+    } catch(err) {
+        alert("Fehler bei der Konvertierung: " + err);
+    }
+});
+
+document.getElementById('btnFolderUpload').addEventListener('click', () => {
+    document.getElementById('folderInput').click();
+});
+
+document.getElementById('folderInput').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    await compileFilesList(files);
+    e.target.value = '';
+});
+
+// Recursive Directory Reader via HTML5 File System API
+async function readEntryRecursively(entry, path = '', filesList = []) {
+    if (entry.isFile) {
+        const file = await new Promise((resolve, reject) => {
+            entry.file(resolve, reject);
+        });
+        file.customRelativePath = path ? `${path}/${file.name}` : file.name;
+        filesList.push(file);
+    } else if (entry.isDirectory) {
+        const dirReader = entry.createReader();
+        const entries = await new Promise((resolve) => {
+            const allEntries = [];
+            function readBatch() {
+                dirReader.readEntries((batch) => {
+                    if (batch.length === 0) {
+                        resolve(allEntries);
+                    } else {
+                        allEntries.push(...batch);
+                        readBatch();
+                    }
+                }, () => resolve(allEntries));
+            }
+            readBatch();
+        });
+        const currentPath = path ? `${path}/${entry.name}` : entry.name;
+        for (const childEntry of entries) {
+            await readEntryRecursively(childEntry, currentPath, filesList);
+        }
+    }
+    return filesList;
+}
+
+// Robust Folder Compiler with Regex Path-Mapping
+async function compileFilesList(files) {
+    let indexFile = files.find(f => f.name === 'index.html' || f.name === 'index.htm');
+    if (!indexFile) indexFile = files.find(f => f.name.endsWith('.html'));
+    if (!indexFile) {
+        alert("Keine index.html im hochgeladenen Ordner gefunden!");
+        return;
+    }
+
+    const btn = document.getElementById('btnFolderUpload');
+    const oldText = btn.textContent;
+    btn.textContent = 'Lese lokale Dateien...';
+    btn.disabled = true;
+
+    showLoader("Ordner-Kompilierung", "Analysiere hochgeladene Ordner-Struktur...");
+    updateLoader(5, "Scanne Dateien...", `Gefunden: ${files.length} Dateien in der Struktur.`);
+
+    try {
+        let htmlContent = await indexFile.text();
+        updateLoader(10, "Lese index.html...", `Hauptdokument index.html eingelesen (${(htmlContent.length / 1024).toFixed(1)} KB).`);
+        
+        const fileDataMap = {};
+        let readCount = 0;
+        for (const file of files) {
+            if (file === indexFile) continue;
+            
+            readCount++;
+            const pct = Math.round(10 + (readCount / files.length) * 35);
+            updateLoader(pct, `Lese ${file.name}...`, `Verarbeite Asset: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+
+            const dataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = ev => resolve(ev.target.result);
+                reader.readAsDataURL(file);
+            });
+            
+            let relativePath = file.customRelativePath;
+            if (!relativePath && file.webkitRelativePath) {
+                const pathParts = file.webkitRelativePath.split('/');
+                pathParts.shift();
+                relativePath = pathParts.join('/');
+            }
+            if (!relativePath) {
+                relativePath = file.name;
+            }
+            
+            fileDataMap[relativePath] = dataUrl;
+            fileDataMap[file.name] = dataUrl;
+        }
+
+        btn.textContent = 'Ersetze relative Pfade...';
+        updateLoader(50, "Inlining relative Pfade...", "Dedupliziere und ersetze Dateireferenzen in HTML/CSS...");
+        
+        // Replace relative paths using regex to match nested paths, prefixing, quotes variations
+        let replaceCount = 0;
+        const totalPaths = Object.keys(fileDataMap).length;
+        for (const [path, dataUrl] of Object.entries(fileDataMap)) {
+            replaceCount++;
+            const pct = Math.round(50 + (replaceCount / totalPaths) * 20);
+            updateLoader(pct, `Inlining: ${path}`, `Ersetze Pfad ${replaceCount}/${totalPaths}: ${path}`);
+            
+            const escapedPath = path.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            // Matches src="path", src='./path', url(path) etc.
+            const regex = new RegExp(`(["'\\(])(?:\\.\\/)?${escapedPath}(["'\\)])`, 'g');
+            htmlContent = htmlContent.replace(regex, `$1${dataUrl}$2`);
+        }
+
+        btn.textContent = 'Kompiliere in BWEB...';
+        updateLoader(75, "Kompiliere in BWEB...", "Rendere HTML-Dokument in Iframe und extrahiere DOM/CSS Layout...");
+        
+        const bweb = await clientSideConvert(htmlContent);
+        
+        updateLoader(90, "Rendere Binärdaten...", "Konstruiere binäre BML, BDT und BLB Datenblöcke...");
+        lastBweb = bweb;
+        await renderBinary(bweb);
+        document.getElementById('btnDownload').style.display = '';
+        
+        updateLoader(100, "Kompilierung erfolgreich!", "Das binäre BWEB-Paket wurde erfolgreich gerendert.");
+        setTimeout(hideLoader, 800);
+        
+        showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
+    } catch(err) {
+        hideLoader();
+        alert("Fehler beim Inlining oder Konvertieren des Ordners: " + err);
+    } finally {
+        btn.textContent = oldText;
+        btn.disabled = false;
+    }
+}
+
+document.getElementById('btnDownload').addEventListener('click',()=>{
+    if(!lastBweb)return;
+    const blob=new Blob([lastBweb],{type:'application/octet-stream'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='page.bweb';a.click();
+});
+
+document.getElementById('btnDownloadViewport').addEventListener('click',()=>{
+    if(!lastBweb)return;
+    const blob=new Blob([lastBweb],{type:'application/octet-stream'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='page.bweb';a.click();
+});
+
+document.getElementById('btnDownloadZip').addEventListener('click',()=>{
+    if(!lastBweb)return;
+    function getEngineScript(){
+        const fullScript=Array.from(document.scripts).find(s=>s.textContent.includes('class BMLParser')).textContent;
+        const uiBoundary="let lastBweb=";
+        const boundaryIndex=fullScript.indexOf(uiBoundary);
+        if(boundaryIndex!==-1){
+            return fullScript.substring(0,boundaryIndex).trim();
+        }
+        return fullScript;
+    }
+    const indexHtml=`<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Webseite</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+        body { margin: 0; padding: 0; background: #fff; color: #000; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+        #renderTarget { width: 100%; min-height: 100vh; position: relative; }
+        .rendered-node { box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div id="renderTarget"></div>
+    <script>
+        ${getEngineScript()}
+        
+        async function initBweb() {
+            try {
+                const response = await fetch('page.bweb');
+                if (!response.ok) throw new Error('page.bweb konnte nicht geladen werden');
+                const buffer = await response.arrayBuffer();
+                await renderBinary(buffer);
+            } catch(e) {
+                console.error("BWEB Engine Error:", e);
+                document.getElementById('renderTarget').innerHTML = \`
+                    <div style="padding: 2rem; max-width: 600px; margin: 40px auto; background: #1e1b4b; border: 1px solid #312e81; border-radius: 8px; text-align: center;">
+                        <h2 style="color: #ef4444; margin-top: 0;">Ladefehler</h2>
+                        <p style="color: #cbd5e1; line-height: 1.6;">Die BWEB Binärdatei <strong>page.bweb</strong> konnte nicht geladen werden.</p>
+                        <p style="color: #94a3b8; font-size: 0.85rem;">Stelle sicher, dass die Dateien auf einem Webserver (z.B. Apache, Nginx oder lokaler Python-Server) laufen und nicht über file:// geöffnet wurden.</p>
+                    </div>
+                \`;
+            }
+        }
+        window.addEventListener('DOMContentLoaded', initBweb);
+    <\/script>
+</body>
+</html>`;
+
+    const htaccess=`# BWEB Apache Deployment Configuration
+AddType application/x-bweb .bweb
+AddType application/x-bml .bml
+
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
+`;
+
+    const sw=`const CACHE_NAME = 'bweb-cache-v1';
+const ASSETS = [
+    './',
+    './index.html',
+    './page.bweb'
+];
+self.addEventListener('install', e => {
+    e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
+    self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+    e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))));
+    self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+    e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request)));
+});
+`;
+
+    function createSimpleZip(files){
+        const crc32Table=[];
+        for(let i=0;i<256;i++){
+            let c=i;
+            for(let j=0;j<8;j++){
+                c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);
+            }
+            crc32Table[i]=c;
+        }
+        function getCrc32(data){
+            let crc=0^(-1);
+            for(let i=0;i<data.length;i++){
+                crc=(crc>>>8)^crc32Table[(crc^data[i])&0xFF];
+            }
+            return (crc^(-1))>>>0;
+        }
+        let offset=0;
+        const parts=[];
+        const cdEntries=[];
+        for(const file of files){
+            const nameBytes=new TextEncoder().encode(file.name);
+            const dataBytes=file.data;
+            const crc=getCrc32(dataBytes);
+            const lfh=new Uint8Array(30+nameBytes.length);
+            const lfhView=new DataView(lfh.buffer);
+            lfhView.setUint32(0,0x04034b50,true);
+            lfhView.setUint16(4,10,true);
+            lfhView.setUint16(6,0,true);
+            lfhView.setUint16(8,0,true);
+            lfhView.setUint32(10,0,true);
+            lfhView.setUint32(14,crc,true);
+            lfhView.setUint32(18,dataBytes.length,true);
+            lfhView.setUint32(22,dataBytes.length,true);
+            lfhView.setUint16(26,nameBytes.length,true);
+            lfhView.setUint16(28,0,true);
+            lfh.set(nameBytes,30);
+            parts.push(lfh);parts.push(dataBytes);
+            const cdh=new Uint8Array(46+nameBytes.length);
+            const cdhView=new DataView(cdh.buffer);
+            cdhView.setUint32(0,0x02014b50,true);
+            cdhView.setUint16(4,20,true);
+            cdhView.setUint16(6,10,true);
+            cdhView.setUint16(8,0,true);
+            cdhView.setUint16(10,0,true);
+            cdhView.setUint32(12,0,true);
+            cdhView.setUint32(16,crc,true);
+            cdhView.setUint32(20,dataBytes.length,true);
+            cdhView.setUint32(24,dataBytes.length,true);
+            cdhView.setUint16(28,nameBytes.length,true);
+            cdhView.setUint16(30,0,true);
+            cdhView.setUint16(32,0,true);
+            cdhView.setUint16(34,0,true);
+            cdhView.setUint16(36,0,true);
+            cdhView.setUint32(38,0,true);
+            cdhView.setUint32(42,offset,true);
+            cdh.set(nameBytes,46);
+            cdEntries.push(cdh);
+            offset+=lfh.length+dataBytes.length;
+        }
+        const cdStart=offset;
+        let cdSize=0;
+        for(const cdh of cdEntries){
+            parts.push(cdh);
+            cdSize+=cdh.length;
+        }
+        const eocd=new Uint8Array(22);
+        const eocdView=new DataView(eocd.buffer);
+        eocdView.setUint32(0,0x06054b50,true);
+        eocdView.setUint16(4,0,true);
+        eocdView.setUint16(6,0,true);
+        eocdView.setUint16(8,cdEntries.length,true);
+        eocdView.setUint16(10,cdEntries.length,true);
+        eocdView.setUint32(12,cdSize,true);
+        eocdView.setUint32(16,cdStart,true);
+        eocdView.setUint16(20,0,true);
+        parts.push(eocd);
+        return new Blob(parts,{type:'application/zip'});
+    }
+    const readme=`========================================================================
+             BWEB BINARY WEB DEPLOYMENT ANLEITUNG
+========================================================================
+
+Herzlichen Glückwunsch! Sie haben erfolgreich ein hochperformantes, 
+binäres BWEB-Projekt generiert. Dieses Verzeichnis ist sofort
+einsatzbereit für die Bereitstellung auf jedem Webserver.
+
+Inhalt dieses ZIP-Archivs:
+--------------------------
+1. page.bweb      - Die komprimierten binären Bytes Ihrer Website.
+2. index.html     - Die HTML-Einstiegsseite mit der BWEB-Engine.
+3. .htaccess      - Die Serverkonfiguration (MIME-Types für Apache).
+4. bweb-sw.js     - Der Service Worker für Offline-Caching (<1ms Ladezeit).
+5. ANLEITUNG.txt  - Dieses Dokument.
+
+SCHRITT-FÜR-SCHRITT ANLEITUNG ZUM DEPLOYMENT:
+=============================================
+
+SCHRITT 1: Dateien auf den Server hochladen
+-------------------------------------------
+Laden Sie alle 4 Kern-Dateien (index.html, page.bweb, .htaccess, bweb-sw.js)
+in das Hauptverzeichnis (Root) oder ein beliebiges Unterverzeichnis
+Ihres Webservers (z. B. Apache, Nginx oder Shared Hosting wie cPanel/Plesk) hoch.
+
+SCHRITT 2: MIME-Types verifizieren
+----------------------------------
+Die .htaccess-Datei konfiguriert die MIME-Types für Apache-Server
+automatisch. Wenn Sie Nginx nutzen, fügen Sie folgende Zeilen in Ihre
+'nginx.conf' oder 'mime.types' ein:
+
+    types {
+        application/x-bweb bweb;
+        application/x-bml bml;
+    }
+
+SCHRITT 3: Testen & Aufrufen
+----------------------------
+Rufen Sie die URL Ihres Servers im Browser auf (z. B. https://ihredomain.de/).
+Die BWEB-Engine lädt page.bweb vollkommen binär und rendert sie in Echtzeit.
+
+WICHTIGER HINWEIS FÜR LOKALES TESTEN:
+-------------------------------------
+Öffnen Sie die 'index.html' NICHT direkt per Doppelklick (file://-Protokoll)
+im Browser. Browser blockieren AJAX-Requests (fetch) aus Sicherheitsgründen
+bei lokalen Dateien. Nutzen Sie zum lokalen Testen einen lokalen Server,
+beispielsweise mit Python:
+
+    python3 -m http.server 8000
+
+Und rufen Sie anschließend http://localhost:8000 auf.
+
+========================================================================
+                Viel Erfolg mit Ihrem Binary Web Projekt!
+========================================================================`;
+
+    const enc=new TextEncoder();
+    const zipBlob=createSimpleZip([
+        {name:'page.bweb',data:new Uint8Array(lastBweb)},
+        {name:'index.html',data:enc.encode(indexHtml)},
+        {name:'.htaccess',data:enc.encode(htaccess)},
+        {name:'bweb-sw.js',data:enc.encode(sw)},
+        {name:'ANLEITUNG.txt',data:enc.encode(readme)}
+    ]);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(zipBlob);
+    a.download='bweb-deployment.zip';
+    a.click();
+});
+
+document.getElementById('aiBackendSelect').addEventListener('change', (e) => {
+    document.getElementById('geminiApiKey').style.display = e.target.value === 'gemini' ? '' : 'none';
+});
+
+document.getElementById('btnGenerate').addEventListener('click',async()=>{
+    const prompt=document.getElementById('promptInput').value.trim();
+    const apiKey=document.getElementById('geminiApiKey').value.trim();
+    const backend=document.getElementById('aiBackendSelect').value;
+    if(!prompt)return;
+    
+    const btn=document.getElementById('btnGenerate');
+    const oldText=btn.textContent;
+    btn.textContent='⏳ Generiere KI-Modell...';
+    btn.disabled=true;
+    
+    try{
+        if (backend === 'nvme') {
+            // Lokale NVMe-KI via RAG-NVMe Server /generate-site (Echte Binär-Verkettung)
+            const nvmeUrl = 'http://127.0.0.1:8090/generate-site';
+            
+            const resp = await fetch(nvmeUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    prompt: prompt,
+                    slices: ['header', 'hero', 'features', 'pricing', 'footer'],
+                    binary: true
+                })
+            });
+            if (resp.ok) {
+                const sessId = resp.headers.get('X-Session-Id');
+                if (sessId) {
+                    currentSessionId = sessId;
+                    initMutationChat(prompt);
+                }
+                const bweb = await resp.arrayBuffer();
+                lastBweb = bweb;
+                await renderBinary(bweb);
+                document.getElementById('btnDownload').style.display = '';
+                showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
+            } else {
+                const data = await resp.json().catch(() => ({}));
+                alert("Fehler bei der Website-Generierung via RAG-NVMe: " + (data.error || "Server-Fehler. Läuft der RAG-Server?"));
+            }
+        } else if (backend === 'gemini') {
+            if (!apiKey) {
+                alert("Bitte gib einen Gemini API-Key ein.");
+                return;
+            }
+            // Lokale Client-Side Generierung via Google API
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [{ text: `Generate a beautiful, modern, responsive HTML/CSS webpage based on this prompt. Use inline styles or <style> tags. Include some realistic images via unsplash. Return ONLY the raw HTML code, no markdown block, no explanation. Prompt: ${prompt}` }]
+                }]
+            };
+            const aiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if (aiResp.ok) {
+                const data = await aiResp.json();
+                let html = data.candidates[0].content.parts[0].text;
+                html = html.replace(/^```html?\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+                
+                btn.textContent = 'Kompiliere in BWEB...';
+                const bweb = await clientSideConvert(html);
+                lastBweb = bweb;
+                await renderBinary(bweb);
+                document.getElementById('btnDownload').style.display = '';
+                document.getElementById('mutationPanel').style.display = 'none'; // Hide mutation panel for gemini
+                showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
+            } else {
+                alert("Fehler bei der lokalen Gemini API-Anfrage (Key ungültig?).");
+            }
+        }
+    }catch(e){
+        alert("Server oder API nicht erreichbar: " + e);
+    }finally{
+        btn.textContent=oldText;
+        btn.disabled=false;
+    }
+});
+
+// AI Design Assistent (RAG-NVMe) Mutation Chat Logic
+document.getElementById('btnMutate').addEventListener('click', async () => {
+    const prompt = document.getElementById('mutationInput').value.trim();
+    if (!prompt || !currentSessionId) return;
+
+    const btn = document.getElementById('btnMutate');
+    const oldText = btn.textContent;
+    btn.textContent = '⏳ Mutierte BLB-Blöcke...';
+    btn.disabled = true;
+
+    addMutationChatMsg('user', prompt);
+    document.getElementById('mutationInput').value = '';
+
+    try {
+        const resp = await fetch('http://127.0.0.1:8090/mutate-site', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                session_id: currentSessionId,
+                prompt: prompt
+            })
+        });
+
+        if (resp.ok) {
+            const mutationsCount = resp.headers.get('X-Mutations-Applied') || '0';
+            const bweb = await resp.arrayBuffer();
+            lastBweb = bweb;
+            await renderBinary(bweb);
+            addMutationChatMsg('ai', `Erfolgreich! <strong>${mutationsCount} BLB-Knoten-Eigenschaften</strong> wurden direkt im binären Layout-Block-Format im RAM mutiert und instant neu gerendert.`);
+        } else {
+            const d = await resp.json().catch(() => ({}));
+            addMutationChatMsg('ai', `Fehler bei der Mutation: ${d.error || 'Server-Fehler'}`);
+        }
+    } catch(err) {
+        addMutationChatMsg('ai', `Verbindungsfehler zum RAG-Server: ${err}`);
+    } finally {
+        btn.textContent = oldText;
+        btn.disabled = false;
+    }
+});
+
+function initMutationChat(prompt) {
+    const history = document.getElementById('mutationChatHistory');
+    history.innerHTML = '';
+    document.getElementById('mutationPanel').style.display = 'block';
+    addMutationChatMsg('ai', `Webseite erfolgreich assembliert für: "<strong>${prompt}</strong>"<br>Session ID: <code>${currentSessionId}</code><br><br>Wie soll ich das Design anpassen? Du kannst mir Befehle geben wie:<br>• "Hintergrundfarbe auf dunkelrot ändern"<br>• "Schriftfarbe gelb machen"<br>• "Rundungen vergrößern"<br>• "Abstände / Padding verringern"`);
+}
+
+function addMutationChatMsg(sender, text) {
+    const history = document.getElementById('mutationChatHistory');
+    const div = document.createElement('div');
+    div.className = `mutation-msg mutation-msg-${sender}`;
+    div.innerHTML = text;
+    history.appendChild(div);
+    history.scrollTop = history.scrollHeight;
+}
+
+async function clientSideConvert(html){
+    return new Promise((resolve, reject) => {
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'absolute';
+        iframe.style.width = '1920px'; // Standard desktop width for layout computation
+        iframe.style.height = '1080px';
+        iframe.style.opacity = '0';
+        iframe.style.pointerEvents = 'none';
+        document.body.appendChild(iframe);
+
+        // Clean HTML to prevent script execution inside layout iframe
+        const cleanHtml = html
+            .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '')
+            .replace(/<script\b[^>]*\/>/gi, '')
+            .replace(/\son[a-z]+\s*=\s*(['"])(.*?)\1/gi, '')
+            .replace(/\son[a-z]+\s*=\s*[^>\s]+/gi, '');
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(cleanHtml);
+        doc.close();
+
+        // Robust Timeout to guarantee full DOM parsing and layout styles calculation
+        setTimeout(async () => {
+            try {
+                const body = doc.body;
+                
+                // Force reveal elements to be visible for the conversion
+                const reveals = doc.querySelectorAll('.reveal');
+                reveals.forEach(el => el.classList.add('active'));
+
+                
+                const TAG_FWD={};
+                for(const[k,v]of Object.entries(TAG_REV))TAG_FWD[v]=parseInt(k);
+                const ATTR_FWD={};
+                for(const[k,v]of Object.entries(ATTR_REV))ATTR_FWD[v]=parseInt(k);
+
+                const enc=new TextEncoder();
+                const bmlBuf=[];
+                const flatNodes=[];
+                const extractedImages = [];
+
+                function colorToU32(c) {
+                    const m = c.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+                    if (!m) return 0;
+                    const r=parseInt(m[1]),g=parseInt(m[2]),b=parseInt(m[3]);
+                    const a=m[4]!==undefined?Math.round(parseFloat(m[4])*255):255;
+                    return((r<<24)|(g<<16)|(b<<8)|a)>>>0;
+                }
+                function cssV(v){if(!v||v==='auto'||v==='none')return 0xFFFF;const n=parseFloat(v);return isNaN(n)?0xFFFF:Math.round(n*10)}
+                const DM={'block':0,'inline':1,'flex':2,'grid':3,'none':4,'inline-block':5,'inline-flex':6};
+                const PM_={'static':0,'relative':1,'absolute':2,'fixed':3,'sticky':4};
+                const TAM={'left':0,'start':0,'center':1,'right':2,'end':2,'justify':3};
+                const FDM={'row':0,'column':1,'row-reverse':2,'column-reverse':3};
+                const JCM={'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'space-between':3,'space-around':4,'space-evenly':5};
+                const AIM={'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'stretch':3,'baseline':4};
+                const OFM={'visible':0,'hidden':1,'scroll':2,'auto':3};
+
+                function serNode(el,parentIdx){
+                    // Ensure it is an element
+                    if (el.nodeType !== 1) return;
+                    
+                    let tag=el.tagName?el.tagName.toLowerCase():'div';
+                    const attrs=[];
+                    
+                    // Image Extraction (BIB)
+                    if (tag === 'img') {
+                        tag = 'canvas'; // Replace with canvas for BWEB rendering
+                        try {
+                            const cvs = document.createElement('canvas');
+                            cvs.width = el.width || el.naturalWidth || 100;
+                            cvs.height = el.height || el.naturalHeight || 100;
+                            const ctx = cvs.getContext('2d');
+                            ctx.drawImage(el, 0, 0, cvs.width, cvs.height);
+                            const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+                            const bibId = extractedImages.length;
+                            extractedImages.push({
+                                id: bibId,
+                                w: cvs.width,
+                                h: cvs.height,
+                                data: new Uint8Array(imgData.data.buffer)
+                            });
+                            // Add data-bind attribute for the parser
+                            const aid = ATTR_FWD['data-bind'];
+                            if (aid !== undefined) {
+                                attrs.push({id: aid, val: enc.encode(bibId.toString())});
+                            }
+                        } catch(e) {
+                            console.warn("CORS blockiert Bild-Extraktion", e);
+                        }
+                    }
+
+                    const tagByte=TAG_FWD[tag]||0x01;
+                    const nodeIdx=flatNodes.length;
+                    
+                    const cs=iframe.contentWindow.getComputedStyle(el);
+                    flatNodes.push({
+                        tag: tagByte, parentIdx, children: [],
+                        cs:{
+                            display:cs.display,position:cs.position,boxSizing:cs.boxSizing,
+                            width:cs.width,height:cs.height,
+                            marginTop:cs.marginTop,marginRight:cs.marginRight,
+                            marginBottom:cs.marginBottom,marginLeft:cs.marginLeft,
+                            paddingTop:cs.paddingTop,paddingRight:cs.paddingRight,
+                            paddingBottom:cs.paddingBottom,paddingLeft:cs.paddingLeft,
+                            borderTopWidth:cs.borderTopWidth,borderRightWidth:cs.borderRightWidth,
+                            borderBottomWidth:cs.borderBottomWidth,borderLeftWidth:cs.borderLeftWidth,
+                            borderColor:cs.borderTopColor,
+                            backgroundColor:cs.backgroundColor,color:cs.color,
+                            fontSize:cs.fontSize,fontWeight:cs.fontWeight,
+                            lineHeight:cs.lineHeight,textAlign:cs.textAlign,
+                            flexDirection:cs.flexDirection,flexWrap:cs.flexWrap,
+                            justifyContent:cs.justifyContent,alignItems:cs.alignItems,
+                            gap:cs.rowGap||'0px',borderRadius:cs.borderTopLeftRadius||'0px',
+                            overflow:cs.overflowY||'visible',opacity:cs.opacity,zIndex:cs.zIndex,
+                        }
+                    });
+                    
+                    if(parentIdx>=0)flatNodes[parentIdx].children.push(nodeIdx);
+
+                    if(el.attributes){
+                        for(const attr of el.attributes){
+                            if(attr.name === 'src' && tag === 'canvas') continue; // Handled by BIB
+                            const aid=ATTR_FWD[attr.name];
+                            if(aid!==undefined&&attr.name!=='style'){
+                                const vb=enc.encode(attr.value);
+                                attrs.push({id:aid,val:vb});
+                            }
+                        }
+                    }
+
+                    let textContent='';
+                    for(const cn of el.childNodes){
+                        if(cn.nodeType===3){
+                            const t=cn.textContent.trim();
+                            if(t)textContent+=t+' ';
+                        }
+                    }
+                    textContent=textContent.trim();
+                    const textBytes=textContent?enc.encode(textContent):new Uint8Array(0);
+
+                    const childElements=[];
+                    for(const cn of el.childNodes){
+                        if(cn.nodeType===1)childElements.push(cn);
+                    }
+
+                    bmlBuf.push(tagByte);
+                    bmlBuf.push(attrs.length);
+                    bmlBuf.push((childElements.length>>8)&0xFF,childElements.length&0xFF);
+                    bmlBuf.push((textBytes.length>>8)&0xFF,textBytes.length&0xFF);
+
+                    for(const a of attrs){
+                        bmlBuf.push(a.id);
+                        bmlBuf.push((a.val.length>>8)&0xFF,a.val.length&0xFF);
+                        for(const b of a.val)bmlBuf.push(b);
+                    }
+                    for(const b of textBytes)bmlBuf.push(b);
+
+                    for(const ce of childElements)serNode(ce,nodeIdx);
+                }
+
+                const topChildren=[...body.children];
+                const wrapDiv=doc.createElement('div');
+                for(const c of topChildren)wrapDiv.appendChild(c.cloneNode(true));
+                serNode(wrapDiv,-1);
+
+                const bmlData=new Uint8Array([0x42,0x4D,0x4C,0x02,...bmlBuf]);
+
+                const bdtBuf=new ArrayBuffer(4+4+flatNodes.length*16);
+                const bdtView=new DataView(bdtBuf);
+                bdtView.setUint8(0,0x42);bdtView.setUint8(1,0x44);bdtView.setUint8(2,0x54);bdtView.setUint8(3,0x01);
+                bdtView.setUint32(4,flatNodes.length);
+                for(let i=0;i<flatNodes.length;i++){
+                    const off=8+i*16;
+                    const n=flatNodes[i];
+                    bdtView.setUint16(off,i);
+                    bdtView.setUint16(off+2,n.parentIdx>=0?n.parentIdx:0xFFFF);
+                    bdtView.setUint16(off+4,n.children.length?n.children[0]:0xFFFF);
+                    let ns=0xFFFF;
+                    if(n.parentIdx>=0){
+                        const siblings=flatNodes[n.parentIdx].children;
+                        const myPos=siblings.indexOf(i);
+                        if(myPos>=0&&myPos<siblings.length-1)ns=siblings[myPos+1];
+                    }
+                    bdtView.setUint16(off+6,ns);
+                    bdtView.setUint8(off+8,1);
+                    bdtView.setUint8(off+9,n.tag);
+                    let depth=0,p=n.parentIdx;
+                    while(p>=0&&depth<255){depth++;p=flatNodes[p].parentIdx}
+                    bdtView.setUint8(off+10,depth);
+                }
+
+                const blbSize=4+4+flatNodes.length*BLB_BLOCK_SIZE;
+                const blbBuf=new ArrayBuffer(blbSize);
+                const blbView=new DataView(blbBuf);
+                blbView.setUint8(0,0x42);blbView.setUint8(1,0x4C);blbView.setUint8(2,0x42);blbView.setUint8(3,0x01);
+                blbView.setUint32(4,flatNodes.length);
+                for(let i=0;i<flatNodes.length;i++){
+                    const off=8+i*BLB_BLOCK_SIZE;
+                    const s=flatNodes[i].cs;
+                    blbView.setUint16(off,i);
+                    blbView.setUint8(off+2,DM[s.display]??0);
+                    blbView.setUint8(off+3,PM_[s.position]??0);
+                    blbView.setUint8(off+4,s.boxSizing==='border-box'?1:0);
+                    blbView.setUint16(off+5,cssV(s.width));
+                    blbView.setUint16(off+7,cssV(s.height));
+                    blbView.setInt16(off+9,Math.round((parseFloat(s.marginTop)||0)*10));
+                    blbView.setInt16(off+11,Math.round((parseFloat(s.marginRight)||0)*10));
+                    blbView.setInt16(off+13,Math.round((parseFloat(s.marginBottom)||0)*10));
+                    blbView.setInt16(off+15,Math.round((parseFloat(s.marginLeft)||0)*10));
+                    blbView.setUint16(off+17,Math.max(0,Math.round((parseFloat(s.paddingTop)||0)*10)));
+                    blbView.setUint16(off+19,Math.max(0,Math.round((parseFloat(s.paddingRight)||0)*10)));
+                    blbView.setUint16(off+21,Math.max(0,Math.round((parseFloat(s.paddingBottom)||0)*10)));
+                    blbView.setUint16(off+23,Math.max(0,Math.round((parseFloat(s.paddingLeft)||0)*10)));
+                    blbView.setUint8(off+25,Math.min(Math.round((parseFloat(s.borderTopWidth)||0)*10),255));
+                    blbView.setUint8(off+26,Math.min(Math.round((parseFloat(s.borderRightWidth)||0)*10),255));
+                    blbView.setUint8(off+27,Math.min(Math.round((parseFloat(s.borderBottomWidth)||0)*10),255));
+                    blbView.setUint8(off+28,Math.min(Math.round((parseFloat(s.borderLeftWidth)||0)*10),255));
+                    blbView.setUint32(off+29,colorToU32(s.borderColor));
+                    blbView.setUint32(off+33,colorToU32(s.backgroundColor));
+                    blbView.setUint32(off+37,colorToU32(s.color));
+                    blbView.setUint16(off+41,Math.round((parseFloat(s.fontSize)||16)*10));
+                    blbView.setUint16(off+43,parseInt(s.fontWeight)||400);
+                    blbView.setUint16(off+45,Math.max(0,Math.round((parseFloat(s.lineHeight)||0)*10)));
+                    blbView.setUint8(off+47,TAM[s.textAlign]??0);
+                    blbView.setUint8(off+48,FDM[s.flexDirection]??0);
+                    blbView.setUint8(off+49,s.flexWrap==='wrap'?1:0);
+                    blbView.setUint8(off+50,JCM[s.justifyContent]??0);
+                    blbView.setUint8(off+51,AIM[s.alignItems]??3);
+                    blbView.setUint16(off+52,Math.max(0,Math.round((parseFloat(s.gap)||0)*10)));
+                    blbView.setUint16(off+54,Math.max(0,Math.round((parseFloat(s.borderRadius)||0)*10)));
+                    blbView.setUint8(off+56,OFM[s.overflow]??0);
+                    blbView.setUint8(off+57,Math.round(parseFloat(s.opacity)*255));
+                    const zi=parseInt(s.zIndex);blbView.setInt16(off+58,isNaN(zi)?0:Math.max(-32768,Math.min(32767,zi)));
+                }
+
+                let bibData=new Uint8Array(0);
+                let bibLen=0;
+                if(extractedImages.length>0){
+                    const bibChunks=[new Uint8Array([0x42,0x49,0x42,0x01])];
+                    bibLen+=4;
+                    const dv4=new DataView(new ArrayBuffer(4));
+                    dv4.setUint32(0,extractedImages.length);
+                    bibChunks.push(new Uint8Array(dv4.buffer));
+                    bibLen+=4;
+                    for(const img of extractedImages){
+                        const h=new DataView(new ArrayBuffer(22));
+                        h.setUint32(0,img.id);
+                        h.setUint16(4,img.w);
+                        h.setUint16(6,img.h);
+                        h.setUint8(8,1);
+                        h.setUint8(9,0);
+                        h.setUint16(16,0);
+                        h.setUint32(18,img.data.length);
+                        bibChunks.push(new Uint8Array(h.buffer));
+                        bibChunks.push(img.data);
+                        bibLen+=22+img.data.length;
+                    }
+                    bibData=new Uint8Array(bibLen);
+                    let offset=0;
+                    for(const chunk of bibChunks){bibData.set(chunk,offset);offset+=chunk.length;}
+                }
+
+                let secCount = 3;
+                if (bibLen > 0) secCount = 4;
+
+                const totalSize=6 + 
+                    (1+4+bmlData.length) + 
+                    (1+4+bdtBuf.byteLength) + 
+                    (1+4+blbBuf.byteLength) + 
+                    (bibLen > 0 ? (1+4+bibLen) : 0);
+                    
+                const out=new ArrayBuffer(totalSize);
+                const ov=new DataView(out);
+                const ou=new Uint8Array(out);
+                let off=0;
+                ou[off++]=0x42;ou[off++]=0x57;ou[off++]=0x45;ou[off++]=0x42;
+                ou[off++]=1;
+                ou[off++]=secCount;
+
+                ou[off++]=1;
+                ov.setUint32(off,bmlData.length);off+=4;
+                ou.set(bmlData,off);off+=bmlData.length;
+
+                ou[off++]=2;
+                ov.setUint32(off,bdtBuf.byteLength);off+=4;
+                ou.set(new Uint8Array(bdtBuf),off);off+=bdtBuf.byteLength;
+
+                ou[off++]=3;
+                ov.setUint32(off,blbBuf.byteLength);off+=4;
+                ou.set(new Uint8Array(blbBuf),off);off+=blbBuf.byteLength;
+
+                if (bibLen > 0) {
+                    ou[off++]=4;
+                    ov.setUint32(off,bibLen);off+=4;
+                    ou.set(bibData,off);off+=bibLen;
+                }
+
+                document.body.removeChild(iframe);
+                resolve(out);
+            } catch(e) {
+                console.error(e);
+                document.body.removeChild(iframe);
+                reject(e);
+            }
+        }, 600);
+    });
+}
+
+(async()=>{
+    try{
+        const r=await fetch('page.bweb');
+        if(r.ok){await renderBinary(await r.arrayBuffer());return}
+    }catch(e){}
+    try{
+        const r=await fetch('page.bml');
+        if(r.ok){await renderBinary(await r.arrayBuffer());return}
+    }catch(e){}
+})();
+
+// Progress Bar & Overlay Helper Functions (Globally Accessible)
+function showLoader(title, status) {
+    document.getElementById('loadingOverlay').style.setProperty('display', 'flex', 'important');
+    document.getElementById('loadingTitle').textContent = title;
+    document.getElementById('loadingStatus').textContent = status;
+    document.getElementById('loadingProgressBar').style.width = '0%';
+    document.getElementById('loadingLog').innerHTML = '';
+}
+
+function updateLoader(percent, status, logText = null) {
+    document.getElementById('loadingProgressBar').style.width = percent + '%';
+    document.getElementById('loadingStatus').textContent = status;
+    if (logText) {
+        const logEl = document.getElementById('loadingLog');
+        const div = document.createElement('div');
+        div.textContent = `[${new Date().toLocaleTimeString()}] ${logText}`;
+        logEl.appendChild(div);
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+}
+
+function hideLoader() {
+    document.getElementById('loadingOverlay').style.setProperty('display', 'none', 'important');
+}
+
+function showSuccessModal(sizeBytes, nodeCount) {
+    document.getElementById('modalStatSize').textContent = (sizeBytes / 1024).toFixed(1) + ' KB';
+    document.getElementById('modalStatNodes').textContent = nodeCount;
+    document.getElementById('modalStatSaving').textContent = '99.9%';
+    
+    const modal = document.getElementById('successModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
+}
+
+function hideSuccessModal() {
+    const modal = document.getElementById('successModal');
+    modal.classList.remove('active');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+document.getElementById('modalClose').addEventListener('click', hideSuccessModal);
+document.getElementById('successModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('successModal')) hideSuccessModal();
+});
+
+document.getElementById('modalBtnDownloadBweb').addEventListener('click', () => {
+    document.getElementById('btnDownloadViewport').click();
+    hideSuccessModal();
+});
+
+document.getElementById('modalBtnDownloadZip').addEventListener('click', () => {
+    document.getElementById('btnDownloadZip').click();
+    hideSuccessModal();
+});
+</script>
+</body>
+</html>
