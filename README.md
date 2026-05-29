@@ -1,91 +1,92 @@
-# BWEB Engine (Binary Web)
-
-BWEB is an experimental, ultra-fast binary web format designed to replace raw HTML, CSS, and base64-encoded media with highly optimized binary streams. It consists of multiple sections (BML, BDT, BLB, BIB, BVS) that skip the browser's traditional string-parsing pipeline and map directly to a zero-latency DOM and GPU-accelerated Canvas.
-
----
-
-## ⚡ Formats
-
-- **BML (Binary Markup Language) - `SEC 1`**: Shrinks raw text and properties drastically. Tags are mapped to 1-byte hex codes (e.g., `<div>` becomes `0x01`).
-- **BDT (Binary DOM Tree) - `SEC 2`**: Replaces nested HTML structures with a flat, O(1) integer-pointer-based node hierarchy (11 bytes per node).
-- **BLB (Binary Layout Blocks) - `SEC 3`**: Compresses CSS styling. Every layout instruction uses a fixed 60-byte block.
-- **BIB (Binary Image Blocks) - `SEC 4`**: Natively streams pixel arrays (RGBA / WebP Bitstream) directly into `<canvas data-bind="ID">` elements using `ctx.putImageData`, skipping base64 overhead completely.
-# BWEB (Binary Web) Prototyp
+# BWEB (Binary Web) Engine
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-Custom-green.svg)
 
-BWEB ist ein experimentelles, **100% binäres Web-Format**. Es verabschiedet sich von textbasiertem HTML und CSS und packt den DOM-Baum (BML, BDT), das vorberechnete CSS-Layout (BLB) und die rohen Bildpixel (BIB) in ein einziges Binärpaket.
+BWEB ist ein experimentelles, **100% binäres Web-Format**. Es verabschiedet sich von textbasiertem HTML und CSS und packt den DOM-Baum (BML, BDT), das vorberechnete CSS-Layout (BLB), Bilder (BIB) sowie Audio/Video-Streams (BVS, BAS) in ein einziges, extrem optimiertes Binärpaket.
+
+Das Ziel: Zero-Parsing, direkte GPU-Beschleunigung und Privacy by Design.
 
 👉 **[BWEB Architecture Landing Page](https://mediclean-pro.at/bweb-converter/)**
 👉 **[Open Online BWEB Converter Tool](https://mediclean-pro.at/bweb-converter/converter.html)**
 
-*(Select entire website folders to instantly convert them into `.bweb` binary structures — no ZIP needed, no upload to any server).*
+*(Wähle lokale HTML-Ordner aus, um sie in Sekundenbruchteilen in `.bweb`-Binärstrukturen zu konvertieren — rein lokal, kein Upload auf externe Server!)*
 
 ---
 
-## Architektur & Formate
+## ⚡ Formate & Architektur
 
-BWEB ist ein Container-Format (Magic: `BWEB`), das 4 Sektionen bündelt:
+BWEB ist ein Container-Format (Magic: `BWEB`), das 6 Sektionen bündelt. Jede Sektion wird ohne String-Parsing direkt in den Speicher geladen.
 
-- **SEC 1: BML** (Binary Markup Language) — Struktur, Attribute, Text (UTF-8)
-- **SEC 2: BDT** (Binary DOM Tree) — Flache Node-Hierarchie mit Parent/Child/Sibling-Pointern (11 Bytes/Node)
-- **SEC 3: BLB** (Binary Layout Block) — Pre-computed CSS (60 Bytes/Node, fixed-point)
-- **SEC 4: BIB** (Binary Image Block) — Raw RGBA Pixeldaten (22 Bytes Header + Pixel)
-- *(SEC 6)* — Optionaler zlib-Deflate Layer für BML/BLB
+- **SEC 1: BML (Binary Markup Language)** — Stark komprimierte Struktur, Attribute und UTF-8 Text. Tags sind 1-Byte Hex-Codes (z.B. `<div>` = `0x01`).
+- **SEC 2: BDT (Binary DOM Tree)** — Flache Node-Hierarchie mit Parent/Child-Pointern (11 Bytes/Node). Ersetzt verschachteltes HTML durch O(1) Zugriffe.
+- **SEC 3: BLB (Binary Layout Blocks)** — Pre-computed CSS-Styling. Jede Layout-Anweisung verwendet einen festen 60-Byte Block.
+- **SEC 4: BIB (Binary Image Blocks)** — Raw RGBA oder WebP Bitstreams, die direkt in `<canvas>` via `putImageData` gezeichnet werden.
+- **SEC 5: BVS (Binary Video Streams)** — Nativ eingebettete Videodaten für Frame-by-Frame Canvas-Rendering.
+- **SEC 6: BAS (Binary Audio Streams)** — Eingebettete Audio-Buffer, abspielbar über die Web Audio API.
 
 > 📖 **[Vollständige Byte-Level Spezifikation (SPEC.md)](SPEC.md)**
 
 ---
 
-## Installation (CLI)
+## 🧩 Browser Extension & Fallback (Polyfill)
 
-BWEB bietet ein Node.js CLI-Tool, das den Python-Serializer ansteuert.
+Da Browser `.bweb`-Dateien nativ (noch) nicht verstehen, nutzt das BWEB-Ökosystem eine duale Strategie:
 
-```bash
-# Optional: Global installieren
-npm link
-
-# Oder direkt über Node
-node cli.js help
-```
-
-### CLI Befehle
-
-```bash
-# 1. Konvertierung (HTML -> BWEB)
-bweb convert input.html output.bweb
-
-# 2. Statistik (zeigt Byte-Größen pro Sektion)
-bweb stats output.bweb
-
-# 3. Validierung (prüft Magic-Bytes und Offsets)
-bweb validate output.bweb
-```
+1. **Native Chrome/Firefox Extension (Empfohlen)**:
+   - Die Extension fängt `.bweb`, `.bml`, `.bdt` etc. Anfragen ab.
+   - Rendert die Binärdaten isoliert in einem sauberen Canvas/DOM-Target.
+   - Sendet den Header `X-BWEB-Native: true` an den Server.
+2. **JS-Polyfill Fallback**:
+   - Ruft ein Nutzer ohne Extension eine BWEB-Seite auf, erkennt der Server (via `.htaccess`) das Fehlen des `X-BWEB-Native`-Headers.
+   - Die Anfrage wird nahtlos an `polyfill.html?file=...` umgeleitet.
+   - Die `polyfill.html` lädt die Binärdatei via Fetch (`?raw=true`) und rendert sie clientseitig über Vanilla JS. Klassische Websites bleiben unberührt.
 
 ---
 
-## Test Suite
+## 🔒 Privatsphäre & Cookie-freie Architektur
 
-Eine vollständige Roundtrip-Testsuite für den Python-Serializer liegt unter `test/`.
+BWEB bricht grundlegend mit der traditionellen, Tracker-verseuchten Architektur des Internets, um **Privacy by Design** zu garantieren:
 
-```bash
-# Setup
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt # falls vorhanden
-
-# Tests ausführen
-cd test
-python3 test_roundtrip.py
-python3 test_formats.py
-```
+1. **Stateless Binary Container**: BWEB ist ein kompilierter, statischer Container. Es gibt keinen Session-Zustand, keine versteckten LocalStorage-Schreibzugriffe beim Laden.
+2. **Zero Tracking Overheads**: CPU-Parsing von Text-HTML und Third-Party-Skript-Injektionen sind nicht möglich. Tracker können keine heimlichen Pixel oder Third-Party-Cookies platzieren. **DSGVO-Cookie-Banner sind obsolet!**
+3. **Sicheres Rendering**: Die Ausführung erfolgt streng limitiert. Es gibt keine unkontrollierten `<script>`-Tags oder dynamischen Event-Listener aus dem Binärcode.
 
 ---
 
-## Lizenz & Attribution
+## 📢 Die Zukunft der Werbung in BWEB
+
+Werbung im modernen Web ist träge, datenhungrig und unsicher. In BWEB wird Werbung revolutioniert:
+
+1. **BIB Ad-Slices (Binäre Werbe-Slices)**: Ads sind keine blockierenden Javascript-Blobs, sondern statische **BIB-Slices**. Sie werden direkt von der GPU gezeichnet – Zero-Latenz und minimaler Stromverbrauch (Akku-Schonung für Mobile).
+2. **Zero-Knowledge Krypto-Verifikation**: Jedes Ad-Slice kann kryptografisch signiert werden. Der Browser validiert die Anzeige lokal, ohne Nutzerprofile an externe Ad-Server zu senden.
+3. **Malvertising-Schutz**: Das Einschleusen von Schadcode über Werbebanner (Malvertising) ist physikalisch unmöglich, da Ads reine Bild/Video-Puffer ohne Logik-Kontext sind.
+
+---
+
+## 🛡️ Sicherheit (Security Hardening)
+
+Die BWEB-Engine (sowohl Polyfill als auch Extension) ist gegen typische Web-Angriffe gehärtet:
+- **XSS-Schutz**: Gefährliche Tags (`<iframe>`, `<script>`) und Event-Handler (`onclick`, `onsubmit`) werden vom Parser ignoriert oder bereinigt.
+- **Memory Safety (OOM)**: Strikte Limits für Canvas-Dimensionen (max 8192px) und Buffer-Bounds-Checks verhindern Tab-Crashes.
+- **Stack-Overflow-Schutz**: Rekursive DOM-Aufbauten (BML) sind auf eine maximale Tiefe (z.B. 256) limitiert.
+- **Path-Traversal-Schutz**: Der Fallback-Server validiert alle Dateipfade strikt.
+
+---
+
+## 💻 Installation & Usage
+
+**Lokaler Python-Konverter / Pipeline**
+In `binary_formats.py` befindet sich der Core-Serializer. Er wandelt DOM-Strukturen in die BWEB Byte-Arrays um.
+
+**Online Konverter**
+Nutze `converter.html` für eine interaktive Konvertierung direkt im Browser via File-System Access API.
+
+---
+
+## 📜 Lizenz & Attribution
 
 Bitte die `LICENSE` Datei beachten. **Jede kommerzielle Nutzung erfordert dieses Zitat im UI/Doku:**
-> `"Incorporates RAG-NVMe architecture designed by Benjamin Leimer."`**
+> `"Incorporates RAG-NVMe architecture designed by Benjamin Leimer."`
 
 *For more information on the RAG-NVMe integration, visit the respective repository.*
