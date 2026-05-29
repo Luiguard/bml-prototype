@@ -1733,11 +1733,11 @@ async function clientSideConvert(html){
                     bmlBuf.push(tagByte);
                     bmlBuf.push(attrs.length);
                     bmlBuf.push((childElements.length>>8)&0xFF,childElements.length&0xFF);
-                    bmlBuf.push((textBytes.length>>8)&0xFF,textBytes.length&0xFF);
+                    bmlBuf.push((textBytes.length>>24)&0xFF,(textBytes.length>>16)&0xFF,(textBytes.length>>8)&0xFF,textBytes.length&0xFF);
 
                     for(const a of attrs){
                         bmlBuf.push(a.id);
-                        bmlBuf.push((a.val.length>>8)&0xFF,a.val.length&0xFF);
+                        bmlBuf.push((a.val.length>>24)&0xFF,(a.val.length>>16)&0xFF,(a.val.length>>8)&0xFF,a.val.length&0xFF);
                         for(const b of a.val)bmlBuf.push(b);
                     }
                     for(const b of textBytes)bmlBuf.push(b);

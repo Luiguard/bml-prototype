@@ -1,43 +1,57 @@
-(async () => {
-    const url = window.location.href;
-    const pathname = window.location.pathname.toLowerCase();
-    const ext = pathname.split('.').pop();
-    const bwebExtensions = ['bweb', 'bml', 'bdt', 'blb', 'bib'];
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Player (JS-Polyfill)</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+        body { margin: 0; padding: 0; background: #fff; color: #000; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+        #renderTarget { width: 100%; min-height: 100vh; position: relative; }
+        .rendered-node { box-sizing: border-box; }
+        .polyfill-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #8a8f98;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="renderTarget">
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center;">
+            <div style="border: 3px solid rgba(255,255,255,0.1); border-left-color: #5e6ad2; border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin-bottom: 16px;"></div>
+            <p style="color: #8a8f98; font-size: 0.9rem;">Lade BWEB-Ressource via JS-Polyfill...</p>
+        </div>
+    </div>
+    <div class="polyfill-status">JS-Polyfill Active</div>
+    <style>
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
 
-    if (!bwebExtensions.includes(ext)) {
-        return;
-    }
+    <script>
+    (async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const fileParam = urlParams.get('file');
+        if (!fileParam || !/^[a-zA-Z0-9_\-\/]+\.(bweb|bml|bdt|blb|bib)$/.test(fileParam) || fileParam.includes('..')) {
+            document.getElementById('renderTarget').innerHTML = '<div style="padding:2rem;text-align:center">Ung\u00fcltige BWEB-Datei angegeben.</div>';
+            return;
+        }
 
-    const DANGEROUS_TAGS = new Set(['script','iframe','object','embed','applet','meta','link','base']);
-    const DANGEROUS_ATTRS = new Set(['onclick','onsubmit','onload','onerror','onmouseover','onfocus','onblur','onchange','oninput','onkeydown','onkeyup','onkeypress','formaction','xlink:href','srcdoc','data']);
-    const MAX_RECURSION_DEPTH = 256;
-    const MAX_SECTION_SIZE = 256 * 1024 * 1024;
-    const MAX_CANVAS_DIM = 8192;
-    const SUPPORTED_CONTAINER_VERSION = 0x01;
-
-    console.log(`⚡ BWEB Native Browser Engine: Intercepted ${ext.toUpperCase()} load for ${url}`);
-
-    // Replaces document with clean canvas target
-    document.documentElement.innerHTML = `
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>BWEB Native Player</title>
-        <style>
-            *, *::before, *::after { box-sizing: border-box; }
-            body { margin: 0; padding: 0; background: #fff; color: #000; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
-            #renderTarget { width: 100%; min-height: 100vh; position: relative; }
-            .rendered-node { box-sizing: border-box; }
-        </style>
-    </head>
-    <body>
-        <div id="renderTarget"></div>
-    </body>`;
-
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP Fehler ${response.status}`);
-        const buffer = await response.arrayBuffer();
+        const DANGEROUS_TAGS = new Set(['script','iframe','object','embed','applet','meta','link','base']);
+        const DANGEROUS_ATTRS = new Set(['onclick','onsubmit','onload','onerror','onmouseover','onfocus','onblur','onchange','oninput','onkeydown','onkeyup','onkeypress','formaction','xlink:href','srcdoc','data']);
+        const MAX_RECURSION_DEPTH = 256;
+        const MAX_SECTION_SIZE = 256 * 1024 * 1024;
+        const MAX_CANVAS_DIM = 8192;
+        const SUPPORTED_CONTAINER_VERSION = 0x01;
 
         // BWEB Engine Constants
         const TAG_REV={0x01:'div',0x02:'span',0x03:'p',0x04:'a',0x05:'h1',0x06:'h2',0x07:'h3',0x08:'h4',0x09:'h5',0x0A:'h6',0x0B:'img',0x0C:'ul',0x0D:'ol',0x0E:'li',0x0F:'table',0x10:'tr',0x11:'td',0x12:'th',0x13:'thead',0x14:'tbody',0x15:'form',0x16:'input',0x17:'button',0x18:'textarea',0x19:'select',0x1A:'option',0x1B:'label',0x1C:'header',0x1D:'footer',0x1E:'nav',0x1F:'main',0x20:'section',0x21:'article',0x22:'aside',0x23:'strong',0x24:'em',0x25:'code',0x26:'pre',0x27:'br',0x28:'hr',0x29:'video',0x2A:'audio',0x2B:'canvas',0x2C:'svg',0x2D:'div',0x2E:'figcaption',0x2F:'figure',0x30:'blockquote',0x31:'small',0x32:'sub',0x33:'sup',0x34:'details',0x35:'summary',0x36:'dialog',0x37:'dl',0x38:'dt',0x39:'dd',0x3A:'mark',0x3B:'time',0x3C:'abbr',0x3D:'cite',0x3E:'b',0x3F:'i',0x40:'u',0xFE:'div',0xFF:'div'};
@@ -49,7 +63,6 @@
         const JUSTIFY=['flex-start','flex-end','center','space-between','space-around','space-evenly'];
         const ALIGN_ITEMS=['flex-start','flex-end','center','stretch','baseline'];
         const OVERFLOW=['visible','hidden','scroll','auto'];
-        const BLB_BLOCK_SIZE=60;
 
         // BWEB Parsers
         class BMLParser{
@@ -159,7 +172,7 @@
                     const w=this.v.getUint16(this.o);this.o+=2;
                     const h=this.v.getUint16(this.o);this.o+=2;
                     const dataLen=this.v.getUint32(this.o);this.o+=4;
-                    if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BIB: Bilddimensionen ${w}x${h} überschreiten Limit ${MAX_CANVAS_DIM}`);
+                    if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BIB: Bilddimensionen ${w}x${h} \u00fcberschreiten Limit ${MAX_CANVAS_DIM}`);
                     if(dataLen!==w*h*4)throw new Error(`BIB: dataLen ${dataLen} != erwartete ${w*h*4} Bytes`);
                     if(this.o+dataLen>this.v.byteLength)throw new Error('BIB: Buffer-Overread');
                     const rgba=new Uint8Array(this.v.buffer,this.o,dataLen);this.o+=dataLen;
@@ -179,7 +192,7 @@
                     const h=this.v.getUint16(this.o);this.o+=2;
                     const fps=this.v.getUint8(this.o++);
                     const dataLen=this.v.getUint32(this.o);this.o+=4;
-                    if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BVS: Videodimensionen ${w}x${h} überschreiten Limit`);
+                    if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error('BVS: Videodimensionen \u00fcberschreiten Limit');
                     if(this.o+dataLen>this.v.byteLength)throw new Error('BVS: Buffer-Overread');
                     const stream=new Uint8Array(this.v.buffer,this.o,dataLen);this.o+=dataLen;
                     vids.push({id,w,h,fps,stream});
@@ -204,12 +217,11 @@
             }
         }
 
-        // BWEB Container Section Unpacker
         function parseBWEB(buf){
             const v=new DataView(buf);
             if(buf.byteLength<6)throw new Error('BWEB: Container zu klein');
             const magic=String.fromCharCode(v.getUint8(0),v.getUint8(1),v.getUint8(2),v.getUint8(3));
-            if(magic!=='BWEB')throw new Error('Ungültiges BWEB Magic');
+            if(magic!=='BWEB')throw new Error('Ung\u00fcltiges BWEB Magic');
             const version=v.getUint8(4);
             if(version!==SUPPORTED_CONTAINER_VERSION)throw new Error(`BWEB: Unbekannte Container-Version ${version}`);
             const nSec=v.getUint8(5);
@@ -217,17 +229,16 @@
             let o=6;
             const sections={};
             for(let i=0;i<nSec;i++){
-                if(o+5>buf.byteLength)throw new Error('BWEB: Unvollständiger Section-Header');
+                if(o+5>buf.byteLength)throw new Error('BWEB: Unvollst\u00e4ndiger Section-Header');
                 const type=v.getUint8(o++);
                 const len=v.getUint32(o);o+=4;
-                if(len>MAX_SECTION_SIZE)throw new Error(`BWEB: Sektion ${type} überschreitet ${MAX_SECTION_SIZE} Bytes`);
-                if(o+len>buf.byteLength)throw new Error(`BWEB: Sektion ${type} liest über Buffer-Ende (${o+len}>${buf.byteLength})`);
+                if(len>MAX_SECTION_SIZE)throw new Error(`BWEB: Sektion ${type} \u00fcberschreitet ${MAX_SECTION_SIZE} Bytes`);
+                if(o+len>buf.byteLength)throw new Error(`BWEB: Sektion ${type} liest \u00fcber Buffer-Ende`);
                 sections[type]=buf.slice(o,o+len);o+=len;
             }
             return sections;
         }
 
-        // Core Layout Injector functions
         async function applyBDT(root,nodes){
             const elements={};
             const mapNode=(nId,el)=>{
@@ -331,9 +342,13 @@
             }
         }
 
-        // Native Render Binary Pipeline
-        async function renderBinary(buf){
-            const sections=parseBWEB(buf);
+        try {
+            const fetchUrl = `${window.location.protocol}//${window.location.host}/${fileParam}${fileParam.includes('?') ? '&' : '?'}raw=true`;
+            const response = await fetch(fetchUrl);
+            if (!response.ok) throw new Error(`HTTP Fehler ${response.status}`);
+            const buffer = await response.arrayBuffer();
+
+            const sections=parseBWEB(buffer);
             const bmlBuf=sections[1];
             const bdtBuf=sections[2];
             const blbBuf=sections[3];
@@ -396,18 +411,18 @@
             if(rootEl){
                 target.appendChild(rootEl);
             }
+        } catch(e) {
+            console.error("BWEB Polyfill Engine Error:", e);
+            const target=document.getElementById('renderTarget');
+            target.innerHTML='';
+            const errBox=document.createElement('div');
+            errBox.setAttribute('style','padding: 2rem; max-width: 600px; margin: 40px auto; background: #1e1b4b; border: 1px solid #312e81; border-radius: 8px; text-align: center;');
+            const h=document.createElement('h2');h.setAttribute('style','color: #ef4444; margin-top: 0;');h.textContent='BWEB Polyfill Ladefehler';errBox.appendChild(h);
+            const p1=document.createElement('p');p1.setAttribute('style','color: #cbd5e1; line-height: 1.6;');p1.textContent='Die JS-Polyfill-Engine konnte die Bin\u00e4rdatei nicht laden oder decodieren.';errBox.appendChild(p1);
+            const p2=document.createElement('p');p2.setAttribute('style','color: #94a3b8; font-size: 0.85rem;');p2.textContent='Details: '+(e instanceof Error?e.message:'Unbekannter Fehler');errBox.appendChild(p2);
+            target.appendChild(errBox);
         }
-
-        await renderBinary(buffer);
-    } catch(e) {
-        console.error("BWEB Native Engine Error:", e);
-        const target=document.getElementById('renderTarget');
-        target.innerHTML='';
-        const errBox=document.createElement('div');
-        errBox.setAttribute('style','padding: 2rem; max-width: 600px; margin: 40px auto; background: #1e1b4b; border: 1px solid #312e81; border-radius: 8px; text-align: center;');
-        const h=document.createElement('h2');h.setAttribute('style','color: #ef4444; margin-top: 0;');h.textContent='BWEB Ladefehler';errBox.appendChild(h);
-        const p1=document.createElement('p');p1.setAttribute('style','color: #cbd5e1; line-height: 1.6;');p1.textContent='Die native BWEB-Erweiterung konnte die Binärdatei nicht rendern.';errBox.appendChild(p1);
-        const p2=document.createElement('p');p2.setAttribute('style','color: #94a3b8; font-size: 0.85rem;');p2.textContent='Details: '+(e instanceof Error?e.message:'Unbekannter Fehler');errBox.appendChild(p2);
-        target.appendChild(errBox);
-    }
-})();
+    })();
+    </script>
+</body>
+</html>
