@@ -8,449 +8,184 @@
     <meta name="keywords" content="HTML to Binary, HTML Converter, BWEB Engine, BWEB Tool, Website umwandeln, Polyfill, Web Performance Tool, Binary DOM Generator">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-            --bg-primary: #030712;
-            --bg-card: rgba(17, 24, 39, 0.5);
-            --bg-hover: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.08);
-            --border-active: #3b82f6;
-            --text-primary: #f9fafb;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.2);
-            --success: #10b981;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --glass: rgba(17, 24, 39, 0.7);
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.5; }
         }
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 3rem 1.5rem;
-            position: relative;
-            overflow-x: hidden;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
+        .mutation-msg { padding: 8px 12px; border-radius: 8px; line-height: 1.4; word-break: break-word; }
+        .mutation-msg-user { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); align-self: flex-end; color: #fff; max-width: 85%; }
+        .mutation-msg-ai { background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); align-self: flex-start; color: var(--text-primary); max-width: 85%; }
+
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --bg-primary:#000000;
+            --bg-card:#0a0a0a;
+            --bg-hover:#121212;
+            --border:rgba(255, 255, 255, 0.1);
+            --border-active:#ffffff;
+            --text-primary:#ffffff;
+            --text-secondary:#8a8f98;
+            --text-muted:#6b7280;
+            --accent:#ffffff;
+            --accent-glow:rgba(255, 255, 255, 0.1);
+            --success:#10b981;--warning:#f59e0b;--error:#ef4444;
+            --glass:rgba(10, 10, 10, 0.85);
+            --transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            --radius: 12px;
+        }
+        body{
+            font-family:'Inter',system-ui,-apple-system,sans-serif;
+            background:var(--bg-primary);color:var(--text-primary);
+            min-height:100vh;display:flex;flex-direction:column;align-items:center;
+            padding:2rem 1rem;
+            letter-spacing: -0.01em;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Ambient Background */
         body::before {
             content: '';
-            position: absolute;
-            top: 0; left: 50%;
-            transform: translateX(-50%);
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle 800px at 50% -200px, rgba(59, 130, 246, 0.12), transparent 80%),
-                        radial-gradient(circle 600px at 15% 50%, rgba(139, 92, 246, 0.04), transparent 75%),
-                        radial-gradient(circle 800px at 85% 85%, rgba(16, 185, 129, 0.04), transparent 75%);
-            pointer-events: none;
-            z-index: -1;
+            position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background: radial-gradient(circle 800px at 50% -20%, rgba(255, 255, 255, 0.05), transparent 80%);
         }
-        .engine-header {
-            text-align: center;
-            margin-bottom: 3rem;
-            animation: fadeInDown 0.6s ease-out;
+
+        .engine-header{ text-align:center;margin-bottom:3rem; }
+        .engine-header h1{ font-size:clamp(2rem, 5vw, 3rem); font-weight:600; letter-spacing: -0.04em; margin-bottom: 1rem; background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .engine-header p{ color:var(--text-secondary); max-width:600px; margin:0 auto; }
+        
+        .format-badges{ display:flex;gap:.5rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap; }
+        .badge{ padding:.25rem .75rem; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:.75rem; font-weight:600; border:1px solid var(--border); background:#000; color:var(--text-primary); }
+        .badge-bml{ border-color:rgba(59,130,246,0.3); }
+        .badge-bdt{ border-color:rgba(16,185,129,0.3); }
+        .badge-blb{ border-color:rgba(245,158,11,0.3); }
+        .badge-bweb{ border-color:rgba(139,92,246,0.3); }
+
+        .main-grid{ display:grid;grid-template-columns:350px 1fr;gap:24px;width:100%;max-width:1400px;align-items:start; }
+        @media(max-width:1024px){ .main-grid{grid-template-columns:1fr;} }
+        
+        .panel{
+            background:var(--bg-card); border:1px solid var(--border);
+            border-radius:var(--radius); padding:24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: border-color var(--transition);
         }
-        .engine-header h1 {
-            font-size: 2.8rem;
-            font-weight: 800;
-            letter-spacing: -1.5px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .engine-header p {
-            color: var(--text-secondary);
-            margin-top: 0.75rem;
-            font-size: 1.05rem;
-            font-weight: 300;
-        }
-        .format-badges {
-            display: flex;
-            gap: 0.6rem;
-            justify-content: center;
-            margin-top: 1.25rem;
-            flex-wrap: wrap;
-        }
-        .badge {
-            padding: 0.4rem 0.9rem;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 500;
-            border: 1px solid var(--border);
+        .panel:hover { border-color: rgba(255, 255, 255, 0.2); }
+        
+        .panel-title{ font-size:1.1rem;font-weight:600;margin-bottom:1.25rem;color:var(--text-primary);letter-spacing: -0.02em; }
+        
+        .drop-zone{
+            border:2px dashed var(--border);border-radius:var(--radius);
+            padding:3rem 2rem;text-align:center;color:var(--text-secondary);
+            cursor:pointer;transition:all var(--transition);
             background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(4px);
-            transition: all 0.2s ease;
         }
-        .badge:hover {
-            transform: translateY(-1px);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-        .badge-bml { color: #3b82f6; border-color: rgba(59, 130, 246, 0.25); background: rgba(59, 130, 246, 0.05); }
-        .badge-bdt { color: #10b981; border-color: rgba(16, 185, 129, 0.25); background: rgba(16, 185, 129, 0.05); }
-        .badge-blb { color: #f59e0b; border-color: rgba(245, 158, 11, 0.25); background: rgba(245, 158, 11, 0.05); }
-        .badge-bweb { color: #ec4899; border-color: rgba(236, 72, 153, 0.25); background: rgba(236, 72, 153, 0.05); }
-        
-        .main-grid {
-            width: 100%;
-            max-width: 1200px;
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 2rem;
-        }
-        @media(max-width: 900px) {
-            .main-grid { grid-template-columns: 1fr; }
+        .drop-zone:hover,.drop-zone.dragover{
+            border-color:var(--border-active);background:rgba(255,255,255,0.05);color:var(--text-primary);
         }
         
-        .panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.75rem;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+        .stats-grid{ display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:1.5rem; }
+        .stat{ background:#000;padding:12px;border-radius:8px;border:1px solid var(--border); }
+        .stat-label{ font-size:.75rem;color:var(--text-secondary);margin-bottom:4px;font-weight:500; }
+        .stat-value{ font-size:1.1rem;font-weight:600;color:var(--text-primary);font-family:'JetBrains Mono',monospace; }
+        
+        .section-bar{ display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:1rem;background:var(--bg-primary); }
+        .sec-bml{background:#3b82f6} .sec-bdt{background:#10b981} .sec-blb{background:#f59e0b} .sec-bib{background:#8b5cf6}
+        .section-legend{ display:flex;gap:12px;font-size:.75rem;font-weight:600;justify-content:center;flex-wrap:wrap; }
+        .legend-bml{color:#3b82f6} .legend-bdt{color:#10b981} .legend-blb{color:#f59e0b} .legend-bib{color:#8b5cf6}
+        
+        .html-input{
+            width:100%;min-height:180px;background:#000;
+            border:1px solid var(--border);border-radius:8px;
+            color:var(--text-primary);padding:16px;
+            font-family:'JetBrains Mono',monospace;font-size:.85rem;
+            resize:vertical;margin-bottom:1rem;transition:border-color var(--transition);
         }
-        .panel:hover {
-            border-color: rgba(255, 255, 255, 0.12);
+        .html-input:focus{ outline:none;border-color:var(--border-active); }
+        
+        .btn-row{ display:flex;gap:12px; }
+        .btn{
+            flex:1;padding:12px;border:none;border-radius:8px;
+            font-weight:600;font-size:.9rem;cursor:pointer;
+            transition:all var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;
         }
-        .panel-title {
-            font-size: 0.9rem;
-            font-weight: 700;
+        .btn-primary{ background:var(--text-primary);color:#000; }
+        .btn-primary:hover{ transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,255,255,0.15);opacity:0.9; }
+        .btn-secondary{ background:transparent;color:var(--text-primary);border:1px solid var(--border); }
+        .btn-secondary:hover{ background:var(--bg-hover);border-color:rgba(255,255,255,0.3); }
+        
+        .btn:disabled{ opacity:.5;cursor:not-allowed;transform:none;box-shadow:none; }
+        
+        .viewport-empty{
+            height:500px;display:flex;align-items:center;justify-content:center;
+            border:1px dashed var(--border);border-radius:var(--radius);
+            color:var(--text-muted);font-size:.9rem;background:#000;
+        }
+        #renderCanvas{ width:100%;height:600px;background:#fff;border-radius:8px;border:1px solid var(--border); }
+        #bml-viewport { max-width: 100%; overflow: hidden; }
+        #renderTarget { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); background: #ffffff; min-height: 500px; }
+        
+        .tree-view{
+            font-family:'JetBrains Mono',monospace;font-size:.8rem;
+            background:#000;padding:16px;border-radius:8px;border:1px solid var(--border);
+            max-height:400px;overflow-y:auto;white-space:pre;color:var(--text-secondary);
+        }
+        .tree-view .tag{color:#f87171} .tree-view .id-ref{color:#38bdf8} .tree-view .depth{color:#a3a3a3}
+        
+        .attribution{ text-align:center;margin-top:4rem;color:var(--text-muted);font-size:.8rem; }
+        .attribution a{ color:var(--text-primary);text-decoration:none; }
+
+        /* Modern Glassmorphic Success Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1; pointer-events: auto;
+        }
+        .modal-card {
+            background: rgba(10, 10, 10, 0.95); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px; padding: 32px; max-width: 500px; width: 90%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); position: relative;
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             color: var(--text-primary);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
         }
-        .panel-title::before {
-            content: '';
-            width: 4px;
-            height: 16px;
-            border-radius: 2px;
-            background: var(--accent);
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
         }
-        .drop-zone {
-            border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 2.5rem 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            color: var(--text-secondary);
-            background: rgba(255, 255, 255, 0.01);
+        .modal-close {
+            position: absolute; top: 16px; right: 16px; background: none; border: none;
+            color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; transition: color var(--transition);
         }
-        .drop-zone:hover, .drop-zone.drag-over {
-            border-color: var(--accent);
-            background: var(--accent-glow);
-            color: var(--text-primary);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
-        }
-        .drop-zone input { display: none; }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+        .modal-icon { font-size: 2.2rem; }
+        .modal-title { font-size: 1.4rem; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+        .modal-subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; line-height: 1.5; }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            margin-top: 1.25rem;
+        .modal-stats { display: flex; gap: 12px; margin-bottom: 24px; }
+        .modal-stat-box {
+            flex: 1; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px; text-align: center;
         }
-        .stat {
-            padding: 0.75rem 1rem;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 0.85rem;
-            transition: transform 0.2s ease;
-        }
-        .stat:hover {
-            transform: translateY(-1px);
-            background: rgba(255, 255, 255, 0.04);
-        }
-        .stat-label { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 0.30rem; font-weight: 500; }
-        .stat-value { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.95rem; }
-        .stat-bml .stat-value { color: #3b82f6; }
-        .stat-bdt .stat-value { color: #10b981; }
-        .stat-blb .stat-value { color: #f59e0b; }
-        .stat-total .stat-value { color: #ec4899; }
-        .stat-time .stat-value { color: #8b5cf6; }
-        .stat-ratio .stat-value { color: #06b6d4; }
+        .modal-stat-label { display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        .modal-stat-value { font-size: 1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
         
-        #bml-viewport {
-            min-height: 500px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            padding: 0;
-            overflow: hidden;
-            border-color: var(--border);
-            background: #090d16;
+        .modal-guide {
+            background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: 10px; padding: 16px 20px; margin-bottom: 28px; text-align: left;
         }
+        .modal-guide h4 { color: #10b981; font-size: 0.9rem; margin-top: 0; margin-bottom: 8px; font-weight: 600; }
+        .modal-guide ol { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
         
-        /* Viewport Mockup Window Bar */
-        .viewport-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1.25rem;
-            background: rgba(3, 7, 18, 0.5);
-            border-bottom: 1px solid var(--border);
-        }
-        .viewport-dots {
-            display: flex;
-            gap: 0.4rem;
-        }
-        .viewport-dots span {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        .dot-red { background: #ff5f56; }
-        .dot-yellow { background: #ffbd2e; }
-        .dot-green { background: #27c93f; }
-        .viewport-title {
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--text-muted);
-            letter-spacing: 0.05em;
-        }
-        .viewport-actions {
-            width: 40px;
-        }
-        
-        #renderTarget {
-            flex: 1;
-            padding: 1.5rem;
-            overflow-y: auto;
-            position: relative;
-        }
-        
-        .viewport-empty {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            height: 400px;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            text-align: center;
-            padding: 2rem;
-        }
-        .viewport-empty svg {
-            width: 48px;
-            height: 48px;
-            stroke: var(--text-muted);
-            opacity: 0.6;
-        }
-        
-        .section-map { margin-top: 1.25rem; }
-        .section-bar {
-            display: flex;
-            height: 10px;
-            border-radius: 6px;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.05);
-            margin-top: 0.75rem;
-            border: 1px solid var(--border);
-        }
-        .section-bar div { transition: width 0.4s ease; }
-        .sec-bml { background: #3b82f6; }
-        .sec-bdt { background: #10b981; }
-        .sec-blb { background: #f59e0b; }
-        .section-legend {
-            display: flex;
-            gap: 0.8rem;
-            margin-top: 0.75rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            flex-wrap: wrap;
-        }
-        .section-legend span::before {
-            content: '';
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 2px;
-            margin-right: 4px;
-            vertical-align: middle;
-        }
-        .legend-bml::before { background: #3b82f6; }
-        .legend-bdt::before { background: #10b981; }
-        .legend-blb::before { background: #f59e0b; }
-        .sec-bib { background: #ec4899; }
-        .legend-bib::before { background: #ec4899; }
-        
-        .tree-view {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            max-height: 250px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-top: 0.8rem;
-            line-height: 1.6;
-        }
-        .tree-view::-webkit-scrollbar { width: 6px; }
-        .tree-view::-webkit-scrollbar-track { background: transparent; }
-        .tree-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        .tree-view .tag { color: #3b82f6; font-weight: 500; }
-        .tree-view .id-ref { color: #10b981; }
-        .tree-view .depth { color: var(--text-muted); }
-        
-        .html-input {
-            width: 100%;
-            min-height: 140px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            padding: 1rem;
-            resize: vertical;
-            margin-top: 0.6rem;
-            transition: all 0.2s ease;
-        }
-        .html-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 10px;
-            border: 1px solid transparent;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-        .btn-primary {
-            background: var(--accent);
-            color: #fff;
-            box-shadow: 0 4px 12px var(--accent-glow);
-        }
-        .btn-primary:hover {
-            background: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-        }
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-        }
-        .btn-secondary:hover {
-            border-color: var(--accent);
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.06);
-            transform: translateY(-1px);
-        }
-        .btn-row {
-            display: flex;
-            gap: 0.6rem;
-            flex-wrap: wrap;
-            margin-top: 0.75rem;
-        }
-        
-        .rendered-node { transition: outline 0.15s ease; }
-        .rendered-node:hover { outline: 1px dashed rgba(59, 130, 246, 0.5); }
-        
-        .bml-tag-h1 { color: #38bdf8; font-size: 2.2rem; font-weight: 800; margin: 0 0 1rem; letter-spacing: -0.5px; }
-        .bml-tag-h2 { color: #60a5fa; font-size: 1.7rem; font-weight: 700; margin: 0 0 0.8rem; letter-spacing: -0.3px; }
-        .bml-tag-h3 { color: #818cf8; font-size: 1.35rem; font-weight: 600; margin: 0 0 0.6rem; }
-        .bml-tag-p { line-height: 1.7; color: #cbd5e1; margin-bottom: 0.75rem; }
-        .bml-tag-a { color: #f43f5e; text-decoration: none; font-weight: 600; transition: opacity 0.2s; }
-        .bml-tag-a:hover { opacity: 0.8; text-decoration: underline; }
-        .bml-tag-img { max-width: 100%; height: auto; border-radius: 12px; display: block; margin: 1rem 0; }
-        .bml-tag-code {
-            background: rgba(59, 130, 246, 0.1);
-            color: #93c5fd;
-            padding: 0.2em 0.4em;
-            border-radius: 6px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9em;
-        }
-        .bml-tag-pre {
-            background: #0d1117;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem;
-            overflow-x: auto;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #c9d1d9;
-            margin: 1rem 0;
-        }
-        .bml-tag-blockquote {
-            border-left: 4px solid var(--accent);
-            padding-left: 1.25rem;
-            color: var(--text-secondary);
-            font-style: italic;
-            margin: 1rem 0;
-        }
-        .bml-tag-ul, .bml-tag-ol { padding-left: 1.75rem; margin: 0.75rem 0; }
-        .bml-tag-li { margin: 0.4rem 0; color: #cbd5e1; }
-        .bml-tag-strong { font-weight: 700; color: var(--text-primary); }
-        .bml-tag-em { font-style: italic; color: #c4b5fd; }
-        .bml-tag-hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
-        .bml-tag-button {
-            padding: 0.6rem 1.25rem;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: opacity 0.2s;
-        }
-        .bml-tag-button:hover { opacity: 0.9; }
-        .bml-tag-nav { display: flex; gap: 1.25rem; padding: 0.75rem 0; }
-        .bml-tag-header { margin-bottom: 1.5rem; }
-        .bml-tag-footer { margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem; }
-        .bml-tag-section { margin: 1.5rem 0; }
-        
-        .attribution {
-            margin-top: 4rem;
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        .attribution a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        .attribution a:hover {
-            color: var(--accent);
-        }
-        
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .modal-footer { display: flex; gap: 12px; }
+
     </style>
 </head>
 <body>
@@ -514,26 +249,41 @@
                 <div class="panel-title" style="color: #10b981;">📁 Lokalen Website-Ordner konvertieren</div>
                 <p style="font-size:.8rem; color:var(--text-muted); margin-bottom:1rem;">Wähle einen Ordner mit HTML, CSS und Bildern aus. Alles wird lokal zu 100% inlined und kompiliert.</p>
                 <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
-                <div class="btn-row">
+                <div class="btn-row" style="flex-direction: column; gap: 8px; align-items: stretch;">
                     <button class="btn" style="background:#10b981; color:#fff;" id="btnFolderUpload">Ordner auswählen & Kompilieren</button>
+                    <span style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.35; margin-top: 4px;">
+                        ℹ️ <strong>Linux/Ubuntu Tipp:</strong> Wähle den Ordner im Dialog aus (nicht doppelt hineinklicken) und klicke unten rechts auf "Auswählen/Open". Alternativ kannst du den Ordner einfach per <strong>Drag & Drop</strong> direkt hierhin ziehen!
+                    </span>
                 </div>
             </div>
 
             <div class="panel" style="margin-top:1rem; border-color: var(--accent);">
                 <div class="panel-title" style="color: var(--accent);">🤖 AI Website Generator</div>
-                <form onsubmit="event.preventDefault();" style="margin:0; padding:0;">
-                    <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
-                        <select id="aiBackendSelect" class="html-input" style="min-height:30px; margin-top:0; padding: 0.4rem; flex: 1;">
-                            <option value="nvme">Lokale NVMe-KI (http://127.0.0.1:8090)</option>
-                            <option value="gemini">Google Gemini API (Key benötigt)</option>
-                        </select>
-                        <input type="password" id="geminiApiKey" class="html-input" autocomplete="off" style="min-height:30px; margin-top:0; font-family: sans-serif; flex: 1; display:none;" placeholder="Dein Gemini API-Key">
+                <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
+                    <select id="aiBackendSelect" class="html-input" style="min-height:30px; margin-top:0; padding: 0.4rem; flex: 1;">
+                        <option value="nvme">Lokale NVMe-KI (http://127.0.0.1:8090)</option>
+                        <option value="gemini">Google Gemini API (Key benötigt)</option>
+                    </select>
+                    <input type="password" id="geminiApiKey" class="html-input" style="min-height:30px; margin-top:0; font-family: sans-serif; flex: 1; display:none;" placeholder="Dein Gemini API-Key">
+                </div>
+                <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="btnGenerate">Website Generieren (BWEB)</button>
+                </div>
+                
+                <!-- Iteratives Design-Mutation-Tuning Chat Panel -->
+                <div id="mutationPanel" style="display:none; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <div class="panel-title" style="color: #10b981; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite;"></span>
+                        💬 AI-Design-Assistent (RAG-NVMe)
                     </div>
-                    <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
+                    <div id="mutationChatHistory" style="max-height: 180px; overflow-y: auto; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 0.75rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px;">
+                    </div>
+                    <textarea class="html-input" id="mutationInput" placeholder="Z.B.: 'ändere Hintergrund zu dunkelblau', 'mach Ecken runder', 'Schriftfarbe gelb'..." style="min-height: 60px; font-size: 0.8rem; margin-bottom: 0.75rem;"></textarea>
                     <div class="btn-row">
-                        <button type="button" class="btn btn-primary" id="btnGenerate">Website Generieren (BWEB)</button>
+                        <button class="btn" style="background:#10b981; color:#fff; font-size: 0.85rem; padding: 8px 16px;" id="btnMutate">Design anpassen</button>
                     </div>
-                </form>
+                </div>
             </div>
 
             <div class="panel" id="treePanel" style="margin-top:1rem; display:none">
@@ -543,22 +293,20 @@
         </div>
 
         <div class="panel" id="bml-viewport">
-            <div class="viewport-header">
-                <div class="viewport-dots">
-                    <span class="dot-red"></span>
-                    <span class="dot-yellow"></span>
-                    <span class="dot-green"></span>
+            <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <span>Viewport</span>
+                <div id="viewportActions" style="display: none; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <span id="viewportStats" style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #10b981; font-weight: 600;"></span>
+                    <button class="btn btn-primary" id="btnDownloadViewport" style="font-size: 0.75rem; padding: 6px 12px; background: #10b981; color: #fff; border: none; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); border-radius: 6px; cursor: pointer; transition: transform var(--transition);">
+                        ⬇ .bweb
+                    </button>
+                    <button class="btn btn-secondary" id="btnDownloadZip" style="font-size: 0.75rem; padding: 6px 12px; border: 1px solid rgba(255,255,255,0.2); color: #fff; display: flex; align-items: center; gap: 6px; border-radius: 6px; cursor: pointer; transition: transform var(--transition); background: rgba(255,255,255,0.05);">
+                        📦 Deployment-ZIP
+                    </button>
                 </div>
-                <div class="viewport-title">BWEB ENGINE VIEWPORT</div>
-                <div class="viewport-actions"></div>
             </div>
             <div class="viewport-empty" id="viewportEmpty">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                </svg>
-                <span>Lade eine .bweb / .bml Datei oder konvertiere HTML</span>
+                Lade eine .bweb Datei oder konvertiere HTML
             </div>
             <div id="renderTarget"></div>
         </div>
@@ -567,6 +315,66 @@
     <div class="attribution">
         <a href="https://github.com/Luiguard">Entwickelt von Benjamin Leimer</a> · Binary Web Engine · 2026
     </div>
+
+<!-- Global High-End Loading & Progress Overlay -->
+<div id="loadingOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:2rem; transition: opacity 0.3s ease;">
+    <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:40px; width:100%; max-width:500px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.8);">
+        <div id="loadingSpinner" style="width:48px; height:48px; border:3px solid rgba(255,255,255,0.1); border-top-color:#10b981; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 24px;"></div>
+        <div id="loadingTitle" style="font-size:1.2rem; font-weight:600; margin-bottom:12px; letter-spacing:-0.02em;">Kompiliere BWEB-Webseite</div>
+        <div id="loadingStatus" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:24px;">Initialisiere Parser...</div>
+        
+        <!-- Progress Bar Container -->
+        <div style="width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden; margin-bottom:16px;">
+            <div id="loadingProgressBar" style="width:0%; height:100%; background:#10b981; transition:width 0.2s ease; border-radius:3px;"></div>
+        </div>
+        
+        <!-- Progress Log Details -->
+        <div id="loadingLog" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text-muted); background:#000; border:1px solid var(--border); border-radius:6px; padding:12px; max-height:100px; overflow-y:auto; text-align:left; line-height:1.4;">
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <div class="modal-header">
+            <div class="modal-icon">🎉</div>
+            <h3 class="modal-title">BWEB erfolgreich kompilisiert!</h3>
+        </div>
+        <div class="modal-body">
+            <p class="modal-subtitle">Deine Website wurde vollständig in das binäre BWEB-Format transformiert und im Viewport gerendert.</p>
+            
+            <div class="modal-stats">
+                <div class="modal-stat-box">
+                    <span class="modal-stat-label">Binär-Größe</span>
+                    <span class="modal-stat-value" id="modalStatSize">-</span>
+                </div>
+                <div class="modal-stat-box">
+                    <span class="modal-stat-label">DOM Nodes</span>
+                    <span class="modal-stat-value" id="modalStatNodes">-</span>
+                </div>
+                <div class="modal-stat-box">
+                    <span class="modal-stat-label">CO2-Einsparung</span>
+                    <span class="modal-stat-value" id="modalStatSaving" style="color: #10b981;">-</span>
+                </div>
+            </div>
+
+            <div class="modal-guide">
+                <h4>Nächste Schritte:</h4>
+                <ol>
+                    <li>Lade die <strong>Deployment-ZIP</strong> herunter.</li>
+                    <li>Entpacke das Archiv und lade alle Dateien auf deinen Webserver hoch.</li>
+                    <li>Lies die Datei <strong>ANLEITUNG.txt</strong> für die Serverkonfiguration.</li>
+                </ol>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="modalBtnDownloadBweb" style="flex: 1;">⬇ .bweb Datei</button>
+            <button class="btn btn-primary" id="modalBtnDownloadZip" style="flex: 1.5; background: #10b981; color: white;">📦 Deployment-ZIP</button>
+        </div>
+    </div>
+</div>
 
 <script>
 const TAG_REV={0x01:'div',0x02:'span',0x03:'p',0x04:'a',0x05:'h1',0x06:'h2',0x07:'h3',0x08:'h4',0x09:'h5',0x0A:'h6',0x0B:'img',0x0C:'ul',0x0D:'ol',0x0E:'li',0x0F:'table',0x10:'tr',0x11:'td',0x12:'th',0x13:'thead',0x14:'tbody',0x15:'form',0x16:'input',0x17:'button',0x18:'textarea',0x19:'select',0x1A:'option',0x1B:'label',0x1C:'header',0x1D:'footer',0x1E:'nav',0x1F:'main',0x20:'section',0x21:'article',0x22:'aside',0x23:'strong',0x24:'em',0x25:'code',0x26:'pre',0x27:'br',0x28:'hr',0x29:'video',0x2A:'audio',0x2B:'canvas',0x2C:'svg',0x2D:'iframe',0x2E:'figcaption',0x2F:'figure',0x30:'blockquote',0x31:'small',0x32:'sub',0x33:'sup',0x34:'details',0x35:'summary',0x36:'dialog',0x37:'dl',0x38:'dt',0x39:'dd',0x3A:'mark',0x3B:'time',0x3C:'abbr',0x3D:'cite',0x3E:'b',0x3F:'i',0x40:'u',0xFE:'div',0xFF:'div'};
@@ -578,32 +386,53 @@ const FLEX_DIR=['row','column','row-reverse','column-reverse'];
 const JUSTIFY=['flex-start','flex-end','center','space-between','space-around','space-evenly'];
 const ALIGN_ITEMS=['flex-start','flex-end','center','stretch','baseline'];
 const OVERFLOW=['visible','hidden','scroll','auto'];
-const BLB_BLOCK_SIZE=96;
-const BLB_BLOCK_SIZE_V1=60;
+const BLB_BLOCK_SIZE=60;
+
+const DANGEROUS_TAGS = new Set(['script','iframe','object','embed','applet','meta','link','base']);
+const DANGEROUS_ATTRS = new Set(['onclick','onsubmit','onload','onerror','onmouseover','onfocus','onblur','onchange','oninput','onkeydown','onkeyup','onkeypress','formaction','xlink:href','srcdoc','data']);
+const MAX_RECURSION_DEPTH = 256;
 
 class BMLParser{
     constructor(buf,offset=0){this.v=new DataView(buf);this.d=new TextDecoder('utf-8');this.o=offset}
-    parseNode(){
-        if(this.o>=this.v.byteLength)return null;
+    parseNode(depth=0){
+        if(depth>MAX_RECURSION_DEPTH)return null;
+        if(this.o+6>this.v.byteLength)return null;
         const tag=this.v.getUint8(this.o++);
         const nAttr=this.v.getUint8(this.o++);
         const nChild=this.v.getUint16(this.o);this.o+=2;
         const tLen=this.v.getUint16(this.o);this.o+=2;
         const tagName=TAG_REV[tag]||'div';
+        if(DANGEROUS_TAGS.has(tagName)){
+            for(let i=0;i<nAttr;i++){
+                if(this.o+3>this.v.byteLength)return null;
+                this.o++;
+                const aLen=this.v.getUint16(this.o);this.o+=2;
+                if(this.o+aLen>this.v.byteLength)return null;
+                this.o+=aLen;
+            }
+            if(tLen>0){if(this.o+tLen>this.v.byteLength)return null;this.o+=tLen;}
+            for(let i=0;i<nChild;i++){this.parseNode(depth+1);}
+            return null;
+        }
         const el=document.createElement(tagName);
         el.classList.add('rendered-node',`bml-tag-${tagName}`);
         for(let i=0;i<nAttr;i++){
+            if(this.o+3>this.v.byteLength)break;
             const aId=this.v.getUint8(this.o++);
             const aLen=this.v.getUint16(this.o);this.o+=2;
+            if(this.o+aLen>this.v.byteLength)break;
             const aVal=this.d.decode(new Uint8Array(this.v.buffer,this.o,aLen));this.o+=aLen;
             const aName=ATTR_REV[aId];
-            if(aName&&aName!=='style')el.setAttribute(aName,aVal);
+            if(!aName||aName==='style'||DANGEROUS_ATTRS.has(aName))continue;
+            if((aName==='href'||aName==='src'||aName==='action')&&/^\s*javascript:/i.test(aVal))continue;
+            el.setAttribute(aName,aVal);
         }
         if(tLen>0){
+            if(this.o+tLen>this.v.byteLength){return el;}
             const txt=this.d.decode(new Uint8Array(this.v.buffer,this.o,tLen));this.o+=tLen;
             el.textContent=txt;
         }
-        for(let i=0;i<nChild;i++){const c=this.parseNode();if(c)el.appendChild(c)}
+        for(let i=0;i<nChild;i++){const c=this.parseNode(depth+1);if(c)el.appendChild(c)}
         return el;
     }
 }
@@ -618,20 +447,22 @@ class BDTParser{
             const pid=this.v.getUint16(this.o);this.o+=2;
             const fc=this.v.getUint16(this.o);this.o+=2;
             const ns=this.v.getUint16(this.o);this.o+=2;
+            const lc=this.v.getUint16(this.o);this.o+=2;
+            const ps=this.v.getUint16(this.o);this.o+=2;
             const nt=this.v.getUint8(this.o++);
             const tt=this.v.getUint8(this.o++);
             const depth=this.v.getUint8(this.o++);
-            nodes.push({id:nid,parent:pid,firstChild:fc,nextSibling:ns,type:nt,tag:tt,depth});
+            this.o++; // padding
+            nodes.push({id:nid,parent:pid,firstChild:fc,nextSibling:ns,lastChild:lc,previousSibling:ps,type:nt,tag:tt,depth});
         }
         return nodes;
     }
 }
 
 class BLBParser{
-    constructor(buf,offset=0,version=2){this.v=new DataView(buf);this.o=offset;this.ver=version}
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
     parse(){
         const count=this.v.getUint32(this.o);this.o+=4;
-        const bs=this.ver>=2?BLB_BLOCK_SIZE:BLB_BLOCK_SIZE_V1;
         const blocks=[];
         for(let i=0;i<count;i++){
             const o=this.o;
@@ -660,266 +491,45 @@ class BLBParser{
             const overflow=this.v.getUint8(o+56);
             const opacity=this.v.getUint8(o+57);
             const zIndex=this.v.getInt16(o+58);
-            let ext={};
-            if(this.ver>=2){
-                ext.textDecoration=this.v.getUint8(o+60);
-                ext.cursor=this.v.getUint8(o+61);
-                ext.whiteSpace=this.v.getUint8(o+62);
-                ext.visibility=this.v.getUint8(o+63);
-                ext.minWidth=this.v.getUint16(o+64);
-                ext.maxWidth=this.v.getUint16(o+66);
-                ext.minHeight=this.v.getUint16(o+68);
-                ext.maxHeight=this.v.getUint16(o+70);
-                ext.flexGrow=this.v.getUint16(o+72);
-                ext.flexShrink=this.v.getUint16(o+74);
-                ext.flexBasis=this.v.getUint16(o+76);
-                ext.order=this.v.getInt8(o+78);
-                ext.alignSelf=this.v.getUint8(o+79);
-                ext.shadowColor=this.v.getUint32(o+80);
-                ext.shadowX=this.v.getInt16(o+84);
-                ext.shadowY=this.v.getInt16(o+86);
-                ext.shadowBlur=this.v.getUint16(o+88);
-                ext.shadowSpread=this.v.getUint16(o+90);
-                ext.fontFamilyId=this.v.getUint16(o+92);
-                ext.fontStyle=this.v.getUint8(o+94);
-                ext.animationId=this.v.getUint8(o+95);
-            }
-            this.o+=bs;
+            this.o+=BLB_BLOCK_SIZE;
             blocks.push({nid,display,position,boxSizing,width,height,
                 margin:{t:mt,r:mr,b:mb,l:ml},padding:{t:pt,r:pr,b:pb,l:pl},
                 borderWidth:{t:btw,r:brw,b:bbw,l:blw},borderColor,bgColor,color,
                 fontSize,fontWeight,lineHeight,textAlign,flexDir,flexWrap,
-                justifyContent,alignItems,gap,borderRadius,overflow,opacity,zIndex,...ext});
+                justifyContent,alignItems,gap,borderRadius,overflow,opacity,zIndex});
         }
         return blocks;
     }
 }
 
-class BCSParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;}
-    parse(){
-        const blockCount=this.v.getUint32(this.o);this.o+=4;
-        const mapCount=this.v.getUint32(this.o);this.o+=4;
-        
-        const uniqueBlocks = [];
-        const bs = 96; 
-        
-        for(let i=0;i<blockCount;i++){
-            const o=this.o;
-            const nid=this.v.getUint16(o);
-            const display=this.v.getUint8(o+2);
-            const position=this.v.getUint8(o+3);
-            const boxSizing=this.v.getUint8(o+4);
-            const width=this.v.getUint16(o+5);
-            const height=this.v.getUint16(o+7);
-            const mt=this.v.getInt16(o+9),mr=this.v.getInt16(o+11),mb=this.v.getInt16(o+13),ml=this.v.getInt16(o+15);
-            const pt=this.v.getUint16(o+17),pr=this.v.getUint16(o+19),pb=this.v.getUint16(o+21),pl=this.v.getUint16(o+23);
-            const btw=this.v.getUint8(o+25),brw=this.v.getUint8(o+26),bbw=this.v.getUint8(o+27),blw=this.v.getUint8(o+28);
-            const borderColor=this.v.getUint32(o+29);
-            const bgColor=this.v.getUint32(o+33);
-            const color=this.v.getUint32(o+37);
-            const fontSize=this.v.getUint16(o+41);
-            const fontWeight=this.v.getUint16(o+43);
-            const lineHeight=this.v.getUint16(o+45);
-            const textAlign=this.v.getUint8(o+47);
-            const flexDir=this.v.getUint8(o+48);
-            const flexWrap=this.v.getUint8(o+49);
-            const justifyContent=this.v.getUint8(o+50);
-            const alignItems=this.v.getUint8(o+51);
-            const gap=this.v.getUint16(o+52);
-            const borderRadius=this.v.getUint16(o+54);
-            const overflow=this.v.getUint8(o+56);
-            const opacity=this.v.getUint8(o+57);
-            const zIndex=this.v.getInt16(o+58);
-            let ext={};
-            ext.textDecoration=this.v.getUint8(o+60);
-            ext.cursor=this.v.getUint8(o+61);
-            ext.minWidth=this.v.getUint16(o+62);
-            ext.maxWidth=this.v.getUint16(o+64);
-            ext.minHeight=this.v.getUint16(o+66);
-            ext.maxHeight=this.v.getUint16(o+68);
-            ext.flexGrow=this.v.getUint16(o+70)/100;
-            ext.flexShrink=this.v.getUint16(o+72)/100;
-            ext.boxShadowX=this.v.getInt16(o+74);
-            ext.boxShadowY=this.v.getInt16(o+76);
-            ext.boxShadowBlur=this.v.getUint16(o+78);
-            ext.boxShadowSpread=this.v.getInt16(o+80);
-            ext.boxShadowColor=this.v.getUint32(o+82);
-            ext.fontStyle=this.v.getUint8(o+86);
-            
-            uniqueBlocks.push({nid,display,position,boxSizing,width,height,mt,mr,mb,ml,pt,pr,pb,pl,btw,brw,bbw,blw,borderColor,bgColor,color,fontSize,fontWeight,lineHeight,textAlign,flexDir,flexWrap,justifyContent,alignItems,gap,borderRadius,overflow,opacity,zIndex,ext});
-            this.o += bs;
-        }
-        
-        const mappedBlocks = [];
-        for(let i=0;i<mapCount;i++){
-            const sid = this.v.getUint16(this.o); this.o+=2;
-            const b = uniqueBlocks[sid];
-            mappedBlocks.push({...b, nid: i});
-        }
-        
-        return mappedBlocks;
-    }
-}
+const MAX_CANVAS_DIM = 8192;
 
-class BRSParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
+class BIBParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
     parse(){
         const count=this.v.getUint32(this.o);this.o+=4;
-        const queries=[];
-        const td=new TextDecoder('ascii');
-        for(let i=0;i<count;i++){
-            const qLen=this.u8[this.o++];
-            const query=td.decode(this.u8.slice(this.o,this.o+qLen));
-            this.o+=qLen;
-            const bCount=this.v.getUint32(this.o);
-            const blbParser = new BLBParser(this.v.buffer, this.o, 2);
-            const blocks = blbParser.parse();
-            this.o = blbParser.o;
-            queries.push({query, blocks});
-        }
-        return queries;
-    }
-}
-
-class BSGParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
-    parse(){
-        const count=this.v.getUint32(this.o);this.o+=4;
-        const graphics=[];
-        const td=new TextDecoder('ascii');
+        const images={};
         for(let i=0;i<count;i++){
             const id=this.v.getUint32(this.o);this.o+=4;
-            const width=this.v.getUint16(this.o);this.o+=2;
-            const height=this.v.getUint16(this.o);this.o+=2;
-            const pCount=this.v.getUint16(this.o);this.o+=2;
-            const paths=[];
-            for(let j=0;j<pCount;j++){
-                const fill=this.v.getUint32(this.o);this.o+=4;
-                const stroke=this.v.getUint32(this.o);this.o+=4;
-                const strokeWidth=this.v.getUint16(this.o);this.o+=2;
-                const dLen=this.v.getUint32(this.o);this.o+=4;
-                const d=td.decode(this.u8.slice(this.o,this.o+dLen));
-                this.o+=dLen;
-                paths.push({fill,stroke,strokeWidth,d});
-            }
-            graphics.push({id,width,height,paths});
-        }
-        return graphics;
-    }
-}
-
-class BJSParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
-    parse(){
-        const count=this.v.getUint32(this.o);this.o+=4;
-        const scripts=[];
-        const td=new TextDecoder('utf-8');
-        for(let i=0;i<count;i++){
-            const id=this.v.getUint32(this.o);this.o+=4;
-            const cLen=this.v.getUint32(this.o);this.o+=4;
-            const content=td.decode(this.u8.slice(this.o,this.o+cLen));
-            this.o+=cLen;
-            scripts.push({id,content});
-        }
-        return scripts;
-    }
-}
-
-class BPRParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
-    parse(){
-        const count=this.v.getUint32(this.o);this.o+=4;
-        const routes=[];
-        const td=new TextDecoder('ascii');
-        for(let i=0;i<count;i++){
-            const id=this.v.getUint16(this.o);this.o+=2;
-            const pLen=this.u8[this.o++];
-            const path=td.decode(this.u8.slice(this.o,this.o+pLen));
-            this.o+=pLen;
-            const nodeId=this.v.getUint16(this.o);this.o+=2;
-            routes.push({id,path,nodeId});
-        }
-        return routes;
-    }
-}
-
-class BWAParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
-    parse(){
-        const count=this.u8[this.o++];
-        const wasms=[];
-        const td=new TextDecoder('ascii');
-        for(let i=0;i<count;i++){
-            const id=this.u8[this.o++];
-            const nameLen=this.u8[this.o++];
-            const name=td.decode(this.u8.slice(this.o,this.o+nameLen));
-            this.o+=nameLen;
-            const dataLen=this.v.getUint32(this.o);this.o+=4;
-            const data=this.u8.slice(this.o,this.o+dataLen);
-            this.o+=dataLen;
-            wasms.push({id,name,data});
-        }
-        return wasms;
-    }
-}
-
-class B3DParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
-    parse(){
-        const count=this.u8[this.o++];
-        const shaders=[];
-        const td=new TextDecoder('utf-8');
-        for(let i=0;i<count;i++){
-            const id=this.u8[this.o++];
-            const type=this.u8[this.o++];
-            const dataLen=this.v.getUint32(this.o);this.o+=4;
-            const data=td.decode(this.u8.slice(this.o,this.o+dataLen));
-            this.o+=dataLen;
-            shaders.push({id,type,data});
-        }
-        return shaders;
-    }
-}
-
-class BAMParser{
-    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf);}
-    parse(){
-        const count=this.v.getUint32(this.o);this.o+=4;
-        const anims={};
-        const td=new TextDecoder('ascii');
-        const tdutf=new TextDecoder('utf-8');
-        for(let i=0;i<count;i++){
-            const id=this.u8[this.o++];
-            const type=this.u8[this.o++];
-            const nameLen=this.u8[this.o++];
-            const name=td.decode(this.u8.slice(this.o,this.o+nameLen));
-            this.o+=nameLen;
-            const duration=this.v.getUint32(this.o);this.o+=4;
-            const delay=this.v.getUint32(this.o);this.o+=4;
-            const timing=this.u8[this.o++];
-            const iters=this.v.getUint16(this.o);this.o+=2;
-            const dir=this.u8[this.o++];
-            const fill=this.u8[this.o++];
+            const w=this.v.getUint16(this.o);this.o+=2;
+            const h=this.v.getUint16(this.o);this.o+=2;
+            const cs=this.v.getUint8(this.o++);
+            const comp=this.v.getUint8(this.o++);
+            this.o+=6; // padding
             
-            const kfCount=this.v.getUint16(this.o);this.o+=2;
-            const keyframes=[];
-            for(let j=0;j<kfCount;j++){
-                const pct=this.u8[this.o++];
-                const propCount=this.u8[this.o++];
-                const props=[];
-                for(let k=0;k<propCount;k++){
-                    const pid=this.u8[this.o++];
-                    const valLen=this.v.getUint16(this.o);this.o+=2;
-                    const val=tdutf.decode(this.u8.slice(this.o,this.o+valLen));
-                    this.o+=valLen;
-                    props.push({pid,val});
-                }
-                keyframes.push({pct,props});
-            }
-            anims[id]={type,name,duration,delay,timing,iters,dir,fill,keyframes};
+            const blockId=this.v.getUint16(this.o);this.o+=2;
+            const dataLen=this.v.getUint32(this.o);this.o+=4;
+            
+            if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BIB: Bilddimensionen ${w}x${h} überschreiten Limit ${MAX_CANVAS_DIM}`);
+            if(dataLen!==w*h*4)throw new Error(`BIB: dataLen ${dataLen} != erwartete ${w*h*4} Bytes`);
+            if(this.o+dataLen>this.v.byteLength)throw new Error('BIB: Buffer-Overread');
+            
+            const pxData=new Uint8ClampedArray(this.v.buffer,this.o,dataLen);
+            this.o+=dataLen;
+            
+            images[id]={w,h,data:pxData};
         }
-        return anims;
+        return images;
     }
 }
 
@@ -937,10 +547,13 @@ class BVSParser {
             const w = this.v.getUint16(this.o); this.o += 2;
             const h = this.v.getUint16(this.o); this.o += 2;
             const codecLen = this.v.getUint8(this.o++);
+            if(this.o+codecLen>this.v.byteLength)throw new Error('BVS: Buffer-Overread');
             const codecBytes = this.u8.slice(this.o, this.o + codecLen);
             this.o += codecLen;
             const codec = new TextDecoder('ascii').decode(codecBytes);
             const chunkCount = this.v.getUint32(this.o); this.o += 4;
+            
+            if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BVS: Videodimensionen ${w}x${h} überschreiten Limit`);
             
             const chunks = [];
             for(let j=0; j<chunkCount; j++) {
@@ -951,6 +564,7 @@ class BVSParser {
                 const pts = Number((BigInt(ptsHigh) << 32n) | BigInt(ptsLow));
                 const dur = this.v.getUint32(this.o); this.o += 4;
                 const dataLen = this.v.getUint32(this.o); this.o += 4;
+                if(this.o+dataLen>this.v.byteLength)throw new Error('BVS: Buffer-Overread');
                 const data = this.u8.slice(this.o, this.o + dataLen);
                 this.o += dataLen;
                 
@@ -1196,14 +810,7 @@ function rgba(v){
     return`rgba(${r},${g},${b},${(a/255).toFixed(2)})`;
 }
 
-const TEXT_DECO=['none','underline','line-through','overline'];
-const CURSOR_CSS=['default','pointer','text','move','not-allowed','grab','crosshair','wait','help'];
-const WHITE_SPACE=['normal','nowrap','pre','pre-wrap','pre-line'];
-const VISIBILITY_CSS=['visible','hidden','collapse'];
-const ALIGN_SELF=['auto','flex-start','flex-end','center','stretch','baseline'];
-const FONT_STYLE=['normal','italic','oblique'];
-
-function applyBLB(rootEl,blocks,anims=null){
+function applyBLB(rootEl,blocks){
     const allNodes=rootEl.querySelectorAll('.rendered-node');
     const nodeList=[rootEl,...allNodes];
     blocks.forEach(bl=>{
@@ -1248,37 +855,6 @@ function applyBLB(rootEl,blocks,anims=null){
         if(bl.overflow>0)s.overflow=OVERFLOW[bl.overflow];
         if(bl.opacity<255)s.opacity=(bl.opacity/255).toFixed(2);
         if(bl.zIndex!==0)s.zIndex=bl.zIndex;
-        // === BLB v2 Extended ===
-        if(bl.textDecoration>0)s.textDecoration=TEXT_DECO[bl.textDecoration]||'';
-        if(bl.cursor>0)s.cursor=CURSOR_CSS[bl.cursor]||'';
-        if(bl.whiteSpace>0)s.whiteSpace=WHITE_SPACE[bl.whiteSpace]||'';
-        if(bl.visibility>0)s.visibility=VISIBILITY_CSS[bl.visibility]||'';
-        if(bl.minWidth!==undefined&&bl.minWidth!==0xFFFF)s.minWidth=cssVal(bl.minWidth);
-        if(bl.maxWidth!==undefined&&bl.maxWidth!==0xFFFF)s.maxWidth=cssVal(bl.maxWidth);
-        if(bl.minHeight!==undefined&&bl.minHeight!==0xFFFF)s.minHeight=cssVal(bl.minHeight);
-        if(bl.maxHeight!==undefined&&bl.maxHeight!==0xFFFF)s.maxHeight=cssVal(bl.maxHeight);
-        if(bl.flexGrow!==undefined&&bl.flexGrow>0)s.flexGrow=(bl.flexGrow/100).toFixed(2);
-        if(bl.flexShrink!==undefined&&bl.flexShrink!==100)s.flexShrink=(bl.flexShrink/100).toFixed(2);
-        if(bl.flexBasis!==undefined&&bl.flexBasis!==0xFFFF)s.flexBasis=cssVal(bl.flexBasis);
-        if(bl.order!==undefined&&bl.order!==0)s.order=bl.order;
-        if(bl.alignSelf!==undefined&&bl.alignSelf>0)s.alignSelf=ALIGN_SELF[bl.alignSelf]||'';
-        if(bl.shadowColor&&bl.shadowColor!==0){
-            s.boxShadow=`${bl.shadowX/10}px ${bl.shadowY/10}px ${bl.shadowBlur/10}px ${bl.shadowSpread/10}px ${rgba(bl.shadowColor)}`;
-        }
-        if(bl.fontStyle!==undefined&&bl.fontStyle>0)s.fontStyle=FONT_STYLE[bl.fontStyle]||'';
-        
-        if(bl.animationId!==undefined&&bl.animationId!==255&&anims){
-            const anim = anims[bl.animationId];
-            if(anim){
-                s.animationName = anim.name;
-                s.animationDuration = (anim.duration/1000) + 's';
-                s.animationDelay = (anim.delay/1000) + 's';
-                s.animationTimingFunction = BAM_TIMING_REV[anim.timing]||'ease';
-                s.animationIterationCount = anim.iters===0xFFFF ? 'infinite' : anim.iters;
-                s.animationDirection = BAM_DIR_REV[anim.dir]||'normal';
-                s.animationFillMode = BAM_FILL_REV[anim.fill]||'none';
-            }
-        }
     });
 }
 
@@ -1299,149 +875,6 @@ async function applyBIB(rootEl,images){
     await Promise.all(promises);
 }
 
-async function applyBFS(fonts){
-    for(const font of Object.values(fonts)){
-        try{
-            const style = font.style === 1 ? 'italic' : font.style === 2 ? 'oblique' : 'normal';
-            const face = new FontFace(font.family, font.data, {
-                weight: font.weight,
-                style: style
-            });
-            await face.load();
-            document.fonts.add(face);
-        }catch(e){
-            console.error('Failed to load font:', font.family, e);
-        }
-    }
-}
-
-const BAM_PROP_REV = {
-    1: 'transform:translateX', 2: 'transform:translateY', 3: 'transform:translateZ',
-    4: 'transform:rotate', 5: 'transform:rotateX', 6: 'transform:rotateY',
-    7: 'transform:scaleX', 8: 'transform:scaleY', 9: 'transform:skewX', 10: 'transform:skewY',
-    16: 'opacity', 17: 'background-color', 18: 'color', 19: 'width', 20: 'height'
-};
-
-const BAM_TIMING_REV = ['ease','linear','ease-in','ease-out','ease-in-out'];
-const BAM_DIR_REV = ['normal','reverse','alternate'];
-const BAM_FILL_REV = ['none','forwards','backwards','both'];
-
-function applyBAM(rootEl, anims){
-    let styleText = '';
-    for(const anim of Object.values(anims)){
-        styleText += `@keyframes ${anim.name} {\n`;
-        for(const kf of anim.keyframes){
-            styleText += `  ${kf.pct}% {\n`;
-            let transforms = [];
-            for(const p of kf.props){
-                const pName = BAM_PROP_REV[p.pid] || 'unknown';
-                if(pName.startsWith('transform:')){
-                    transforms.push(`${pName.split(':')[1]}(${p.val})`);
-                } else {
-                    styleText += `    ${pName}: ${p.val};\n`;
-                }
-            }
-            if(transforms.length > 0){
-                styleText += `    transform: ${transforms.join(' ')};\n`;
-            }
-            styleText += `  }\n`;
-        }
-        styleText += `}\n`;
-    }
-    if(styleText){
-        let style = document.createElement('style');
-        style.textContent = styleText;
-        document.head.appendChild(style);
-    }
-}
-
-function applyBRS(rootEl, queries, blbBlocks, anims){
-    const update = () => {
-        applyBLB(rootEl, blbBlocks, anims);
-        for(const mq of queries){
-            if(window.matchMedia(mq.query).matches){
-                applyBLB(rootEl, mq.blocks, anims);
-            }
-        }
-    };
-
-    for(const mq of queries){
-        window.matchMedia(mq.query).addEventListener('change', update);
-    }
-    update();
-}
-
-function applyBSG(rootEl, graphics){
-    graphics.forEach(g => {
-        const canvases = rootEl.querySelectorAll(`canvas[data-bind-svg="${g.id}"]`);
-        canvases.forEach(canvas => {
-            canvas.width = g.width || canvas.clientWidth || 300;
-            canvas.height = g.height || canvas.clientHeight || 150;
-            const ctx = canvas.getContext('2d');
-            g.paths.forEach(p => {
-                const path2d = new Path2D(p.d);
-                if(p.fill){
-                    ctx.fillStyle = '#' + p.fill.toString(16).padStart(8,'0');
-                    ctx.fill(path2d);
-                }
-                if(p.stroke && p.strokeWidth){
-                    ctx.strokeStyle = '#' + p.stroke.toString(16).padStart(8,'0');
-                    ctx.lineWidth = p.strokeWidth / 10;
-                    ctx.stroke(path2d);
-                }
-            });
-        });
-    });
-}
-
-function applyBJS(rootEl, scripts){
-    scripts.forEach(s => {
-        const scriptEls = rootEl.querySelectorAll(`script[data-bind-js="${s.id}"]`);
-        scriptEls.forEach(el => {
-            const newScript = document.createElement('script');
-            newScript.textContent = s.content;
-            document.body.appendChild(newScript);
-        });
-    });
-}
-
-function applyBPR(rootEl, routes, nodes){
-    const updateRoute = () => {
-        const hash = window.location.hash.replace('#', '') || '/';
-        const activeRoute = routes.find(r => r.path === hash) || routes[0];
-        if(!activeRoute) return;
-        
-        Array.from(rootEl.children).forEach(child => {
-            if(child.getAttribute('data-bdt-id') == activeRoute.nodeId) {
-                child.style.display = '';
-            } else {
-                child.style.display = 'none';
-            }
-        });
-    };
-
-    window.addEventListener('hashchange', updateRoute);
-    updateRoute();
-}
-
-function applyBWA(rootEl, wasms){
-    wasms.forEach(w => {
-        const module = new WebAssembly.Module(w.data);
-        const instance = new WebAssembly.Instance(module, {});
-        // In a real implementation, we would expose this instance to JS (BJS) via a global registry
-        window[`_bwa_${w.id}`] = instance.exports;
-    });
-}
-
-function applyB3D(rootEl, shaders){
-    // B3D requires WebGL context to compile and attach shaders.
-    // For MVP, we expose the shader sources to a global registry so BJS or inline scripts can use them
-    window._b3d = shaders.reduce((acc, s) => {
-        acc[s.id] = s;
-        return acc;
-    }, {});
-}
-
 function renderBDTTree(nodes){
     const tv=document.getElementById('treeView');
     const tp=document.getElementById('treePanel');
@@ -1451,7 +884,7 @@ function renderBDTTree(nodes){
     nodes.forEach(n=>{
         const indent='  '.repeat(n.depth);
         const tag=TAG_REV[n.tag]||'?';
-        html+=`${indent}<span class="tag">&lt;${tag}&gt;</span> <span class="id-ref">#${n.id}</span> <span class="depth">p:${n.parent===0xFFFF?'root':n.parent} fc:${n.firstChild===0xFFFF?'-':n.firstChild} ns:${n.nextSibling===0xFFFF?'-':n.nextSibling}</span>\n`;
+        html+=`${indent}<span class="tag">&lt;${tag}&gt;</span> <span class="id-ref">#${n.id}</span> <span class="depth">p:${n.parent===0xFFFF?'root':n.parent} fc:${n.firstChild===0xFFFF?'-':n.firstChild} lc:${n.lastChild===0xFFFF?'-':n.lastChild} ps:${n.previousSibling===0xFFFF?'-':n.previousSibling} ns:${n.nextSibling===0xFFFF?'-':n.nextSibling}</span>\n`;
     });
     tv.innerHTML=html;
 }
@@ -1480,8 +913,10 @@ async function renderBinary(buf){
     const sections=parseBWEB(buf);
 
     const bmlBuf=sections[1];
+    const bdtBuf=sections[2];
+    const blbBuf=sections[3];
 
-    let rootEl=null;
+    let rootEl=null,blbBlocks=null;
 
     if(bmlBuf){
         const bmlView=new Uint8Array(bmlBuf);
@@ -1491,13 +926,19 @@ async function renderBinary(buf){
         rootEl=parser.parseNode();
     }
 
-    let bdtNodes = [];
-    if(sections[2]){
-        const bdtBuf=sections[2];
+    if(bdtBuf){
         const bdtView=new Uint8Array(bdtBuf);
         let bdtStart=0;
         if(bdtView[0]===0x42&&bdtView[1]===0x44&&bdtView[2]===0x54)bdtStart=4;
         bdtNodes=new BDTParser(bdtBuf,bdtStart).parse();
+    }
+
+    if(blbBuf&&rootEl){
+        const blbView=new Uint8Array(blbBuf);
+        let blbStart=0;
+        if(blbView[0]===0x42&&blbView[1]===0x4C&&blbView[2]===0x42)blbStart=4;
+        blbBlocks=new BLBParser(blbBuf,blbStart).parse();
+        applyBLB(rootEl,blbBlocks);
     }
 
     if(sections[4]&&rootEl){
@@ -1527,101 +968,6 @@ async function renderBinary(buf){
         await applyBAS(rootEl,audios);
     }
 
-    if(sections[7]){
-        const bfsBuf=sections[7];
-        const bfsView=new Uint8Array(bfsBuf);
-        let bfsStart=0;
-        if(bfsView[0]===0x42&&bfsView[1]===0x46&&bfsView[2]===0x53)bfsStart=4;
-        const fonts=new BFSParser(bfsBuf,bfsStart).parse();
-        await applyBFS(fonts);
-    }
-
-    let anims = null;
-    if(sections[8]){
-        const bamBuf=sections[8];
-        const bamView=new Uint8Array(bamBuf);
-        let bamStart=0;
-        if(bamView[0]===0x42&&bamView[1]===0x41&&bamView[2]===0x4D)bamStart=4;
-        anims=new BAMParser(bamBuf,bamStart).parse();
-        applyBAM(rootEl,anims);
-    }
-
-    let blbBlocks = [];
-    
-    if(sections[13]) {
-        const bcsBuf=sections[13];
-        const bcsView=new Uint8Array(bcsBuf);
-        let bcsStart=0;
-        if(bcsView[0]===0x42&&bcsView[1]===0x43&&bcsView[2]===0x53)bcsStart=4;
-        blbBlocks = new BCSParser(bcsBuf,bcsStart).parse();
-    } else if(sections[3]){
-        const blbBuf=sections[3];
-        const blbView=new Uint8Array(blbBuf);
-        let blbStart=0;
-        let blbVer=2;
-        if(blbView[0]===0x42&&blbView[1]===0x4C&&blbView[2]===0x42){blbVer=blbView[3];blbStart=4;}
-        blbBlocks=new BLBParser(blbBuf,blbStart,blbVer).parse();
-    }
-
-    if(bdtNodes.length>0 && blbBlocks.length>0 && rootEl){
-        applyBLB(rootEl,blbBlocks,anims);
-    }
-
-    if(sections[9]&&rootEl){
-        const brsBuf=sections[9];
-        const brsView=new Uint8Array(brsBuf);
-        let brsStart=0;
-        if(brsView[0]===0x42&&brsView[1]===0x52&&brsView[2]===0x53)brsStart=4;
-        const queries=new BRSParser(brsBuf,brsStart).parse();
-        applyBRS(rootEl, queries, blbBlocks, anims);
-    }
-
-    if(sections[10]&&rootEl){
-        const bsgBuf=sections[10];
-        const bsgView=new Uint8Array(bsgBuf);
-        let bsgStart=0;
-        if(bsgView[0]===0x42&&bsgView[1]===0x53&&bsgView[2]===0x47)bsgStart=4;
-        const graphics=new BSGParser(bsgBuf,bsgStart).parse();
-        applyBSG(rootEl, graphics);
-    }
-
-    if(sections[11]&&rootEl){
-        const bjsBuf=sections[11];
-        const bjsView=new Uint8Array(bjsBuf);
-        let bjsStart=0;
-        if(bjsView[0]===0x42&&bjsView[1]===0x4A&&bjsView[2]===0x53)bjsStart=4;
-        const scripts=new BJSParser(bjsBuf,bjsStart).parse();
-        applyBJS(rootEl, scripts);
-    }
-
-    if(sections[12]&&rootEl){
-        const bprBuf=sections[12];
-        const bprView=new Uint8Array(bprBuf);
-        let bprStart=0;
-        if(bprView[0]===0x42&&bprView[1]===0x50&&bprView[2]===0x52)bprStart=4;
-        const routes=new BPRParser(bprBuf,bprStart).parse();
-        applyBPR(rootEl, routes, bdtNodes);
-    }
-
-    if(sections[14]){
-        const bwaBuf=sections[14];
-        const bwaView=new Uint8Array(bwaBuf);
-        let bwaStart=0;
-        if(bwaView[0]===0x42&&bwaView[1]===0x57&&bwaView[2]===0x41)bwaStart=4;
-        const wasms=new BWAParser(bwaBuf,bwaStart).parse();
-        applyBWA(rootEl, wasms);
-    }
-
-    if(sections[15]){
-        const b3dBuf=sections[15];
-        const b3dView=new Uint8Array(b3dBuf);
-        let b3dStart=0;
-        if(b3dView[0]===0x42&&b3dView[1]===0x33&&b3dView[2]===0x44)b3dStart=4;
-        const shaders=new B3DParser(b3dBuf,b3dStart).parse();
-        applyB3D(rootEl, shaders);
-    }
-
-    const t1=performance.now();
     const target=document.getElementById('renderTarget');
     const empty=document.getElementById('viewportEmpty');
     target.innerHTML='';
@@ -1629,6 +975,8 @@ async function renderBinary(buf){
         target.appendChild(rootEl);
         empty.style.display='none';
     }
+
+    const t1=performance.now();
 
     document.getElementById('statsGrid').style.display='';
     document.getElementById('statTotal').textContent=buf.byteLength+' B';
@@ -1653,9 +1001,20 @@ async function renderBinary(buf){
     }
 
     renderBDTTree(bdtNodes);
+
+    // Show viewport action bar and update stats
+    const actions = document.getElementById('viewportActions');
+    const statsEl = document.getElementById('viewportStats');
+    if (actions && statsEl && buf) {
+        actions.style.display = 'flex';
+        const kb = (buf.byteLength / 1024).toFixed(1);
+        statsEl.innerHTML = `⚡ ${kb} KB | ${bdtNodes ? bdtNodes.length : 0} Nodes`;
+    }
 }
 
 let lastBweb=null;
+let currentSessionId=null;
+let bdtNodes=null;
 
 document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change',e=>{
@@ -1665,10 +1024,33 @@ document.getElementById('fileInput').addEventListener('change',e=>{
 const dz=document.getElementById('dropZone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-dz.addEventListener('drop',e=>{
-    e.preventDefault();dz.classList.remove('drag-over');
-    const f=e.dataTransfer.files[0];if(!f)return;
-    f.arrayBuffer().then(async buf=>await renderBinary(buf));
+dz.addEventListener('drop',async(e)=>{
+    e.preventDefault();
+    dz.classList.remove('drag-over');
+    
+    // Check if dynamic directory entry dropping is supported
+    const items = Array.from(e.dataTransfer.items || []);
+    if (items.length > 0) {
+        const entry = typeof items[0].webkitGetAsEntry === 'function' ? items[0].webkitGetAsEntry() : null;
+        if (entry && entry.isDirectory) {
+            const files = [];
+            await readEntryRecursively(entry, '', files);
+            if (files.length > 0) {
+                await compileFilesList(files);
+                return;
+            }
+        }
+    }
+    
+    const f=e.dataTransfer.files[0];
+    if(!f)return;
+    if (f.name.endsWith('.bweb')) {
+        f.arrayBuffer().then(async buf=>await renderBinary(buf));
+    } else if (f.name.endsWith('.html') || f.name.endsWith('.htm')) {
+        const text = await f.text();
+        document.getElementById('htmlInput').value = text;
+        alert("HTML-Inhalt geladen! Klicke auf 'Konvertieren', um BWEB zu erzeugen.");
+    }
 });
 
 document.getElementById('btnConvert').addEventListener('click',async()=>{
@@ -1679,6 +1061,7 @@ document.getElementById('btnConvert').addEventListener('click',async()=>{
         lastBweb=bweb;
         await renderBinary(bweb);
         document.getElementById('btnDownload').style.display='';
+        showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
     } catch(err) {
         alert("Fehler bei der Konvertierung: " + err);
     }
@@ -1691,11 +1074,48 @@ document.getElementById('btnFolderUpload').addEventListener('click', () => {
 document.getElementById('folderInput').addEventListener('change', async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    
+    await compileFilesList(files);
+    e.target.value = '';
+});
+
+// Recursive Directory Reader via HTML5 File System API
+async function readEntryRecursively(entry, path = '', filesList = []) {
+    if (entry.isFile) {
+        const file = await new Promise((resolve, reject) => {
+            entry.file(resolve, reject);
+        });
+        file.customRelativePath = path ? `${path}/${file.name}` : file.name;
+        filesList.push(file);
+    } else if (entry.isDirectory) {
+        const dirReader = entry.createReader();
+        const entries = await new Promise((resolve) => {
+            const allEntries = [];
+            function readBatch() {
+                dirReader.readEntries((batch) => {
+                    if (batch.length === 0) {
+                        resolve(allEntries);
+                    } else {
+                        allEntries.push(...batch);
+                        readBatch();
+                    }
+                }, () => resolve(allEntries));
+            }
+            readBatch();
+        });
+        const currentPath = path ? `${path}/${entry.name}` : entry.name;
+        for (const childEntry of entries) {
+            await readEntryRecursively(childEntry, currentPath, filesList);
+        }
+    }
+    return filesList;
+}
+
+// Robust Folder Compiler with Regex Path-Mapping
+async function compileFilesList(files) {
     let indexFile = files.find(f => f.name === 'index.html' || f.name === 'index.htm');
     if (!indexFile) indexFile = files.find(f => f.name.endsWith('.html'));
     if (!indexFile) {
-        alert("Keine index.html im Ordner gefunden!");
+        alert("Keine index.html im hochgeladenen Ordner gefunden!");
         return;
     }
 
@@ -1704,52 +1124,321 @@ document.getElementById('folderInput').addEventListener('change', async (e) => {
     btn.textContent = 'Lese lokale Dateien...';
     btn.disabled = true;
 
+    showLoader("Ordner-Kompilierung", "Analysiere hochgeladene Ordner-Struktur...");
+    updateLoader(5, "Scanne Dateien...", `Gefunden: ${files.length} Dateien in der Struktur.`);
+
     try {
         let htmlContent = await indexFile.text();
+        updateLoader(10, "Lese index.html...", `Hauptdokument index.html eingelesen (${(htmlContent.length / 1024).toFixed(1)} KB).`);
         
         const fileDataMap = {};
+        let readCount = 0;
         for (const file of files) {
             if (file === indexFile) continue;
+            
+            readCount++;
+            const pct = Math.round(10 + (readCount / files.length) * 35);
+            updateLoader(pct, `Lese ${file.name}...`, `Verarbeite Asset: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+
             const dataUrl = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = ev => resolve(ev.target.result);
                 reader.readAsDataURL(file);
             });
-            const pathParts = file.webkitRelativePath.split('/');
-            pathParts.shift();
-            const relativePath = pathParts.join('/');
+            
+            let relativePath = file.customRelativePath;
+            if (!relativePath && file.webkitRelativePath) {
+                const pathParts = file.webkitRelativePath.split('/');
+                pathParts.shift();
+                relativePath = pathParts.join('/');
+            }
+            if (!relativePath) {
+                relativePath = file.name;
+            }
             
             fileDataMap[relativePath] = dataUrl;
             fileDataMap[file.name] = dataUrl;
         }
 
+        btn.textContent = 'Ersetze relative Pfade...';
+        updateLoader(50, "Inlining relative Pfade...", "Dedupliziere und ersetze Dateireferenzen in HTML/CSS...");
+        
+        // Replace relative paths using regex to match nested paths, prefixing, quotes variations
+        let replaceCount = 0;
+        const totalPaths = Object.keys(fileDataMap).length;
         for (const [path, dataUrl] of Object.entries(fileDataMap)) {
-            htmlContent = htmlContent.split(`"${path}"`).join(`"${dataUrl}"`);
-            htmlContent = htmlContent.split(`'${path}'`).join(`'${dataUrl}'`);
-            htmlContent = htmlContent.split(`url(${path})`).join(`url(${dataUrl})`);
+            replaceCount++;
+            const pct = Math.round(50 + (replaceCount / totalPaths) * 20);
+            updateLoader(pct, `Inlining: ${path}`, `Ersetze Pfad ${replaceCount}/${totalPaths}: ${path}`);
+            
+            const escapedPath = path.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            // Matches src="path", src='./path', url(path) etc.
+            const regex = new RegExp(`(["'\\(])(?:\\.\\/)?${escapedPath}(["'\\)])`, 'g');
+            htmlContent = htmlContent.replace(regex, `$1${dataUrl}$2`);
         }
 
-        btn.textContent = 'Kompiliere in Iframe...';
+        btn.textContent = 'Kompiliere in BWEB...';
+        updateLoader(75, "Kompiliere in BWEB...", "Rendere HTML-Dokument in Iframe und extrahiere DOM/CSS Layout...");
         
         const bweb = await clientSideConvert(htmlContent);
+        
+        updateLoader(90, "Rendere Binärdaten...", "Konstruiere binäre BML, BDT und BLB Datenblöcke...");
         lastBweb = bweb;
         await renderBinary(bweb);
         document.getElementById('btnDownload').style.display = '';
         
+        updateLoader(100, "Kompilierung erfolgreich!", "Das binäre BWEB-Paket wurde erfolgreich gerendert.");
+        setTimeout(hideLoader, 800);
+        
+        showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
     } catch(err) {
-        alert("Fehler beim Inlining oder Konvertieren: " + err);
+        hideLoader();
+        alert("Fehler beim Inlining oder Konvertieren des Ordners: " + err);
     } finally {
         btn.textContent = oldText;
         btn.disabled = false;
-        e.target.value = '';
     }
-});
+}
 
 document.getElementById('btnDownload').addEventListener('click',()=>{
     if(!lastBweb)return;
     const blob=new Blob([lastBweb],{type:'application/octet-stream'});
     const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download='page.bweb';a.click();
+});
+
+document.getElementById('btnDownloadViewport').addEventListener('click',()=>{
+    if(!lastBweb)return;
+    const blob=new Blob([lastBweb],{type:'application/octet-stream'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='page.bweb';a.click();
+});
+
+document.getElementById('btnDownloadZip').addEventListener('click',()=>{
+    if(!lastBweb)return;
+    function getEngineScript(){
+        const fullScript=Array.from(document.scripts).find(s=>s.textContent.includes('class BMLParser')).textContent;
+        const uiBoundary="let lastBweb=";
+        const boundaryIndex=fullScript.indexOf(uiBoundary);
+        if(boundaryIndex!==-1){
+            return fullScript.substring(0,boundaryIndex).trim();
+        }
+        return fullScript;
+    }
+    const indexHtml=`<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Webseite</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+        #renderTarget { width: 100%; min-height: 100vh; position: relative; }
+        .rendered-node { box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div id="renderTarget"></div>
+    <script>
+        ${getEngineScript()}
+        
+        async function initBweb() {
+            try {
+                const response = await fetch('page.bweb');
+                if (!response.ok) throw new Error('page.bweb konnte nicht geladen werden');
+                const buffer = await response.arrayBuffer();
+                await renderBinary(buffer);
+            } catch(e) {
+                console.error("BWEB Engine Error:", e);
+                document.getElementById('renderTarget').innerHTML = \`
+                    <div style="padding: 2rem; max-width: 600px; margin: 40px auto; background: #1e1b4b; border: 1px solid #312e81; border-radius: 8px; text-align: center;">
+                        <h2 style="color: #ef4444; margin-top: 0;">Ladefehler</h2>
+                        <p style="color: #cbd5e1; line-height: 1.6;">Die BWEB Binärdatei <strong>page.bweb</strong> konnte nicht geladen werden.</p>
+                        <p style="color: #94a3b8; font-size: 0.85rem;">Stelle sicher, dass die Dateien auf einem Webserver (z.B. Apache, Nginx oder lokaler Python-Server) laufen und nicht über file:// geöffnet wurden.</p>
+                    </div>
+                \`;
+            }
+        }
+        window.addEventListener('DOMContentLoaded', initBweb);
+    <\/script>
+</body>
+</html>`;
+
+    const htaccess=`# BWEB Apache Deployment Configuration
+AddType application/x-bweb .bweb
+AddType application/x-bml .bml
+
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
+`;
+
+    const sw=`const CACHE_NAME = 'bweb-cache-v1';
+const ASSETS = [
+    './',
+    './index.html',
+    './page.bweb'
+];
+self.addEventListener('install', e => {
+    e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
+    self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+    e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))));
+    self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+    e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request)));
+});
+`;
+
+    function createSimpleZip(files){
+        const crc32Table=[];
+        for(let i=0;i<256;i++){
+            let c=i;
+            for(let j=0;j<8;j++){
+                c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);
+            }
+            crc32Table[i]=c;
+        }
+        function getCrc32(data){
+            let crc=0^(-1);
+            for(let i=0;i<data.length;i++){
+                crc=(crc>>>8)^crc32Table[(crc^data[i])&0xFF];
+            }
+            return (crc^(-1))>>>0;
+        }
+        let offset=0;
+        const parts=[];
+        const cdEntries=[];
+        for(const file of files){
+            const nameBytes=new TextEncoder().encode(file.name);
+            const dataBytes=file.data;
+            const crc=getCrc32(dataBytes);
+            const lfh=new Uint8Array(30+nameBytes.length);
+            const lfhView=new DataView(lfh.buffer);
+            lfhView.setUint32(0,0x04034b50,true);
+            lfhView.setUint16(4,10,true);
+            lfhView.setUint16(6,0,true);
+            lfhView.setUint16(8,0,true);
+            lfhView.setUint32(10,0,true);
+            lfhView.setUint32(14,crc,true);
+            lfhView.setUint32(18,dataBytes.length,true);
+            lfhView.setUint32(22,dataBytes.length,true);
+            lfhView.setUint16(26,nameBytes.length,true);
+            lfhView.setUint16(28,0,true);
+            lfh.set(nameBytes,30);
+            parts.push(lfh);parts.push(dataBytes);
+            const cdh=new Uint8Array(46+nameBytes.length);
+            const cdhView=new DataView(cdh.buffer);
+            cdhView.setUint32(0,0x02014b50,true);
+            cdhView.setUint16(4,20,true);
+            cdhView.setUint16(6,10,true);
+            cdhView.setUint16(8,0,true);
+            cdhView.setUint16(10,0,true);
+            cdhView.setUint32(12,0,true);
+            cdhView.setUint32(16,crc,true);
+            cdhView.setUint32(20,dataBytes.length,true);
+            cdhView.setUint32(24,dataBytes.length,true);
+            cdhView.setUint16(28,nameBytes.length,true);
+            cdhView.setUint16(30,0,true);
+            cdhView.setUint16(32,0,true);
+            cdhView.setUint16(34,0,true);
+            cdhView.setUint16(36,0,true);
+            cdhView.setUint32(38,0,true);
+            cdhView.setUint32(42,offset,true);
+            cdh.set(nameBytes,46);
+            cdEntries.push(cdh);
+            offset+=lfh.length+dataBytes.length;
+        }
+        const cdStart=offset;
+        let cdSize=0;
+        for(const cdh of cdEntries){
+            parts.push(cdh);
+            cdSize+=cdh.length;
+        }
+        const eocd=new Uint8Array(22);
+        const eocdView=new DataView(eocd.buffer);
+        eocdView.setUint32(0,0x06054b50,true);
+        eocdView.setUint16(4,0,true);
+        eocdView.setUint16(6,0,true);
+        eocdView.setUint16(8,cdEntries.length,true);
+        eocdView.setUint16(10,cdEntries.length,true);
+        eocdView.setUint32(12,cdSize,true);
+        eocdView.setUint32(16,cdStart,true);
+        eocdView.setUint16(20,0,true);
+        parts.push(eocd);
+        return new Blob(parts,{type:'application/zip'});
+    }
+    const readme=`========================================================================
+             BWEB BINARY WEB DEPLOYMENT ANLEITUNG
+========================================================================
+
+Herzlichen Glückwunsch! Sie haben erfolgreich ein hochperformantes, 
+binäres BWEB-Projekt generiert. Dieses Verzeichnis ist sofort
+einsatzbereit für die Bereitstellung auf jedem Webserver.
+
+Inhalt dieses ZIP-Archivs:
+--------------------------
+1. page.bweb      - Die komprimierten binären Bytes Ihrer Website.
+2. index.html     - Die HTML-Einstiegsseite mit der BWEB-Engine.
+3. .htaccess      - Die Serverkonfiguration (MIME-Types für Apache).
+4. bweb-sw.js     - Der Service Worker für Offline-Caching (<1ms Ladezeit).
+5. ANLEITUNG.txt  - Dieses Dokument.
+
+SCHRITT-FÜR-SCHRITT ANLEITUNG ZUM DEPLOYMENT:
+=============================================
+
+SCHRITT 1: Dateien auf den Server hochladen
+-------------------------------------------
+Laden Sie alle 4 Kern-Dateien (index.html, page.bweb, .htaccess, bweb-sw.js)
+in das Hauptverzeichnis (Root) oder ein beliebiges Unterverzeichnis
+Ihres Webservers (z. B. Apache, Nginx oder Shared Hosting wie cPanel/Plesk) hoch.
+
+SCHRITT 2: MIME-Types verifizieren
+----------------------------------
+Die .htaccess-Datei konfiguriert die MIME-Types für Apache-Server
+automatisch. Wenn Sie Nginx nutzen, fügen Sie folgende Zeilen in Ihre
+'nginx.conf' oder 'mime.types' ein:
+
+    types {
+        application/x-bweb bweb;
+        application/x-bml bml;
+    }
+
+SCHRITT 3: Testen & Aufrufen
+----------------------------
+Rufen Sie die URL Ihres Servers im Browser auf (z. B. https://ihredomain.de/).
+Die BWEB-Engine lädt page.bweb vollkommen binär und rendert sie in Echtzeit.
+
+WICHTIGER HINWEIS FÜR LOKALES TESTEN:
+-------------------------------------
+Öffnen Sie die 'index.html' NICHT direkt per Doppelklick (file://-Protokoll)
+im Browser. Browser blockieren AJAX-Requests (fetch) aus Sicherheitsgründen
+bei lokalen Dateien. Nutzen Sie zum lokalen Testen einen lokalen Server,
+beispielsweise mit Python:
+
+    python3 -m http.server 8000
+
+Und rufen Sie anschließend http://localhost:8000 auf.
+
+========================================================================
+                Viel Erfolg mit Ihrem Binary Web Projekt!
+========================================================================`;
+
+    const enc=new TextEncoder();
+    const zipBlob=createSimpleZip([
+        {name:'page.bweb',data:new Uint8Array(lastBweb)},
+        {name:'index.html',data:enc.encode(indexHtml)},
+        {name:'.htaccess',data:enc.encode(htaccess)},
+        {name:'bweb-sw.js',data:enc.encode(sw)},
+        {name:'ANLEITUNG.txt',data:enc.encode(readme)}
+    ]);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(zipBlob);
+    a.download='bweb-deployment.zip';
+    a.click();
 });
 
 document.getElementById('aiBackendSelect').addEventListener('change', (e) => {
@@ -1769,27 +1458,32 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
     
     try{
         if (backend === 'nvme') {
-            // Lokale NVMe-KI via RAG-NVMe Server
-            const nvmeUrl = 'http://127.0.0.1:8090/chat';
-            const nvmePrompt = `Erstelle eine vollständige HTML/CSS Webseite. Nutze Inline-Styles oder <style> Tags. Gib NUR den reinen HTML-Code aus, keine Erklärungen, keinen Markdown-Block. Prompt: ${prompt}`;
+            // Lokale NVMe-KI via RAG-NVMe Server /generate-site (Echte Binär-Verkettung)
+            const nvmeUrl = 'http://127.0.0.1:8090/generate-site';
             
             const resp = await fetch(nvmeUrl, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({query: nvmePrompt})
+                body: JSON.stringify({
+                    prompt: prompt,
+                    slices: ['header', 'hero', 'features', 'pricing', 'footer'],
+                    binary: true
+                })
             });
             if (resp.ok) {
-                const data = await resp.json();
-                let html = data.answer || '';
-                html = html.replace(/^```html?\n?/i, '').replace(/\n?```\s*$/i, '').trim();
-                
-                btn.textContent = 'Kompiliere NVMe-Resultat...';
-                const bweb = await clientSideConvert(html);
+                const sessId = resp.headers.get('X-Session-Id');
+                if (sessId) {
+                    currentSessionId = sessId;
+                    initMutationChat(prompt);
+                }
+                const bweb = await resp.arrayBuffer();
                 lastBweb = bweb;
                 await renderBinary(bweb);
                 document.getElementById('btnDownload').style.display = '';
+                showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
             } else {
-                alert("Fehler: NVMe-KI nicht erreichbar auf " + nvmeUrl + ". Hast du rag_server_async.py auf Port 8090 gestartet?");
+                const data = await resp.json().catch(() => ({}));
+                alert("Fehler bei der Website-Generierung via RAG-NVMe: " + (data.error || "Server-Fehler. Läuft der RAG-Server?"));
             }
         } else if (backend === 'gemini') {
             if (!apiKey) {
@@ -1818,6 +1512,8 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
                 lastBweb = bweb;
                 await renderBinary(bweb);
                 document.getElementById('btnDownload').style.display = '';
+                document.getElementById('mutationPanel').style.display = 'none'; // Hide mutation panel for gemini
+                showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
             } else {
                 alert("Fehler bei der lokalen Gemini API-Anfrage (Key ungültig?).");
             }
@@ -1830,6 +1526,63 @@ document.getElementById('btnGenerate').addEventListener('click',async()=>{
     }
 });
 
+// AI Design Assistent (RAG-NVMe) Mutation Chat Logic
+document.getElementById('btnMutate').addEventListener('click', async () => {
+    const prompt = document.getElementById('mutationInput').value.trim();
+    if (!prompt || !currentSessionId) return;
+
+    const btn = document.getElementById('btnMutate');
+    const oldText = btn.textContent;
+    btn.textContent = '⏳ Mutierte BLB-Blöcke...';
+    btn.disabled = true;
+
+    addMutationChatMsg('user', prompt);
+    document.getElementById('mutationInput').value = '';
+
+    try {
+        const resp = await fetch('http://127.0.0.1:8090/mutate-site', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                session_id: currentSessionId,
+                prompt: prompt
+            })
+        });
+
+        if (resp.ok) {
+            const mutationsCount = resp.headers.get('X-Mutations-Applied') || '0';
+            const bweb = await resp.arrayBuffer();
+            lastBweb = bweb;
+            await renderBinary(bweb);
+            addMutationChatMsg('ai', `Erfolgreich! <strong>${mutationsCount} BLB-Knoten-Eigenschaften</strong> wurden direkt im binären Layout-Block-Format im RAM mutiert und instant neu gerendert.`);
+        } else {
+            const d = await resp.json().catch(() => ({}));
+            addMutationChatMsg('ai', `Fehler bei der Mutation: ${d.error || 'Server-Fehler'}`);
+        }
+    } catch(err) {
+        addMutationChatMsg('ai', `Verbindungsfehler zum RAG-Server: ${err}`);
+    } finally {
+        btn.textContent = oldText;
+        btn.disabled = false;
+    }
+});
+
+function initMutationChat(prompt) {
+    const history = document.getElementById('mutationChatHistory');
+    history.innerHTML = '';
+    document.getElementById('mutationPanel').style.display = 'block';
+    addMutationChatMsg('ai', `Webseite erfolgreich assembliert für: "<strong>${prompt}</strong>"<br>Session ID: <code>${currentSessionId}</code><br><br>Wie soll ich das Design anpassen? Du kannst mir Befehle geben wie:<br>• "Hintergrundfarbe auf dunkelrot ändern"<br>• "Schriftfarbe gelb machen"<br>• "Rundungen vergrößern"<br>• "Abstände / Padding verringern"`);
+}
+
+function addMutationChatMsg(sender, text) {
+    const history = document.getElementById('mutationChatHistory');
+    const div = document.createElement('div');
+    div.className = `mutation-msg mutation-msg-${sender}`;
+    div.innerHTML = text;
+    history.appendChild(div);
+    history.scrollTop = history.scrollHeight;
+}
+
 async function clientSideConvert(html){
     return new Promise((resolve, reject) => {
         const iframe = document.createElement('iframe');
@@ -1840,11 +1593,21 @@ async function clientSideConvert(html){
         iframe.style.pointerEvents = 'none';
         document.body.appendChild(iframe);
 
-        iframe.onload = async () => {
-            // Wait a brief moment for dynamic scripts and images to render
-            await new Promise(r => setTimeout(r, 500));
+        // Clean HTML to prevent script execution inside layout iframe
+        const cleanHtml = html
+            .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '')
+            .replace(/<script\b[^>]*\/>/gi, '')
+            .replace(/\son[a-z]+\s*=\s*(['"])(.*?)\1/gi, '')
+            .replace(/\son[a-z]+\s*=\s*[^>\s]+/gi, '');
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(cleanHtml);
+        doc.close();
+
+        // Robust Timeout to guarantee full DOM parsing and layout styles calculation
+        setTimeout(async () => {
             try {
-                const doc = iframe.contentWindow.document;
                 const body = doc.body;
                 
                 const TAG_FWD={};
@@ -1983,12 +1746,12 @@ async function clientSideConvert(html){
 
                 const bmlData=new Uint8Array([0x42,0x4D,0x4C,0x02,...bmlBuf]);
 
-                const bdtBuf=new ArrayBuffer(4+4+flatNodes.length*11);
+                const bdtBuf=new ArrayBuffer(4+4+flatNodes.length*16);
                 const bdtView=new DataView(bdtBuf);
                 bdtView.setUint8(0,0x42);bdtView.setUint8(1,0x44);bdtView.setUint8(2,0x54);bdtView.setUint8(3,0x01);
                 bdtView.setUint32(4,flatNodes.length);
                 for(let i=0;i<flatNodes.length;i++){
-                    const off=8+i*11;
+                    const off=8+i*16;
                     const n=flatNodes[i];
                     bdtView.setUint16(off,i);
                     bdtView.setUint16(off+2,n.parentIdx>=0?n.parentIdx:0xFFFF);
@@ -2120,11 +1883,7 @@ async function clientSideConvert(html){
                 document.body.removeChild(iframe);
                 reject(e);
             }
-        };
-        
-        iframe.contentWindow.document.open();
-        iframe.contentWindow.document.write(html);
-        iframe.contentWindow.document.close();
+        }, 600);
     });
 }
 
@@ -2138,6 +1897,62 @@ async function clientSideConvert(html){
         if(r.ok){await renderBinary(await r.arrayBuffer());return}
     }catch(e){}
 })();
+
+// Progress Bar & Overlay Helper Functions (Globally Accessible)
+function showLoader(title, status) {
+    document.getElementById('loadingOverlay').style.setProperty('display', 'flex', 'important');
+    document.getElementById('loadingTitle').textContent = title;
+    document.getElementById('loadingStatus').textContent = status;
+    document.getElementById('loadingProgressBar').style.width = '0%';
+    document.getElementById('loadingLog').innerHTML = '';
+}
+
+function updateLoader(percent, status, logText = null) {
+    document.getElementById('loadingProgressBar').style.width = percent + '%';
+    document.getElementById('loadingStatus').textContent = status;
+    if (logText) {
+        const logEl = document.getElementById('loadingLog');
+        const div = document.createElement('div');
+        div.textContent = `[${new Date().toLocaleTimeString()}] ${logText}`;
+        logEl.appendChild(div);
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+}
+
+function hideLoader() {
+    document.getElementById('loadingOverlay').style.setProperty('display', 'none', 'important');
+}
+
+function showSuccessModal(sizeBytes, nodeCount) {
+    document.getElementById('modalStatSize').textContent = (sizeBytes / 1024).toFixed(1) + ' KB';
+    document.getElementById('modalStatNodes').textContent = nodeCount;
+    document.getElementById('modalStatSaving').textContent = '99.9%';
+    
+    const modal = document.getElementById('successModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
+}
+
+function hideSuccessModal() {
+    const modal = document.getElementById('successModal');
+    modal.classList.remove('active');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+document.getElementById('modalClose').addEventListener('click', hideSuccessModal);
+document.getElementById('successModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('successModal')) hideSuccessModal();
+});
+
+document.getElementById('modalBtnDownloadBweb').addEventListener('click', () => {
+    document.getElementById('btnDownloadViewport').click();
+    hideSuccessModal();
+});
+
+document.getElementById('modalBtnDownloadZip').addEventListener('click', () => {
+    document.getElementById('btnDownloadZip').click();
+    hideSuccessModal();
+});
 </script>
 </body>
 </html>

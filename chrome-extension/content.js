@@ -25,7 +25,7 @@
         <title>BWEB Native Player</title>
         <style>
             *, *::before, *::after { box-sizing: border-box; }
-            body { margin: 0; padding: 0; background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+            body { margin: 0; padding: 0; background: #fff; color: #000; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
             #renderTarget { width: 100%; min-height: 100vh; position: relative; }
             .rendered-node { box-sizing: border-box; }
         </style>
