@@ -1611,6 +1611,11 @@ async function clientSideConvert(html){
             try {
                 const body = doc.body;
                 
+                // Force reveal elements to be visible for the conversion
+                const reveals = doc.querySelectorAll('.reveal');
+                reveals.forEach(el => el.classList.add('active'));
+
+                
                 const TAG_FWD={};
                 for(const[k,v]of Object.entries(TAG_REV))TAG_FWD[v]=parseInt(k);
                 const ATTR_FWD={};
