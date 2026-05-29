@@ -2,6 +2,23 @@
 AddType application/x-bweb .bweb
 AddType application/x-bml .bml
 
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # 1. Wenn der Request-Header "X-BWEB-Native" gesetzt ist: Direkt ausliefern
+    RewriteCond %{HTTP:X-BWEB-Native} true
+    RewriteRule ^ - [L]
+
+    # 2. Wenn der Query-String "raw=true" enthält: Direkt ausliefern (für das Polyfill-Fetch)
+    RewriteCond %{QUERY_STRING} (^|&)raw=true(&|$)
+    RewriteRule ^ - [L]
+
+    # 3. Für BWEB-Dateien (.bweb, .bml, .bdt, .blb, .bib), die direkt aufgerufen werden:
+    #    Rewrite auf die polyfill.html unter Übergabe des Pfades
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^(.*)\.(bweb|bml|bdt|blb|bib)$ polyfill.html?file=$1.$2 [QSA,L]
+</IfModule>
+
 # CORS für lokale NVMe-KI Requests
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"

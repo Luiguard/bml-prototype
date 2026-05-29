@@ -1140,11 +1140,22 @@ async function compileFilesList(files) {
             const pct = Math.round(10 + (readCount / files.length) * 35);
             updateLoader(pct, `Lese ${file.name}...`, `Verarbeite Asset: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
 
-            const dataUrl = await new Promise((resolve) => {
+            let dataUrl = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = ev => resolve(ev.target.result);
                 reader.readAsDataURL(file);
             });
+            
+            // Fix missing or incorrect MIME types (common on Linux)
+            if (file.name.endsWith('.css')) {
+                dataUrl = dataUrl.replace(/^data:[^;]*;/, 'data:text/css;');
+            } else if (file.name.endsWith('.js')) {
+                dataUrl = dataUrl.replace(/^data:[^;]*;/, 'data:application/javascript;');
+            } else if (file.name.endsWith('.svg')) {
+                dataUrl = dataUrl.replace(/^data:[^;]*;/, 'data:image/svg+xml;');
+            } else if (file.name.endsWith('.html')) {
+                dataUrl = dataUrl.replace(/^data:[^;]*;/, 'data:text/html;');
+            }
             
             let relativePath = file.customRelativePath;
             if (!relativePath && file.webkitRelativePath) {
@@ -1606,7 +1617,7 @@ async function clientSideConvert(html){
         doc.write(cleanHtml);
         doc.close();
 
-        // Robust Timeout to guarantee full DOM parsing and layout styles calculation
+        // Robust Timeout to guarantee full DOM parsing, font loading, and layout calculation
         setTimeout(async () => {
             try {
                 const body = doc.body;
@@ -1890,7 +1901,7 @@ async function clientSideConvert(html){
                 document.body.removeChild(iframe);
                 reject(e);
             }
-        }, 600);
+        }, 2500);
     });
 }
 

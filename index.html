@@ -33,59 +33,38 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
         :root {
-            --bg: #030712;
-            --bg-card: rgba(17, 24, 39, 0.45);
-            --text-primary: #f9fafb;
-            --text-secondary: #9ca3af;
-            --accent-green: #10b981;
-            --accent-blue: #3b82f6;
-            --accent-cyan: #06b6d4;
-            --border: rgba(255, 255, 255, 0.08);
-            --glow: rgba(16, 185, 129, 0.15);
-            --gradient: linear-gradient(135deg, #10b981, #06b6d4, #3b82f6);
-        }
-        html {
-            scroll-behavior: smooth;
-        }
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg);
-            color: var(--text-primary);
-            line-height: 1.6;
-            overflow-x: hidden;
-            position: relative;
-        }
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-            z-index: -2;
-            pointer-events: none;
-        }
-        body::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 50%;
-            transform: translateX(-50%);
-            width: 100vw;
-            height: 800px;
-            background: radial-gradient(circle 800px at 50% -200px, rgba(16, 185, 129, 0.15), transparent 80%),
-                        radial-gradient(circle 600px at 10% 40%, rgba(59, 130, 246, 0.08), transparent 75%),
-                        radial-gradient(circle 800px at 90% 80%, rgba(6, 182, 212, 0.08), transparent 75%);
-            pointer-events: none;
-            z-index: -1;
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --surface-hover: #121212;
+            --border: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --text-main: #ffffff;
+            --text-muted: #8a8f98;
+            --accent: #5e6ad2;
+            --radius: 12px;
+            --transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.01em;
+        }
+
+        /* Subtle Ambient Glow */
+        .ambient {
+            position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background: radial-gradient(circle 800px at 50% -20%, rgba(255, 255, 255, 0.05), transparent 80%);
+        }
+
         /* Navigation */
         nav {
             display: flex;
@@ -93,317 +72,107 @@
             align-items: center;
             padding: 1.25rem 5%;
             border-bottom: 1px solid var(--border);
-            background: rgba(3, 7, 18, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             position: sticky;
             top: 0;
             z-index: 100;
         }
-        .logo {
-            font-weight: 800;
-            font-size: 1.5rem;
-            letter-spacing: -1px;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-        }
+        .logo { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.03em; color: var(--text-main); }
+        .logo span { color: var(--text-muted); }
+        .nav-links { display: flex; align-items: center; gap: 2rem; }
         .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: color 0.3s ease, transform 0.2s ease;
+            color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color var(--transition); font-weight: 500;
         }
-        .nav-links a:hover {
-            color: var(--text-primary);
-            transform: translateY(-1px);
-        }
-        
+        .nav-links a:hover { color: var(--text-main); }
+
+        /* Typography */
+        h2, h3, h4 { font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; }
+        h2 { font-size: 2.2rem; margin-bottom: 1rem; }
+        h3 { font-size: 1.2rem; margin-bottom: 0.75rem; color: var(--text-main); }
+        p { color: var(--text-muted); font-weight: 400; }
+        strong { color: var(--text-main); font-weight: 600; }
+
         /* Hero */
-        header {
-            padding: 9rem 5% 7rem;
-            text-align: center;
-            max-width: 950px;
-            margin: 0 auto;
-            animation: fadeInUp 0.8s ease-out;
-        }
+        header { padding: 8rem 5% 6rem; text-align: center; max-width: 900px; margin: 0 auto; }
         h1 {
-            font-size: 4.5rem;
-            font-weight: 800;
-            line-height: 1.1;
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            line-height: 1.05;
             margin-bottom: 1.5rem;
-            letter-spacing: -2.5px;
-            background: var(--gradient);
+            letter-spacing: -0.04em;
+            font-weight: 600;
+            background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%);
             -webkit-background-clip: text;
-            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .subtitle {
-            font-size: 1.35rem;
-            color: var(--text-secondary);
-            margin-bottom: 3rem;
-            max-width: 750px;
-            margin-left: auto;
-            margin-right: auto;
-            font-weight: 300;
-        }
-        .cta-group {
-            display: flex;
-            gap: 1.25rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+        .subtitle { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 3rem; max-width: 650px; margin-left: auto; margin-right: auto; }
+        
+        .cta-group { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
         .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.9rem 2.2rem;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            border: 1px solid transparent;
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 12px 24px; border-radius: 999px; text-decoration: none;
+            font-weight: 500; font-size: 0.95rem; transition: all var(--transition);
         }
-        .btn-primary {
-            background: var(--gradient);
-            color: #030712;
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 40px rgba(6, 182, 212, 0.2);
-            font-weight: 700;
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
-        }
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: left 0.5s ease;
-            z-index: -1;
-        }
-        .btn-primary:hover::before {
-            left: 100%;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.45);
-        }
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(8px);
-        }
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
+        .btn-primary { background: var(--text-main); color: #000; box-shadow: 0 4px 14px rgba(255,255,255,0.1); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); opacity: 0.9; }
+        .btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--surface); border-color: var(--border-hover); }
+
+        /* Sections */
+        section { padding: 6rem 5%; max-width: 1100px; margin: 0 auto; }
         
-        /* Content Sections */
-        section {
-            padding: 6rem 5%;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-        h2 {
-            font-size: 2.8rem;
-            font-weight: 800;
-            margin-bottom: 2rem;
-            letter-spacing: -1.5px;
-            background: linear-gradient(135deg, var(--text-primary) 30%, var(--text-secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        /* Grid */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-        }
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 2.5rem;
-            border-radius: 16px;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(16, 185, 129, 0.3);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 1px 1px rgba(16, 185, 129, 0.1);
-        }
-        .card:hover::before {
-            opacity: 1;
-        }
-        .card h3 {
-            color: var(--accent-blue);
-            margin-bottom: 1.25rem;
-            font-size: 1.4rem;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-        .card p {
-            color: var(--text-secondary);
-            font-size: 0.98rem;
-            line-height: 1.7;
-        }
-        
-        /* CO2 Section */
+        /* CO2 Box & Cards */
         .co2-box {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.03) 50%, rgba(16, 185, 129, 0.01) 100%);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 20px;
-            padding: 4rem 3rem;
-            margin-bottom: 5rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 3rem; border-radius: var(--radius);
+            margin-bottom: 3rem; text-align: center;
         }
-        .co2-box::after {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%);
-            pointer-events: none;
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 2.5rem; border-radius: var(--radius); transition: all var(--transition);
         }
-        .co2-box h2 {
-            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-        }
-        .co2-box p {
-            font-size: 1.25rem;
-            color: #e5e7eb;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.8;
-            font-weight: 300;
-        }
-        .co2-box strong {
-            color: var(--accent-green);
-            font-weight: 600;
-        }
+        .card:hover { border-color: var(--border-hover); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
         
-        /* Formats */
-        .format-list {
-            margin-top: 3rem;
-            position: relative;
-        }
+        /* Format List */
+        .format-list { display: flex; flex-direction: column; gap: 1.5rem; }
         .format-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 2rem;
-            padding-bottom: 2rem;
-            border-bottom: 1px solid var(--border);
-            transition: transform 0.2s ease;
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 1.5rem 2rem; border-radius: var(--radius);
+            display: flex; gap: 1.5rem; align-items: flex-start;
+            transition: all var(--transition);
         }
-        .format-item:hover {
-            transform: translateX(4px);
-        }
-        .format-item:last-child {
-            border-bottom: none;
-        }
+        .format-item:hover { border-color: var(--border-hover); background: var(--surface-hover); }
         .format-badge {
-            background: rgba(6, 182, 212, 0.1);
-            color: var(--accent-cyan);
-            border: 1px solid rgba(6, 182, 212, 0.25);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            margin-right: 2rem;
-            min-width: 85px;
-            text-align: center;
-            font-family: 'JetBrains Mono', monospace;
-            box-shadow: 0 0 10px rgba(6, 182, 212, 0.05);
+            background: #000; color: var(--text-main); border: 1px solid var(--border);
+            padding: 6px 12px; border-radius: 6px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; font-weight: 600; white-space: nowrap; margin-top: 2px;
         }
-        .format-desc h4 {
-            margin-bottom: 0.5rem;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        .format-desc p {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            line-height: 1.7;
-        }
-        
+        .format-desc h4 { margin-bottom: 0.5rem; font-size: 1.1rem; }
+        .format-desc p { font-size: 0.95rem; line-height: 1.6; }
+
         /* Footer */
         footer {
-            text-align: center;
-            padding: 5rem 5% 4rem;
-            border-top: 1px solid var(--border);
-            color: var(--text-secondary);
-            margin-top: 6rem;
-            background: rgba(3, 7, 18, 0.4);
-            font-size: 0.95rem;
+            text-align: center; padding: 3rem 5%; border-top: 1px solid var(--border);
+            color: var(--text-muted); font-size: 0.85rem; margin-top: 4rem;
         }
-        footer a {
-            color: var(--text-primary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-        footer a:hover {
-            color: var(--accent-green);
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @media(max-width: 768px) {
-            h1 { font-size: 3rem; }
-            h2 { font-size: 2.2rem; }
-            .co2-box h2 { font-size: 2.2rem; }
-            nav { padding: 1.25rem 5%; }
-            .nav-links { gap: 1rem; }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            h1 { font-size: 2.5rem; }
             .format-item { flex-direction: column; gap: 1rem; }
-            .format-badge { margin-right: 0; }
         }
+
     </style>
 </head>
 <body>
+    <div class="ambient"></div>
 
     <nav>
         <div class="logo">BWEB<span>.</span></div>
         <div class="nav-links">
+            <a href="#extension" style="color: #818cf8; font-weight: 600; text-shadow: 0 0 10px rgba(94,106,210,0.3);">✨ Chrome Extension</a>
             <a href="#vision">Die Vision</a>
             <a href="#architektur">Architektur</a>
             <a href="converter.html" class="btn btn-secondary" style="margin-left:2rem; padding:0.5rem 1rem;">Lokaler Konverter</a>
@@ -419,6 +188,63 @@
         </div>
     </header>
 
+    <section id="extension" style="border-top: 1px solid var(--border); padding-top: 6rem; padding-bottom: 6rem;">
+        <div style="background: linear-gradient(135deg, rgba(94, 106, 210, 0.15) 0%, rgba(10, 10, 10, 0.8) 100%); border: 1px solid rgba(94, 106, 210, 0.3); padding: 3rem; border-radius: var(--radius); display: flex; gap: 3rem; align-items: center; justify-content: space-between; text-align: left; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(94, 106, 210, 0.2); border: 1px solid var(--accent); padding: 4px 12px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; color: #a5b4fc; margin-bottom: 1.5rem;">
+                    <span>⚡ NATIVES RENDERING AKTIVIEREN</span>
+                </div>
+                <h2 style="font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(180deg, #fff 0%, #c7d2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">BWEB Inspector & Privacy Companion</h2>
+                <p style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
+                    Ersetzt das standardmäßige JavaScript-Polyfill vollständig durch native Browser-Interzeption. Deine Vorteile bei der Nutzung des binären Internets mit installierter Erweiterung:
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+                    <div>
+                        <h4 style="color: #fff; font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">🚀 Blitzschnelle Ladezeiten</h4>
+                        <p style="font-size: 0.9rem;">Direktes Rendern roher Binärdaten auf die GPU unter Umgehung aller HTML-Parsing-Prozesse.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #fff; font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">🔋 90% weniger Strom & Akku</h4>
+                        <p style="font-size: 0.9rem;">Minimiert CPU-Zyklen massiv, schont den Akku auf Mobilgeräten und senkt spürbar den Energiebedarf.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #fff; font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">📉 75% weniger mobile Daten</h4>
+                        <p style="font-size: 0.9rem;">Hochkomprimierte, schlanke Binärdaten sparen wertvolles Datenvolumen bei jedem Klick.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #fff; font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">🔒 100% Tracking-Schutz</h4>
+                        <p style="font-size: 0.9rem;">Absolut cookie-freie Architektur unterbindet unbemerktes Ausführen von Spionage-Skripten im Hintergrund.</p>
+                    </div>
+                </div>
+                <a href="chrome-extension.zip" class="btn btn-primary" style="background: var(--accent); color: #fff; border: 1px solid var(--accent);">Erweiterung herunterladen (.zip)</a>
+            </div>
+            <div style="flex: 0 0 340px; display: flex; flex-direction: column; background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 2rem; border-radius: var(--radius); text-align: center; margin: 0 auto; position: relative;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">📦</div>
+                <h3 style="margin-bottom: 0.5rem;">Schnellstart-Anleitung</h3>
+                <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
+                    <span id="browser-detection-badge" style="font-size: 0.75rem; color: #a5b4fc; background: rgba(94, 106, 210, 0.2); border: 1px solid var(--accent); padding: 2px 10px; border-radius: 99px; font-weight: 600; letter-spacing: 0.02em;"></span>
+                </div>
+                
+                <!-- Browser Tabs -->
+                <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 3px; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <button class="browser-tab" data-target="chromium" style="flex: 1; background: transparent; border: none; color: var(--text-muted); font-size: 0.72rem; padding: 6px 2px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all var(--transition);">Chrome</button>
+                    <button class="browser-tab" data-target="edge" style="flex: 1; background: transparent; border: none; color: var(--text-muted); font-size: 0.72rem; padding: 6px 2px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all var(--transition);">Edge</button>
+                    <button class="browser-tab" data-target="brave" style="flex: 1; background: transparent; border: none; color: var(--text-muted); font-size: 0.72rem; padding: 6px 2px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all var(--transition);">Brave</button>
+                    <button class="browser-tab" data-target="firefox" style="flex: 1; background: transparent; border: none; color: var(--text-muted); font-size: 0.72rem; padding: 6px 2px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all var(--transition);">Firefox</button>
+                </div>
+
+                <!-- Content Container -->
+                <div id="instruction-content" style="font-size: 0.8rem; text-align: left; line-height: 1.5; color: #cbd5e1; min-height: 145px;">
+                    <!-- Wird dynamisch befüllt -->
+                </div>
+
+                <div style="color: var(--text-muted); font-size: 0.75rem; border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1.5rem;">
+                    Nativ lauffähig auf allen modernen Browser-Engines.
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="vision">
         <div class="co2-box">
             <h2>Nachhaltigkeit durch Reduktion</h2>
@@ -433,6 +259,22 @@
             <div class="card">
                 <h3>Sofortige Migration</h3>
                 <p>Dein bestehendes HTML-Projekt ist nicht verloren. Mit dem automatischen BWEB-Converter kann jeder Website-Betreiber seine klassischen Ordnerstrukturen per Klick in das hochperformante Binärformat `.bweb` umwandeln.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="privacy" style="border-top: 1px solid var(--border); padding-top: 6rem;">
+        <h2>🔒 Absolute Privatsphäre by Design</h2>
+        <p style="color: var(--text-muted); margin-bottom: 3rem;">BWEB eliminiert Cookie-Consent-Banner und schützt Nutzer vollständig vor Tracking und Malvertising.</p>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>Warum BWEB keine Cookies nutzt</h3>
+                <p>BWEB ist eine <strong>zustandsfreie binäre Architektur (Stateless Container)</strong>. Das Dateiformat speichert keine Sessions und blockiert das Ausführen von verstecktem Javascript im Hintergrund. Werbe-Tracker und Spionage-Pixel haben physikalisch keine Chance mehr, heimliche Third-Party-Cookies zu setzen. Cookie-Banner sind ab sofort Vergangenheit.</p>
+            </div>
+            <div class="card">
+                <h3>Die Zukunft der Banner-Werbung</h3>
+                <p>Werbebanner in BWEB sind keine tonnenschweren, datenhungrigen Skripte, sondern **statische binäre BIB-Slices (Binary Image Blocks)**. Sie werden direkt von der GPU gerendert – absolut sicher, ohne Tracking und extrem stromsparend. Jedes Ad-Slice wird kryptografisch signiert und lokal ohne Nutzer-Profiling verifiziert.</p>
             </div>
         </div>
     </section>
@@ -493,5 +335,104 @@
     </footer>
 
 
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const userAgent = navigator.userAgent.toLowerCase();
+        let detected = "chromium";
+        let displayName = "Google Chrome";
+
+        if (userAgent.includes("firefox")) {
+            detected = "firefox";
+            displayName = "Mozilla Firefox";
+        } else if (userAgent.includes("edg/")) {
+            detected = "edge";
+            displayName = "Microsoft Edge";
+        } else if (userAgent.includes("opr/") || userAgent.includes("opera")) {
+            detected = "chromium";
+            displayName = "Opera";
+        } else if (navigator.brave && typeof navigator.brave.isBrave === "function") {
+            detected = "brave";
+            displayName = "Brave Browser";
+        }
+
+        const instructions = {
+            chromium: {
+                title: "Google Chrome / Opera",
+                steps: [
+                    "ZIP-Archiv entpacken.",
+                    "<code>chrome://extensions</code> im Browser öffnen.",
+                    "Oben rechts den <strong>Entwicklermodus</strong> aktivieren.",
+                    "Auf <strong>Entpackte Erweiterung laden</strong> klicken und den entpackten Ordner auswählen."
+                ]
+            },
+            edge: {
+                title: "Microsoft Edge",
+                steps: [
+                    "ZIP-Archiv entpacken.",
+                    "<code>edge://extensions</code> im Browser öffnen.",
+                    "Links den <strong>Entwicklermodus</strong> aktivieren.",
+                    "Auf <strong>Entpackte Erweiterung laden</strong> klicken und den entpackten Ordner auswählen."
+                ]
+            },
+            brave: {
+                title: "Brave Browser",
+                steps: [
+                    "ZIP-Archiv entpacken.",
+                    "<code>brave://extensions</code> im Browser öffnen.",
+                    "Oben rechts den <strong>Entwicklermodus</strong> aktivieren.",
+                    "Auf <strong>Entpackte Erweiterung laden</strong> klicken und den entpackten Ordner auswählen."
+                ]
+            },
+            firefox: {
+                title: "Mozilla Firefox",
+                steps: [
+                    "ZIP-Archiv entpacken.",
+                    "<code>about:debugging</code> im Browser öffnen.",
+                    "Links auf den Reiter <strong>Diesen Firefox</strong> klicken.",
+                    "Rechts auf <strong>Temporäres Add-on laden...</strong> klicken und die Datei <code>manifest.json</code> im Ordner auswählen."
+                ]
+            }
+        };
+
+        const badge = document.getElementById("browser-detection-badge");
+        if (badge) {
+            badge.innerText = `🔍 Erkennung: ${displayName}`;
+        }
+
+        const renderSteps = (key) => {
+            const container = document.getElementById("instruction-content");
+            if (!container) return;
+            const data = instructions[key] || instructions.chromium;
+            let html = `<strong style="color: #fff; display: block; margin-bottom: 0.75rem;">Installation für ${data.title}:</strong><ol style="margin-left: 1.25rem;">`;
+            data.steps.forEach(step => {
+                html += `<li style="margin-bottom: 0.5rem;">${step}</li>`;
+            });
+            html += `</ol>`;
+            container.innerHTML = html;
+
+            // Update Tab active classes
+            document.querySelectorAll(".browser-tab").forEach(btn => {
+                if (btn.getAttribute("data-target") === key) {
+                    btn.style.background = "var(--accent)";
+                    btn.style.color = "#fff";
+                    btn.style.boxShadow = "0 2px 8px rgba(94, 106, 210, 0.4)";
+                } else {
+                    btn.style.background = "transparent";
+                    btn.style.color = "var(--text-muted)";
+                    btn.style.boxShadow = "none";
+                }
+            });
+        };
+
+        document.querySelectorAll(".browser-tab").forEach(btn => {
+            btn.addEventListener("click", () => {
+                renderSteps(btn.getAttribute("data-target"));
+            });
+        });
+
+        // Initialer Render nach Erkennung
+        renderSteps(detected);
+    });
+    </script>
 </body>
 </html>

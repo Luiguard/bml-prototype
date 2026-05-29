@@ -190,22 +190,18 @@ def serialize_bdt(root: DOMNode) -> bytes:
     buf += _u32(len(flat))
 
     for i, node in enumerate(flat):
-        first_child = 0xFFFF
+        first_child = node.children[0].node_id if node.children else 0xFFFF
+        last_child = node.children[-1].node_id if node.children else 0xFFFF
+
+        prev_sibling = 0xFFFF
         next_sibling = 0xFFFF
-
-        for j, n in enumerate(flat):
-            if n.parent_id == i:
-                first_child = j
-                break
-
-        found_self = False
-        for j, n in enumerate(flat):
-            if j == i:
-                found_self = True
-                continue
-            if found_self and n.parent_id == node.parent_id:
-                next_sibling = j
-                break
+        if node.parent_id != 0xFFFF:
+            parent_node = flat[node.parent_id]
+            my_idx = parent_node.children.index(node)
+            if my_idx > 0:
+                prev_sibling = parent_node.children[my_idx-1].node_id
+            if my_idx < len(parent_node.children) - 1:
+                next_sibling = parent_node.children[my_idx+1].node_id
 
         depth = 0
         pid = node.parent_id
@@ -217,9 +213,12 @@ def serialize_bdt(root: DOMNode) -> bytes:
         buf += _u16(node.parent_id)
         buf += _u16(first_child)
         buf += _u16(next_sibling)
+        buf += _u16(last_child)
+        buf += _u16(prev_sibling)
         buf.append(1)  # node_type=element
         buf.append(TAG.get(node.tag, 0x01))
         buf.append(depth)
+        buf.append(0)  # padding 16-byte alignment
 
     return bytes(buf)
 
