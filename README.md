@@ -7,9 +7,10 @@ BWEB is an experimental, ultra-fast binary web format designed to replace raw HT
 ## ⚡ Formats
 
 - **BML (Binary Markup Language) - `SEC 1`**: Shrinks raw text and properties drastically. Tags are mapped to 1-byte hex codes (e.g., `<div>` becomes `0x01`).
-- **BDT (Binary DOM Tree) - `SEC 2`**: Replaces nested HTML structures with a flat, O(1) integer-pointer-based node hierarchy (11 bytes per node).
+- **BDT (Binary DOM Tree) - `SEC 2`**: Replaces nested HTML structures with a flat, O(1) integer-pointer-based node hierarchy (15 bytes per node).
 - **BLB (Binary Layout Blocks) - `SEC 3`**: Compresses CSS styling. Every layout instruction uses a fixed 60-byte block.
-- **BIB (Binary Image Blocks) - `SEC 4`**: Natively streams pixel arrays (RGBA / WebP Bitstream) directly into `<canvas data-bind="ID">` elements using `ctx.putImageData`, skipping base64 overhead completely.
+- **BIB (Binary Image Blocks) - `SEC 4`**: Streams original encoded image bytes (JPEG, PNG, SVG, WebP) with an 8-byte header directly into `<canvas>` elements.
+- **BVS (Binary Video Streams) - `SEC 5`**: Streams native video bitstreams (MP4, WebM) directly into rendering pipelines for zero-reflow video playback.
 # BWEB (Binary Web) Prototyp
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
@@ -29,10 +30,11 @@ BWEB ist ein experimentelles, **100% binäres Web-Format**. Es verabschiedet sic
 BWEB ist ein Container-Format (Magic: `BWEB`), das 4 Sektionen bündelt:
 
 - **SEC 1: BML** (Binary Markup Language) — Struktur, Attribute, Text (UTF-8)
-- **SEC 2: BDT** (Binary DOM Tree) — Flache Node-Hierarchie mit Parent/Child/Sibling-Pointern (11 Bytes/Node)
+- **SEC 2: BDT** (Binary DOM Tree) — Flache Node-Hierarchie mit Parent/Child/Sibling-Pointern (15 Bytes/Node)
 - **SEC 3: BLB** (Binary Layout Block) — Pre-computed CSS (60 Bytes/Node, fixed-point)
-- **SEC 4: BIB** (Binary Image Block) — Raw RGBA Pixeldaten (22 Bytes Header + Pixel)
-- *(SEC 6)* — Optionaler zlib-Deflate Layer für BML/BLB
+- **SEC 4: BIB** (Binary Image Block) — Bilddaten (8 Bytes Header + Raw Payload)
+- **SEC 5: BVS** (Binary Video Stream) — Videodaten (8 Bytes Header + Raw Payload)
+- **SEC 9: TOC** (Table of Contents) — Einstiegspunkte und Metadaten
 
 > 📖 **[Vollständige Byte-Level Spezifikation (SPEC.md)](SPEC.md)**
 
@@ -40,45 +42,32 @@ BWEB ist ein Container-Format (Magic: `BWEB`), das 4 Sektionen bündelt:
 
 ## Installation (CLI)
 
-BWEB bietet ein Node.js CLI-Tool, das den Python-Serializer ansteuert.
+BWEB bietet ein Node.js CLI-Tool (`bwebc.js`), das die gesamte Extraktion (mittels headless Puppeteer) und Kompilierung durchführt.
 
 ```bash
-# Optional: Global installieren
-npm link
-
-# Oder direkt über Node
-node cli.js help
+# Abhängigkeiten installieren
+npm install
 ```
 
 ### CLI Befehle
 
 ```bash
-# 1. Konvertierung (HTML -> BWEB)
-bweb convert input.html output.bweb
+# 1. Konvertierung (HTML Projekt-Ordner -> BWEB)
+node bwebc.js build src/ output.bweb
 
-# 2. Statistik (zeigt Byte-Größen pro Sektion)
-bweb stats output.bweb
-
-# 3. Validierung (prüft Magic-Bytes und Offsets)
-bweb validate output.bweb
+# 2. Entwicklung (Dev Server)
+node bwebc.js serve src/ 8080
 ```
 
 ---
 
 ## Test Suite
 
-Eine vollständige Roundtrip-Testsuite für den Python-Serializer liegt unter `test/`.
+Eine Testsuite und Sandbox für den Node.js-Compiler liegt unter `tests/` und `showcase/`.
 
 ```bash
-# Setup
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt # falls vorhanden
-
-# Tests ausführen
-cd test
-python3 test_roundtrip.py
-python3 test_formats.py
+# Showcase kompilieren und testen
+node bwebc.js build src/ ../showcase/showcase.bweb
 ```
 
 ## 🔒 Privatsphäre & Cookie-freie Architektur
@@ -104,6 +93,6 @@ Klassische Web-Werbung bremst das Laden aus, verbraucht CPU-Strom und spioniert 
 ## Lizenz & Attribution
 
 Bitte die `LICENSE` Datei beachten. **Jede kommerzielle Nutzung erfordert dieses Zitat im UI/Doku:**
-> `"Incorporates RAG-NVMe architecture designed by Benjamin Leimer."`**
+> `"Incorporates BWEB architecture designed by Benjamin Leimer."`**
 
-*For more information on the RAG-NVMe integration, visit the respective repository.*
+*For more information on the BWEB integration, visit the respective repository.*
