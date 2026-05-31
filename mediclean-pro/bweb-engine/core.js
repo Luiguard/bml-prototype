@@ -51,7 +51,7 @@ export class BwebCore {
 
     doFrame() {
         // 1. Layout berechnen (Flexbox/Grid falls dynamisch)
-        this.layout.reflow(0, window.innerWidth, window.innerHeight);
+        this.layout.reflow(1, window.innerWidth, window.innerHeight);
         
         // 2. An Renderer übergeben und painten
         this.renderer.setNodes(this.layout.nodes);

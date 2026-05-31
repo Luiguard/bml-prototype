@@ -157,13 +157,19 @@
                             bmlTexts.push(text);
                             off += 3 + len;
                         } else {
-                            bmlTexts.push("");
                             const attrCount = bmlView.getUint8(off + 1);
                             off += 2;
+                            let srcAttr = "";
                             for (let a = 0; a < attrCount; a++) {
+                                const attrId = bmlView.getUint8(off);
                                 const len = bmlView.getUint16(off + 1);
+                                
+                                if (attrId === 18) { // 0x12 (src) in bml-compiler.js
+                                    srcAttr = decoder.decode(new Uint8Array(sections[1], off + 3, len));
+                                }
                                 off += 3 + len;
                             }
+                            bmlTexts.push(srcAttr); // Speichere src temporär im Text-Array für BDT-Mapping
                         }
                     }
                 }
@@ -172,15 +178,44 @@
                 const bdtNodes = [];
                 if (sections[2]) {
                     const bdtView = new DataView(sections[2]);
-                    const count = blbBlocks.length; // BDT nodes == BLB blocks count
+                    const count = blbBlocks.length;
                     for (let i = 0; i < count; i++) {
                         const off = i * 15;
+                        if (off + 15 > sections[2].byteLength) break;
+                        const nodeId = bdtView.getUint32(off);
+                        const parentId = bdtView.getUint16(off + 4);
+                        const nextSibling = bdtView.getUint16(off + 6);
+                        const tag = bdtView.getUint8(off + 13);
+                        const depth = bdtView.getUint8(off + 14);
+                        
                         bdtNodes.push({
-                            nodeId: bdtView.getUint32(off),
-                            parentId: bdtView.getUint16(off + 4),
-                            tag: bdtView.getUint8(off + 13),
-                            text: bmlTexts[i] || ""
+                            nodeId,
+                            parentId,
+                            nextSibling,
+                            firstChild: 0xFFFF,
+                            tag,
+                            depth,
+                            text: (bmlTexts[i] && !bmlTexts[i].startsWith('bib://') && !bmlTexts[i].startsWith('bvs://')) ? bmlTexts[i] : "",
+                            src: (bmlTexts[i] && (bmlTexts[i].startsWith('bib://') || bmlTexts[i].startsWith('bvs://'))) ? bmlTexts[i] : ""
                         });
+                    }
+                    
+                    // Rekonstruiere firstChild aus parentId
+                    const nodeMap = {};
+                    for (const n of bdtNodes) nodeMap[n.nodeId] = n;
+                    for (const n of bdtNodes) {
+                        if (n.parentId !== 0xFFFF && nodeMap[n.parentId]) {
+                            const parent = nodeMap[n.parentId];
+                            if (parent.firstChild === 0xFFFF) {
+                                parent.firstChild = n.nodeId;
+                            }
+                        }
+                    }
+                    
+                    // Log asset refs for debugging
+                    const assetRefs = bdtNodes.filter(n => n.src);
+                    if (assetRefs.length > 0) {
+                        console.log("[BDT] Asset references:", assetRefs.map(n => ({nodeId: n.nodeId, src: n.src})));
                     }
                 }
                 
@@ -189,6 +224,79 @@
                     blbBlocks: blbBlocks.slice(0, 5),
                     totalNodes: bdtNodes.length
                 });
+
+                // Parse BIB (Section 4) — Format: [ID:u16 | Format:u8 | Compress:u8 | Len:u32 | Data:Len]
+                const engineAssets = {};
+                if (sections[4]) {
+                    const bibArr = new Uint8Array(sections[4]);
+                    const bibView = new DataView(sections[4]);
+                    let off = 0;
+                    while (off + 8 <= sections[4].byteLength) {
+                        const id = bibView.getUint16(off);
+                        const fmt = bibView.getUint8(off + 2);
+                        const comp = bibView.getUint8(off + 3);
+                        const len = bibView.getUint32(off + 4);
+                        if (off + 8 + len > sections[4].byteLength) break;
+                        
+                        const data = bibArr.slice(off + 8, off + 8 + len);
+                        
+                        // MIME detection via magic bytes
+                        let mime = 'image/png';
+                        if (data[0] === 0xFF && data[1] === 0xD8) mime = 'image/jpeg';
+                        else if (data[0] === 0x89 && data[1] === 0x50) mime = 'image/png';
+                        else if (data[0] === 0x52 && data[1] === 0x49) mime = 'image/webp'; // RIFF
+                        else if (data[0] === 0x3C) mime = 'image/svg+xml'; // <
+                        
+                        const blob = new Blob([data], { type: mime });
+                        
+                        if (mime === 'image/svg+xml') {
+                            const url = URL.createObjectURL(blob);
+                            const img = new Image();
+                            img.src = url;
+                            await new Promise(r => { img.onload = r; img.onerror = r; });
+                            engineAssets[`bib://${id}`] = { type: 'image', bitmap: img };
+                        } else {
+                            const bitmap = await createImageBitmap(blob);
+                            engineAssets[`bib://${id}`] = { type: 'image', bitmap };
+                        }
+                        
+                        console.log(`[BIB] Asset bib://${id} loaded (${mime}, ${len} bytes)`);
+                        off += 8 + len;
+                    }
+                }
+                
+                // Parse BVS (Section 5) — Same header format
+                if (sections[5]) {
+                    const bvsArr = new Uint8Array(sections[5]);
+                    const bvsView = new DataView(sections[5]);
+                    let off = 0;
+                    while (off + 8 <= sections[5].byteLength) {
+                        const id = bvsView.getUint16(off);
+                        const fmt = bvsView.getUint8(off + 2);
+                        const comp = bvsView.getUint8(off + 3);
+                        const len = bvsView.getUint32(off + 4);
+                        if (off + 8 + len > sections[5].byteLength) break;
+                        
+                        const data = bvsArr.slice(off + 8, off + 8 + len);
+                        
+                        // MIME via magic
+                        let mime = 'video/mp4';
+                        if (data[4] === 0x66 && data[5] === 0x74 && data[6] === 0x79 && data[7] === 0x70) mime = 'video/mp4'; // ftyp
+                        else if (data[0] === 0x1A && data[1] === 0x45) mime = 'video/webm'; // EBML
+                        
+                        const blob = new Blob([data], { type: mime });
+                        const video = document.createElement('video');
+                        video.src = URL.createObjectURL(blob);
+                        video.autoplay = true; video.loop = true; video.muted = true; video.playsInline = true;
+                        video.play().catch(e => console.warn("Video autoplay prevented", e));
+                        
+                        engineAssets[`bvs://${id}`] = { type: 'video', video };
+                        console.log(`[BVS] Asset bvs://${id} loaded (${mime}, ${len} bytes)`);
+                        off += 8 + len;
+                    }
+                }
+                
+                engine.renderer.assets = engineAssets;
 
                 // Canvas Size Setup
                 canvas.width = window.innerWidth * window.devicePixelRatio;
@@ -205,6 +313,18 @@
                 await document.fonts.ready;
 
                 engine.load(blbBlocks, bdtNodes);
+                
+                console.log("[Engine] Assets loaded:", Object.keys(engineAssets));
+                
+                // Video RAF Loop: Kontinuierliches Re-Rendering für Videos
+                const hasVideo = Object.values(engineAssets).some(a => a.type === 'video');
+                if (hasVideo) {
+                    const videoLoop = () => {
+                        engine.doFrame();
+                        requestAnimationFrame(videoLoop);
+                    };
+                    requestAnimationFrame(videoLoop);
+                }
                 
                 // === INTERAKTIVE SHOWCASE LOGIK (BWEB POLYFILL) ===
                 try {

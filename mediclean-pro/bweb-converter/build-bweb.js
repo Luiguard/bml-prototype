@@ -121,12 +121,12 @@ const server = app.listen(0, async () => {
                 }
             }
             
-            // Extract Images from document
-            for (const imgEl of document.querySelectorAll('img')) {
-                const src = imgEl.src;
-                if (src && !src.startsWith('bib://')) {
+            // Extract Images and Videos from document
+            for (const el of document.querySelectorAll('img, video')) {
+                const src = el.src || el.currentSrc;
+                if (src && !src.startsWith('bib://') && !src.startsWith('bvs://')) {
                     if (!globalImages.has(src)) {
-                        globalImages.set(src, { id: globalImages.size, url: src });
+                        globalImages.set(src, { id: globalImages.size + 1, url: src, isVideo: el.tagName.toLowerCase() === 'video' });
                     }
                 }
             }
@@ -147,7 +147,7 @@ const server = app.listen(0, async () => {
                 if (el.nodeType !== 1) return;
                 let tag = el.tagName ? el.tagName.toLowerCase() : 'div';
                 if (SKIP_TAGS.has(tag)) return;
-                if (tag === 'img') tag = 'canvas';
+                if (tag === 'img' || tag === 'video') tag = 'canvas'; // Rendered externally via Canvas
                 
                 const myIdx = flatNodes.length;
                 flatNodes.push({ node: el, tag: TAG_FWD[tag] || 255, parentIdx, children: [], id: myIdx });
@@ -155,9 +155,13 @@ const server = app.listen(0, async () => {
                 
                 const attrs = [];
                 for (const a of el.attributes) {
-                    if (el.tagName && el.tagName.toLowerCase() === 'img' && a.name === 'src') {
-                        if(globalImages.has(a.value)) {
-                            attrs.push({id: ATTR_FWD['src'] || 19, val: enc.encode(`bib://${globalImages.get(a.value).id}`)});
+                    const elTag = el.tagName ? el.tagName.toLowerCase() : '';
+                    if ((elTag === 'img' || elTag === 'video') && a.name === 'src') {
+                        const fullSrc = el.src || el.currentSrc;
+                        if(globalImages.has(fullSrc)) {
+                            const asset = globalImages.get(fullSrc);
+                            const prefix = asset.isVideo ? 'bvs://' : 'bib://';
+                            attrs.push({id: ATTR_FWD['src'] || 4, val: enc.encode(`${prefix}${asset.id}`)});
                         }
                         continue;
                     }
@@ -297,7 +301,8 @@ const server = app.listen(0, async () => {
             return {
                 bml: Array.from(bmlData),
                 bdt: Array.from(new Uint8Array(bdtBuf)),
-                blbDesktop: Array.from(blbDesktop)
+                blbDesktop: Array.from(blbDesktop),
+                assets: Array.from(globalImages.values())
             };
         });
 
@@ -310,10 +315,49 @@ const server = app.listen(0, async () => {
         const bdtBuf = Buffer.from(bwebData.bdt);
         const blbBuf = Buffer.from(bwebData.blbDesktop);
         
+        // Pack Assets (BIB & BVS)
+        const bibBufs = [];
+        const bvsBufs = [];
+        for (const asset of bwebData.assets) {
+            try {
+                const url = new URL(asset.url);
+                const localPath = path.join(inputDir, url.pathname.replace(/^\//, ''));
+                if (!fs.existsSync(localPath)) continue;
+                
+                const fileData = fs.readFileSync(localPath);
+                const header = Buffer.alloc(7);
+                header.writeUInt16BE(asset.id, 0);
+                
+                if (asset.isVideo) {
+                    header.writeUInt8(localPath.endsWith('.webm') ? 2 : 1, 2); // 1=MP4, 2=WebM
+                    header.writeUInt32BE(fileData.length, 3);
+                    bvsBufs.push(Buffer.concat([Buffer.from("BVS\x01"), header, fileData]));
+                } else {
+                    let mime = 2; // PNG
+                    if (localPath.endsWith('.jpg') || localPath.endsWith('.jpeg')) mime = 1;
+                    else if (localPath.endsWith('.svg')) mime = 3;
+                    else if (localPath.endsWith('.webp')) mime = 4;
+                    
+                    header.writeUInt8(mime, 2);
+                    header.writeUInt32BE(fileData.length, 3);
+                    bibBufs.push(Buffer.concat([Buffer.from("BIB\x01"), header, fileData]));
+                }
+            } catch(e) {
+                console.warn("[WARN] Failed to pack asset:", asset.url);
+            }
+        }
+        
+        const totalBibBuf = Buffer.concat(bibBufs);
+        const totalBvsBuf = Buffer.concat(bvsBufs);
+        
         // Write .bweb container
         const tocMap = { [htmlFiles[0]]: { index: 0 } };
         const tocBytes = Buffer.from("VFS\x01" + JSON.stringify(tocMap));
-        const numSections = 4; // TOC, BML, BDT, BLB
+        
+        let numSections = 4; // TOC, BML, BDT, BLB
+        if (totalBibBuf.length > 0) numSections++;
+        if (totalBvsBuf.length > 0) numSections++;
+        
         const bwebHeader = Buffer.alloc(8 + 8*numSections);
         bwebHeader.writeUInt32BE(0x42574542, 0); // BWEB
         bwebHeader.writeUInt32BE(numSections, 4);
@@ -343,6 +387,25 @@ const server = app.listen(0, async () => {
         bwebHeader.writeUInt16BE(0, 38);
         currentOffset += blbBuf.length;
         
+        let sectionIndex = 40;
+        if (totalBibBuf.length > 0) {
+            bwebHeader.writeUInt8(4, sectionIndex); // BIB
+            bwebHeader.writeUInt32BE(totalBibBuf.length, sectionIndex+1);
+            bwebHeader.writeUInt8(0, sectionIndex+5);
+            bwebHeader.writeUInt16BE(0, sectionIndex+6);
+            currentOffset += totalBibBuf.length;
+            sectionIndex += 8;
+        }
+        
+        if (totalBvsBuf.length > 0) {
+            bwebHeader.writeUInt8(5, sectionIndex); // BVS
+            bwebHeader.writeUInt32BE(totalBvsBuf.length, sectionIndex+1);
+            bwebHeader.writeUInt8(0, sectionIndex+5);
+            bwebHeader.writeUInt16BE(0, sectionIndex+6);
+            currentOffset += totalBvsBuf.length;
+            sectionIndex += 8;
+        }
+        
         // Output it
         const outStream = fs.createWriteStream(outputFile);
         outStream.write(bwebHeader);
@@ -350,13 +413,19 @@ const server = app.listen(0, async () => {
         outStream.write(bmlBuf);
         outStream.write(bdtBuf);
         outStream.write(blbBuf);
+        if (totalBibBuf.length > 0) outStream.write(totalBibBuf);
+        if (totalBvsBuf.length > 0) outStream.write(totalBvsBuf);
         
         outStream.end();
         console.log(`[SUCCESS] BWEB written to ${outputFile}`);
         
         // Generate manifest.bpg with ECDSA signature
         const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
-        const bwebHash = crypto.createHash('sha256').update(bwebHeader).update(tocBytes).update(bmlBuf).update(bdtBuf).update(blbBuf).digest();
+        const hashStream = crypto.createHash('sha256');
+        hashStream.update(bwebHeader).update(tocBytes).update(bmlBuf).update(bdtBuf).update(blbBuf);
+        if (totalBibBuf.length > 0) hashStream.update(totalBibBuf);
+        if (totalBvsBuf.length > 0) hashStream.update(totalBvsBuf);
+        const bwebHash = hashStream.digest();
         const sign = crypto.createSign('SHA256');
         sign.update(bwebHash);
         const signature = sign.sign(privateKey);

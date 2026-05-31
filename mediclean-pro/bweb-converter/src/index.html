@@ -14,6 +14,7 @@
         <div class="orb orb-3"></div>
     </div>
     <header class="hero">
+        <img src="assets/hero.jpg" class="hero-bg" alt="Hero Background">
         <div class="container">
             <h1>Willkommen im <span class="accent">Binären Web</span></h1>
             <p class="subtitle">Eine radikale Neuerfindung der Webarchitektur. Schneller, sicherer und deterministischer.</p>
@@ -36,31 +37,31 @@
             
             <div class="grid">
                 <div class="card" id="card-1">
-                    <div class="icon bml-icon">1</div>
+                    <img src="assets/icon-bml.svg" class="card-icon" alt="BML Icon">
                     <h3>BML (Binary Markup)</h3>
                     <p>Ersetzt HTML. XML-Knoten und Tags werden zu 1-Byte Opcodes reduziert. Kein Parsing-Overhead mehr.</p>
                 </div>
                 
                 <div class="card" id="card-2">
-                    <div class="icon bdt-icon">2</div>
+                    <img src="assets/icon-bml.svg" class="card-icon" alt="BDT Icon">
                     <h3>BDT (Binary DOM Tree)</h3>
                     <p>Der Strukturbaum im Speicher. Eine extrem flache Array-Struktur, navigiert über 16-Bit Pointer. Eliminiert Node-Traversal-Latenzen.</p>
                 </div>
 
                 <div class="card" id="card-3">
-                    <div class="icon blb-icon">3</div>
+                    <img src="assets/icon-blb.svg" class="card-icon" alt="BLB Icon">
                     <h3>BLB (Binary Layout)</h3>
                     <p>Das Ende des CSS-Cascadings. Statische 60-Byte-Blöcke, die dem Renderer die finalen Box-Metriken ohne Engine-Berechnung diktieren.</p>
                 </div>
 
                 <div class="card" id="card-4">
-                    <div class="icon bib-icon">4</div>
+                    <img src="assets/icon-bib.svg" class="card-icon" alt="BIB Icon">
                     <h3>BIB (Binary Images)</h3>
                     <p>Rohe Pixelpipelines. Original komprimierte Medien (PNG/JPG), die asynchron direkt über die GPU-Decodierer auf das Canvas gefeuert werden.</p>
                 </div>
 
                 <div class="card" id="card-5">
-                    <div class="icon bvs-icon">5</div>
+                    <img src="assets/icon-bib.svg" class="card-icon" alt="BVS Icon">
                     <h3>BVS (Binary Video)</h3>
                     <p>Zero-Latency Video Playback. Kein MP4-Overhead. Reine Multiplex-Frames direkt an die WebCodecs API.</p>
                 </div>
@@ -110,6 +111,14 @@
                 </div>
             </div>
             <p class="bench-note">Die BWEB-Struktur entlastet den Main-Thread komplett. Interaktionen, Reflows und Repaints erfolgen innerhalb der WASM-Sandbox, abgekoppelt von browserinternen Layout-Thrashing-Problemen.</p>
+        </section>
+
+        <section class="video-section">
+            <h2>BVS Video Streaming Demo</h2>
+            <p>Ein flüssiges Video, decodiert und gezeichnet direkt auf das deterministische BWEB Canvas (kein DOM Video Element sichtbar!).</p>
+            <div class="video-container">
+                <video src="assets/demo.mp4" autoplay loop muted class="demo-video"></video>
+            </div>
         </section>
     </main>
 

@@ -132,6 +132,18 @@ Struktur eines BDT-Knotens (fest 13 Bytes):
 ## 4. BLB (Binary Layout Blocks)
 Magic: `0x42 0x4C 0x42 0x01` (`BLB\x01`)
 
+## 2. Grobstruktur einer .bweb Datei
+Die Datei besteht aus einem globalen Header und aufeinanderfolgenden Sections (Blöcken).
+
+```
+[BWEB Global Header]
+[Section 1: BML - Binary Markup Language]
+[Section 2: BDT - Binary Document Tree]
+[Section 3: BLB - Binary Layout Block]
+[Section 4: BIB - Binary Image Block] (optional)
+[Section 5: BVS - Binary Video Stream] (optional)
+```
+
 Jeder BLB-Block repräsentiert genau einen DOM-Knoten in derselben Reihenfolge wie der BDT und ist **exakt 60 Bytes** groß.
 
 ### 4.1 Block-Struktur
@@ -170,48 +182,31 @@ Zusätzlich zur festen Basis-Struktur (oder als Alternative im dynamischen Parsi
 
 ---
 
-## 5. Media Streams (BIB, BVS, BAS)
+## 6. Section 4: BIB (Binary Image Block)
+Bilder werden in BWEB nicht base64-encodiert im Markup gespeichert, sondern als eigenständige Binärblöcke. Die src-Property eines BML Image-Knotens referenziert das Bild über `bib://<id>`.
 
-### 5.1 BIB (Images)
-Magic: `0x42 0x49 0x42 0x01` (`BIB\x01`)
-- Image ID (`uint32`)
-- Width (`uint16`)
-- Height (`uint16`)
-- Format (`uint8`, `1` = RGBA)
-- Compress (`uint8`, `0` = Uncompressed)
-- Padding (`6 Bytes`)
-- Chunk Count (`uint16`, meist 0 für Single-Block)
-- Payload Length (`uint32`)
-- Pixeldaten (RGBA, Uncompressed)
+**Header-Struktur (pro Bild):**
+| Byte-Offset | Datentyp | Beschreibung |
+| :--- | :--- | :--- |
+| `0x00` | `uint16` | BIB Asset ID (entspricht `<id>` in `bib://<id>`) |
+| `0x02` | `uint8` | Mime-Type Enum (1=JPEG, 2=PNG, 3=SVG, 4=WebP, 5=GIF) |
+| `0x03` | `uint32` | Payload-Length `L` (Größe des Bildes in Bytes) |
+| `0x07` | `bytes` | Raw Image Bytes (Länge `L`) |
 
-### 5.2 BVS (Video)
-Magic: `0x42 0x56 0x53 0x01` (`BVS\x01`)
-- Video ID (`uint32`)
-- Width (`uint16`)
-- Height (`uint16`)
-- Codec String Length (`uint8`)
-- Codec String (`N Bytes` ASCII, z.B. "avc1.42E01E")
-- Chunk Count (`uint32`)
-- Chunks:
-  - Is Keyframe (`uint8`)
-  - PTS (`uint64`, µs)
-  - Duration (`uint32`, µs)
-  - Payload Length (`uint32`)
-  - Payload (`N Bytes`)
+## 7. Section 5: BVS (Binary Video Stream)
+Videos werden in BWEB gestreamed bzw. sequenziell als Binärblock abgelegt. Die src-Property eines BML Video-Knotens referenziert das Video über `bvs://<id>`.
 
-### 5.3 BAS (Audio)
-Magic: `0x42 0x41 0x53 0x01` (`BAS\x01`)
-- Audio ID (`uint32`)
-- Codec String Length (`uint8`)
-- Codec String (`N Bytes` ASCII, z.B. "mp4a.40.2")
-- Sample Rate (`uint32`)
-- Channels (`uint8`)
-- Chunk Count (`uint32`)
-- Chunks (wie bei BVS)
+**Header-Struktur (pro Video):**
+| Byte-Offset | Datentyp | Beschreibung |
+| :--- | :--- | :--- |
+| `0x00` | `uint16` | BVS Asset ID (entspricht `<id>` in `bvs://<id>`) |
+| `0x02` | `uint8` | Format Enum (1=MP4, 2=WebM) |
+| `0x03` | `uint32` | Total Length `L` (Größe des Videos in Bytes) |
+| `0x07` | `bytes` | Raw Video Bytes (Länge `L`) |
 
----
+*(Hinweis: Für BWEB 1.0 werden Videos als kompletter Block (ohne dediziertes internes Chunking auf BWEB-Ebene) eingebunden, die Verarbeitung übernimmt der Browser/Offscreen-Canvas asynchron.)*
 
-## 6. Performance Characteristics (Benchmarks)
+## 8. Performance Characteristics (Benchmarks)
 Der BWEB-Standard wurde auf 10.000 generierte, verschachtelte Boxen im Headless-Modus (Chromium) gebenchmarkt, um den reinen Layout- und Paint-Overhead gegenüber nativem DOM zu evaluieren.
 
 | Metrik | DOM (Native) | BWEB (JS/Canvas Prototype) |

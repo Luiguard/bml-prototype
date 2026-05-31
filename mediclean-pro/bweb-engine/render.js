@@ -165,10 +165,21 @@ export class BwebRenderer {
             this.ctx.stroke();
         }
 
+        // Media (BIB / BVS)
+        if (node.bdt.src && this.assets && this.assets[node.bdt.src]) {
+            const asset = this.assets[node.bdt.src];
+            if (asset.type === 'image' && asset.bitmap) {
+                this.ctx.drawImage(asset.bitmap, comp.x, comp.y, comp.w, comp.h);
+            } else if (asset.type === 'video' && asset.video) {
+                // Video wird framegenau ins Canvas kopiert
+                this.ctx.drawImage(asset.video, comp.x, comp.y, comp.w, comp.h);
+            }
+        }
+
         // Text (BML Payload)
         // Text-Rendering wird über BML/Text-Knoten gesteuert.
         // Falls dieser Knoten direkten Text enthält (oder ein generierter Span ist):
-        if (node.bdt.text) {
+        if (node.bdt.text && node.bdt.text !== "") {
             this.ctx.fillStyle = this._toRgba(blb.color || 0x000000FF);
             const fontFamily = blb.fontFamily ? blb.fontFamily : 'sans-serif';
             this.ctx.font = `${blb.fontWeight || 400} ${blb.fontSize || 16}px ${fontFamily}`;

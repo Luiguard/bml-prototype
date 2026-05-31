@@ -1,15 +1,16 @@
 const { Buffer } = require('buffer');
 
 class BmlCompiler {
-    constructor(logger) {
+    constructor(logger, vfsManifest) {
         this.logger = logger;
+        this.vfsManifest = vfsManifest;
         this.tagMap = {
             'div': 0x01, 'span': 0x02, 'p': 0x03, 'a': 0x04,
             'h1': 0x05, 'h2': 0x06, 'h3': 0x07, 'h4': 0x08,
             'h5': 0x09, 'h6': 0x0A, 'img': 0x0B, 'button': 0x0C,
             'input': 0x0D, 'form': 0x0E, 'ul': 0x0F, 'li': 0x10,
             'header': 0x11, 'footer': 0x12, 'nav': 0x13, 'section': 0x14,
-            'article': 0x15, 'aside': 0x16, 'main': 0x17, '#text': 0xFF
+            'article': 0x15, 'aside': 0x16, 'main': 0x17, 'canvas': 0x2B, 'video': 0x29, '#text': 0xFF
         };
         this.attrMap = {
             'class': 0x10, 'id': 0x11, 'src': 0x12, 'href': 0x13,
@@ -47,7 +48,25 @@ class BmlCompiler {
 
                 for (const key of validAttrs) {
                     const attrOpcode = this.attrMap[key];
-                    const valBuf = Buffer.from(node.attributes[key], 'utf-8');
+                    let val = node.attributes[key];
+
+                    if (key === 'src' && this.vfsManifest) {
+                        let cleanVal = val.startsWith('/') ? val.substring(1) : val;
+                        // Search in vfsManifest
+                        for (const [relPath, entry] of Object.entries(this.vfsManifest.files)) {
+                            if (relPath.replace(/\\/g, '/') === cleanVal || relPath.replace(/\\/g, '/').endsWith(cleanVal)) {
+                                const parts = entry.id.split('_');
+                                if (parts.length === 2) {
+                                    const numId = parseInt(parts[1], 10);
+                                    if (entry.id.startsWith('bib_')) val = `bib://${numId}`;
+                                    else if (entry.id.startsWith('bvs_')) val = `bvs://${numId}`;
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    const valBuf = Buffer.from(val, 'utf-8');
                     const attrHeader = Buffer.alloc(3);
                     attrHeader.writeUInt8(attrOpcode, 0);
                     attrHeader.writeUInt16BE(valBuf.length, 1);

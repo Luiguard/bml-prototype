@@ -47,7 +47,7 @@ async function buildBweb(inputDir, outputFile) {
         console.log(`[Core] Extracted ID Map written to ${idMapPath}`);
 
         // 4. BML Phase
-        const bmlCompiler = new BmlCompiler(logger);
+        const bmlCompiler = new BmlCompiler(logger, vfsManifest);
         const bmlBuffer = bmlCompiler.compile(astNodes);
 
         // 5. BLB Phase

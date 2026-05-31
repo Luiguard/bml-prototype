@@ -82,6 +82,19 @@ body {
     padding: 10rem 0 6rem;
     text-align: center;
     border-bottom: 1px solid var(--border-glass);
+    overflow: hidden;
+}
+
+.hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+    opacity: 0.3;
+    filter: blur(10px);
 }
 
 h1 {
@@ -185,8 +198,16 @@ h1 {
 }
 
 .card h3 {
-    margin-bottom: 1rem;
-    font-size: 1.4rem;
+    margin: 1.5rem 0 1rem;
+    font-size: 1.25rem;
+    color: #fff;
+}
+
+.card-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto;
+    display: block;
 }
 
 .card p {
@@ -341,3 +362,26 @@ footer {
     color: var(--text-main);
 }
 
+
+/* Video Section */
+.video-section {
+    padding: 6rem 0;
+    text-align: center;
+    border-top: 1px solid var(--border-glass);
+    margin-top: 4rem;
+}
+
+.video-container {
+    margin: 3rem auto 0;
+    max-width: 800px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    border: 1px solid var(--border-glass);
+}
+
+.demo-video {
+    width: 100%;
+    display: block;
+}
