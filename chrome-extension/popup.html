@@ -2,10 +2,11 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Outfit', sans-serif;
             background: #000; color: #fff;
             width: 380px; padding: 20px;
             overflow-x: hidden;
@@ -13,7 +14,7 @@
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; }
         .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.03em; }
         .logo span { color: #5e6ad2; }
-        .badge { background: rgba(94, 106, 210, 0.1); border: 1px solid rgba(94, 106, 210, 0.3); color: #8b96f5; padding: 2px 8px; border-radius: 6px; font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace; font-size: 0.7rem; font-weight: 600; }
+        .badge { background: rgba(94, 106, 210, 0.1); border: 1px solid rgba(94, 106, 210, 0.3); color: #8b96f5; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; }
         
         .tab-nav { display: flex; gap: 8px; margin-bottom: 16px; }
         .tab-btn { flex: 1; padding: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); color: #8a8f98; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: all 0.2s; }
@@ -35,7 +36,7 @@
         .stat-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
         .stat-row:last-child { border-bottom: none; }
         .stat-label { color: #8a8f98; }
-        .stat-val { font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace; font-weight: 600; color: #10b981; }
+        .stat-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #10b981; }
         
         .feature-icon { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.15); color: #10b981; border-radius: 4px; font-size: 0.65rem; font-weight: 700; }
     </style>

@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "description": "Inspektiere binäre BWEB-Seiten, analysiere die cookie-freie Architektur und entdecke die Zukunft der Privatsphäre.",
   "permissions": [
+    "activeTab",
+    "scripting",
     "tabs",
     "storage",
     "declarativeNetRequest"
@@ -12,7 +14,8 @@
     "default_popup": "popup.html"
   },
   "background": {
-    "service_worker": "service-worker.js"
+    "service_worker": "service-worker.js",
+    "scripts": ["service-worker.js"]
   },
   "declarative_net_request": {
     "rule_resources": [
@@ -26,21 +29,7 @@
   "content_scripts": [
     {
       "matches": [
-        "http://*/*.bml*",
-        "https://*/*.bml*",
-        "http://*/*.bdt*",
-        "https://*/*.bdt*",
-        "http://*/*.blb*",
-        "https://*/*.blb*",
-        "http://*/*.bib*",
-        "https://*/*.bib*",
-        "http://*/*.bweb*",
-        "https://*/*.bweb*",
-        "file:///*/*.bml*",
-        "file:///*/*.bdt*",
-        "file:///*/*.blb*",
-        "file:///*/*.bib*",
-        "file:///*/*.bweb*"
+        "<all_urls>"
       ],
       "js": ["content.js"],
       "run_at": "document_start"

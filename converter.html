@@ -55,7 +55,7 @@
         }
 
         .engine-header{ text-align:center;margin-bottom:3rem; }
-        .engine-header h1{ font-size:clamp(2rem, 5vw, 3rem); font-weight:600; letter-spacing: -0.04em; margin-bottom: 1rem; background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .engine-header h1{ font-size:clamp(2rem, 5vw, 3rem); font-weight:600; letter-spacing: -0.04em; margin-bottom: 1rem; background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); background-clip: text; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .engine-header p{ color:var(--text-secondary); max-width:600px; margin:0 auto; }
         
         .format-badges{ display:flex;gap:.5rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap; }
@@ -329,7 +329,9 @@
         </div>
         
         <!-- Progress Log Details -->
-        <div id="loadingLog" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text-muted); background:#000; border:1px solid var(--border); border-radius:6px; padding:12px; max-height:100px; overflow-y:auto; text-align:left; line-height:1.4;">
+        <div id="loadingLogContainer" style="position:relative; max-height:100px;">
+            <div id="loadingLog" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text-muted); background:#000; border:1px solid var(--border); border-radius:6px; padding:12px; height:100%; max-height:100px; overflow-y:auto; text-align:left; line-height:1.4; white-space: pre-wrap;"></div>
+            <button id="copyLogBtn" style="position:absolute; top:5px; right:5px; background:var(--primary); color:#fff; border:none; padding:4px 8px; font-size:0.7rem; border-radius:4px; cursor:pointer;" onclick="navigator.clipboard.writeText(document.getElementById('loadingLog').innerText).then(()=>this.textContent='Kopiert!').catch(()=>this.textContent='Fehler'); setTimeout(()=>this.textContent='Log kopieren', 2000);">Log kopieren</button>
         </div>
     </div>
 </div>
@@ -377,9 +379,13 @@
 </div>
 
 <script>
-const TAG_REV={0x01:'div',0x02:'span',0x03:'p',0x04:'a',0x05:'h1',0x06:'h2',0x07:'h3',0x08:'h4',0x09:'h5',0x0A:'h6',0x0B:'img',0x0C:'ul',0x0D:'ol',0x0E:'li',0x0F:'table',0x10:'tr',0x11:'td',0x12:'th',0x13:'thead',0x14:'tbody',0x15:'form',0x16:'input',0x17:'button',0x18:'textarea',0x19:'select',0x1A:'option',0x1B:'label',0x1C:'header',0x1D:'footer',0x1E:'nav',0x1F:'main',0x20:'section',0x21:'article',0x22:'aside',0x23:'strong',0x24:'em',0x25:'code',0x26:'pre',0x27:'br',0x28:'hr',0x29:'video',0x2A:'audio',0x2B:'canvas',0x2C:'svg',0x2D:'iframe',0x2E:'figcaption',0x2F:'figure',0x30:'blockquote',0x31:'small',0x32:'sub',0x33:'sup',0x34:'details',0x35:'summary',0x36:'dialog',0x37:'dl',0x38:'dt',0x39:'dd',0x3A:'mark',0x3B:'time',0x3C:'abbr',0x3D:'cite',0x3E:'b',0x3F:'i',0x40:'u',0xFE:'div',0xFF:'div'};
+const TAG_REV={0x01:'div',0x02:'span',0x03:'p',0x04:'a',0x05:'h1',0x06:'h2',0x07:'h3',0x08:'h4',0x09:'h5',0x0A:'h6',0x0B:'img',0x0C:'ul',0x0D:'ol',0x0E:'li',0x0F:'table',0x10:'tr',0x11:'td',0x12:'th',0x13:'thead',0x14:'tbody',0x15:'form',0x16:'input',0x17:'button',0x18:'textarea',0x19:'select',0x1A:'option',0x1B:'label',0x1C:'header',0x1D:'footer',0x1E:'nav',0x1F:'main',0x20:'section',0x21:'article',0x22:'aside',0x23:'strong',0x24:'em',0x25:'code',0x26:'pre',0x27:'br',0x28:'hr',0x29:'video',0x2A:'audio',0x2B:'canvas',0x2C:'svg',0x2D:'iframe',0x2E:'figcaption',0x2F:'figure',0x30:'blockquote',0x31:'small',0x32:'sub',0x33:'sup',0x34:'details',0x35:'summary',0x36:'dialog',0x37:'dl',0x38:'dt',0x39:'dd',0x3A:'mark',0x3B:'time',0x3C:'abbr',0x3D:'cite',0x3E:'b',0x3F:'i',0x40:'u',0xFD:'#text',0xFD:'#text',0xFE:'div',0xFF:'div'};
+const TAG_FWD={};
+for(const[k,v]of Object.entries(TAG_REV))TAG_FWD[v]=parseInt(k);
 const ATTR_REV={0x10:'class',0x11:'id',0x12:'href',0x13:'src',0x14:'style',0x15:'type',0x16:'name',0x17:'value',0x18:'placeholder',0x19:'alt',0x1A:'title',0x1B:'action',0x1C:'method',0x1D:'target',0x1E:'rel',0x1F:'role',0x20:'aria-label',0x21:'data-bind',0x22:'onclick',0x23:'onsubmit',0x24:'width',0x25:'height',0x26:'disabled',0x27:'checked',0x28:'selected',0x29:'required',0x2A:'autofocus',0x2B:'autocomplete',0x2C:'min',0x2D:'max',0x2E:'step',0x2F:'pattern',0x30:'for',0x31:'tabindex',0x32:'content',0x33:'charset',0x34:'http-equiv',0x35:'lang',0x36:'dir',0x37:'hidden'};
-const DISPLAY=['block','inline','flex','grid','none','inline-block','inline-flex'];
+const ATTR_FWD={};
+for(const[k,v]of Object.entries(ATTR_REV))ATTR_FWD[v]=parseInt(k);
+const DISPLAY=['block','inline','flex','grid','none','inline-block','inline-flex','list-item','table','table-row','table-cell','inline-grid'];
 const POSITION=['static','relative','absolute','fixed','sticky'];
 const TEXT_ALIGN=['left','center','right','justify'];
 const FLEX_DIR=['row','column','row-reverse','column-reverse'];
@@ -394,19 +400,20 @@ const MAX_RECURSION_DEPTH = 256;
 
 class BMLParser{
     constructor(buf,offset=0){this.v=new DataView(buf);this.d=new TextDecoder('utf-8');this.o=offset}
+    parse(){return this.parseNode(0)}
     parseNode(depth=0){
         if(depth>MAX_RECURSION_DEPTH)return null;
         if(this.o+6>this.v.byteLength)return null;
         const tag=this.v.getUint8(this.o++);
         const nAttr=this.v.getUint8(this.o++);
         const nChild=this.v.getUint16(this.o);this.o+=2;
-        const tLen=this.v.getUint32(this.o);this.o+=4;
+        const tLen=this.v.getUint16(this.o);this.o+=2;
         const tagName=TAG_REV[tag]||'div';
         if(DANGEROUS_TAGS.has(tagName)){
             for(let i=0;i<nAttr;i++){
-                if(this.o+5>this.v.byteLength)return null;
+                if(this.o+3>this.v.byteLength)return null;
                 this.o++;
-                const aLen=this.v.getUint32(this.o);this.o+=4;
+                const aLen=this.v.getUint16(this.o);this.o+=2;
                 if(this.o+aLen>this.v.byteLength)return null;
                 this.o+=aLen;
             }
@@ -414,25 +421,34 @@ class BMLParser{
             for(let i=0;i<nChild;i++){this.parseNode(depth+1);}
             return null;
         }
-        const el=document.createElement(tagName);
-        el.classList.add('rendered-node',`bml-tag-${tagName}`);
+        let el = {
+            tag: tag,
+            tagName: tagName,
+            attrs: {},
+            attributes: [],
+            children: [],
+            text: '',
+            isText: tagName === '#text'
+        };
         for(let i=0;i<nAttr;i++){
-            if(this.o+5>this.v.byteLength)break;
+            if(this.o+3>this.v.byteLength)break;
             const aId=this.v.getUint8(this.o++);
-            const aLen=this.v.getUint32(this.o);this.o+=4;
+            const aLen=this.v.getUint16(this.o);this.o+=2;
             if(this.o+aLen>this.v.byteLength)break;
-            const aVal=this.d.decode(new Uint8Array(this.v.buffer,this.o,aLen));this.o+=aLen;
+            const rawBytes=new Uint8Array(this.v.buffer,this.o,aLen);
+            el.attributes.push({id:aId,val:new Uint8Array(rawBytes)});
+            const aVal=this.d.decode(rawBytes);this.o+=aLen;
             const aName=ATTR_REV[aId];
             if(!aName||aName==='style'||DANGEROUS_ATTRS.has(aName))continue;
             if((aName==='href'||aName==='src'||aName==='action')&&/^\s*javascript:/i.test(aVal))continue;
-            el.setAttribute(aName,aVal);
+            el.attrs[aName] = aVal;
         }
         if(tLen>0){
             if(this.o+tLen>this.v.byteLength){return el;}
             const txt=this.d.decode(new Uint8Array(this.v.buffer,this.o,tLen));this.o+=tLen;
-            el.textContent=txt;
+            el.text=txt;
         }
-        for(let i=0;i<nChild;i++){const c=this.parseNode(depth+1);if(c)el.appendChild(c)}
+        for(let i=0;i<nChild;i++){const c=this.parseNode(depth+1);if(c)el.children.push(c)}
         return el;
     }
 }
@@ -465,41 +481,54 @@ class BLBParser{
         const count=this.v.getUint32(this.o);this.o+=4;
         const blocks=[];
         for(let i=0;i<count;i++){
-            const o=this.o;
-            const nid=this.v.getUint16(o);
-            const display=this.v.getUint8(o+2);
-            const position=this.v.getUint8(o+3);
-            const boxSizing=this.v.getUint8(o+4);
-            const width=this.v.getUint16(o+5);
-            const height=this.v.getUint16(o+7);
-            const mt=this.v.getInt16(o+9),mr=this.v.getInt16(o+11),mb=this.v.getInt16(o+13),ml=this.v.getInt16(o+15);
-            const pt=this.v.getUint16(o+17),pr=this.v.getUint16(o+19),pb=this.v.getUint16(o+21),pl=this.v.getUint16(o+23);
-            const btw=this.v.getUint8(o+25),brw=this.v.getUint8(o+26),bbw=this.v.getUint8(o+27),blw=this.v.getUint8(o+28);
-            const borderColor=this.v.getUint32(o+29);
-            const bgColor=this.v.getUint32(o+33);
-            const color=this.v.getUint32(o+37);
-            const fontSize=this.v.getUint16(o+41);
-            const fontWeight=this.v.getUint16(o+43);
-            const lineHeight=this.v.getUint16(o+45);
-            const textAlign=this.v.getUint8(o+47);
-            const flexDir=this.v.getUint8(o+48);
-            const flexWrap=this.v.getUint8(o+49);
-            const justifyContent=this.v.getUint8(o+50);
-            const alignItems=this.v.getUint8(o+51);
-            const gap=this.v.getUint16(o+52);
-            const borderRadius=this.v.getUint16(o+54);
-            const overflow=this.v.getUint8(o+56);
-            const opacity=this.v.getUint8(o+57);
-            const zIndex=this.v.getInt16(o+58);
-            this.o+=BLB_BLOCK_SIZE;
-            blocks.push({nid,display,position,boxSizing,width,height,
-                margin:{t:mt,r:mr,b:mb,l:ml},padding:{t:pt,r:pr,b:pb,l:pl},
-                borderWidth:{t:btw,r:brw,b:bbw,l:blw},borderColor,bgColor,color,
-                fontSize,fontWeight,lineHeight,textAlign,flexDir,flexWrap,
-                justifyContent,alignItems,gap,borderRadius,overflow,opacity,zIndex});
+            const nid=this.v.getUint16(this.o);this.o+=2;
+            const propCount=this.v.getUint8(this.o++);
+            
+            const b = { nid, props: {} };
+            
+            for(let p=0; p<propCount; p++){
+                const tag=this.v.getUint8(this.o++);
+                const type=this.v.getUint8(this.o++);
+                
+                let val = null;
+                if(type === 0) { // Dimension
+                    const u = this.v.getUint8(this.o++);
+                    const v = this.v.getInt32(this.o); this.o+=4;
+                    val = {u, v};
+                } else if(type === 1) { // Enum / Int16 (Wait! I wrote flex properties as type=1 but len=2! Let me read by type properly)
+                    // Let's rely on tag to know the size!
+                    // Tag 21, 27, 28, 44 are uint16/int16
+                    if(tag===21 || tag===27 || tag===28 || tag===44) {
+                        val = tag===44 ? this.v.getInt16(this.o) : this.v.getUint16(this.o); this.o+=2;
+                    } else {
+                        val = this.v.getUint8(this.o++);
+                    }
+                } else if(type === 2) { // Color
+                    val = this.v.getUint32(this.o); this.o+=4;
+                } else if(type === 3) { // String
+                    const sLen = this.v.getUint32(this.o); this.o += 4;
+                    val = new TextDecoder().decode(new Uint8Array(this.v.buffer, this.o + this.v.byteOffset, sLen));
+                    this.o += sLen;
+                }
+                b.props[tag] = val;
+            }
+            blocks.push(b);
         }
         return blocks;
     }
+}
+
+function parseBLB(buf) {
+    const p = new BLBParser(buf);
+    return p.parse();
+}
+
+function parseBDT(buf) {
+    const u8 = new Uint8Array(buf);
+    let off = 0;
+    if(u8[0]===0x42 && u8[1]===0x44 && u8[2]===0x54) off = 4;
+    const p = new BDTParser(buf, off);
+    return p.parse();
 }
 
 const MAX_CANVAS_DIM = 8192;
@@ -521,13 +550,13 @@ class BIBParser{
             const dataLen=this.v.getUint32(this.o);this.o+=4;
             
             if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BIB: Bilddimensionen ${w}x${h} überschreiten Limit ${MAX_CANVAS_DIM}`);
-            if(dataLen!==w*h*4)throw new Error(`BIB: dataLen ${dataLen} != erwartete ${w*h*4} Bytes`);
+            if(comp === 0 && dataLen!==w*h*4)throw new Error(`BIB: dataLen ${dataLen} != erwartete ${w*h*4} Bytes`);
             if(this.o+dataLen>this.v.byteLength)throw new Error('BIB: Buffer-Overread');
             
-            const pxData=new Uint8ClampedArray(this.v.buffer,this.o,dataLen);
+            const pxData=new Uint8Array(this.v.buffer,this.o,dataLen);
             this.o+=dataLen;
             
-            images[id]={w,h,data:pxData};
+            images[id]={w,h,data:pxData,comp:comp};
         }
         return images;
     }
@@ -801,75 +830,500 @@ async function applyBAS(rootEl, audios) {
 
 function cssVal(v){
     if(v===0xFFFF)return'auto';
-    if(v&0x8000)return(v&0x7FFF)/10+'%';
     return v/10+'px';
 }
+// --- BWEB Canvas Layout Engine (BLB-2) ---
+class CanvasEngine {
+    constructor() {
+        this.root = null;
+        this.blbMap = {};
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.layoutHeight = 0;
+        
+        this.a11yLayer = document.createElement('div');
+        this.a11yLayer.style.position = 'absolute';
+        this.a11yLayer.style.top = '0';
+        this.a11yLayer.style.left = '0';
+        this.a11yLayer.style.width = '100%';
+        this.a11yLayer.style.height = '100%';
+        this.a11yLayer.style.pointerEvents = 'none';
+        this.a11yLayer.style.overflow = 'hidden';
+        this.a11yNodes = new Map();
+        
+        window.addEventListener('resize', () => {
+            if (this.blbs) {
+                let activeBlocks = this.blbs.desktop;
+                if(window.innerWidth <= 768 && this.blbs.tablet) activeBlocks = this.blbs.tablet;
+                if(window.innerWidth <= 375 && this.blbs.mobile) activeBlocks = this.blbs.mobile;
+                this.blbMap = {};
+                for(const b of activeBlocks) this.blbMap[b.nid] = b.props;
+            }
+            this.measureAndLayout();
+            this.draw();
+        });
+        window.addEventListener('scroll', () => {
+            this.draw();
+        });
+    }
+
+    update(rootVNode, bdtNodes, blbs) {
+        this.root = rootVNode;
+        this.blbs = blbs;
+        this.blbMap = {};
+        
+        let activeBlocks = blbs.desktop;
+        if(window.innerWidth <= 768 && blbs.tablet) activeBlocks = blbs.tablet;
+        if(window.innerWidth <= 375 && blbs.mobile) activeBlocks = blbs.mobile;
+        for(const b of activeBlocks) this.blbMap[b.nid] = b.props;
+        
+        this.a11yLayer.innerHTML = '';
+        this.a11yNodes.clear();
+
+        let bdtIdx = 0;
+        const linkTree = (node, parentNode) => {
+            if(!node) return;
+            node.parent = parentNode;
+            if(!node.isText) { node.id = bdtIdx++; } else { node.id = -1; }
+            node.layout = { x:0, y:0, w:0, h:0, innerW:0, innerH:0, lines:[], scrollY: 0 };
+            
+            // Build A11y Node
+            const el = (node.id >= 0) ? findBMLElementForNode(node.id, currentBMLRoot) : null;
+            if (el && !node.isText) {
+                let tagName = 'div';
+                if (el.tag === 4) tagName = 'a';
+                else if (el.tag === 22) tagName = 'input';
+                else if (el.tag === 23) tagName = 'button';
+                else if (el.tag === 24) tagName = 'textarea';
+                else if (el.tag === 25) tagName = 'select';
+                else if (el.tag === 5) tagName = 'h1';
+                else if (el.tag === 6) tagName = 'h2';
+                else if (el.tag >= 5 && el.tag <= 10) tagName = 'h' + (el.tag - 4);
+                
+                if (tagName !== 'div' || (el.attributes && el.attributes.length > 0)) {
+                    const domNode = document.createElement(tagName);
+                    domNode.style.position = 'absolute';
+                    domNode.style.opacity = '0';
+                    domNode.style.pointerEvents = (tagName==='a'||tagName==='input'||tagName==='button'||tagName==='textarea'||tagName==='select') ? 'auto' : 'none';
+                    if (tagName === 'input') domNode.style.opacity = '0.01'; // Webkit bug with fully transparent inputs
+                    
+                    if (el.attributes) {
+                        for(const a of el.attributes) {
+                            if (a.id === 18) domNode.href = new TextDecoder().decode(a.val); // href
+                            if (a.id === 21) domNode.type = new TextDecoder().decode(a.val); // type
+                            if (a.id === 22) domNode.name = new TextDecoder().decode(a.val); // name
+                            if (a.id === 24) domNode.placeholder = new TextDecoder().decode(a.val); // placeholder
+                            if (a.id === 32) domNode.setAttribute('aria-label', new TextDecoder().decode(a.val)); // aria-label
+                        }
+                    }
+                    this.a11yLayer.appendChild(domNode);
+                    this.a11yNodes.set(node.id, domNode);
+                }
+            }
+            
+            for(const c of node.children) linkTree(c, node);
+        };
+        linkTree(this.root, null);
+        
+        this.measureAndLayout();
+        this.draw();
+    }
+
+    mount(container) {
+        if(container.tagName === 'CANVAS') {
+            const div = document.createElement('div');
+            div.id = container.id;
+            div.className = container.className;
+            div.style.cssText = container.style.cssText;
+            container.parentNode.replaceChild(div, container);
+            container = div;
+        }
+        container.innerHTML = '';
+        container.style.position = 'relative';
+        container.appendChild(this.canvas);
+        container.appendChild(this.a11yLayer);
+    }
+    
+    getVal(val, parentSize) {
+        if(!val) return 0;
+        if(val.u === 0) return val.v / 10;
+        if(val.u === 1) return (val.v / 1000) * parentSize;
+        if(val.u === 2) return (val.v / 1000) * window.innerWidth;
+        if(val.u === 3) return (val.v / 1000) * window.innerHeight;
+        return 0;
+    }
+
+    measureNode(node, parentW) {
+        if(!node) return;
+        const s = node.isText ? (this.blbMap[node.parent?.id] || {}) : (this.blbMap[node.id] || {});
+        if(!node.isText && s[5] === 4) { node.layout.w=0; node.layout.h=0; return; }
+        
+        node.layout.mt = this.getVal(s[8], parentW);
+        node.layout.mr = this.getVal(s[9], parentW);
+        node.layout.mb = this.getVal(s[10], parentW);
+        node.layout.ml = this.getVal(s[11], parentW);
+        
+        node.layout.pt = this.getVal(s[12], parentW);
+        node.layout.pr = this.getVal(s[13], parentW);
+        node.layout.pb = this.getVal(s[14], parentW);
+        node.layout.pl = this.getVal(s[15], parentW);
+        
+        node.layout.position = s[6] || 0;
+
+        if (s[46] && s[46].u !== 4) node.layout.x = this.getVal(s[46], 0);
+        if (s[47] && s[47].u !== 4) node.layout.y = this.getVal(s[47], 0);
+        if (s[48] && s[48].u !== 4) node.layout.w = this.getVal(s[48], 0);
+        if (s[49] && s[49].u !== 4) node.layout.h = this.getVal(s[49], 0);
+
+        if (node.isText) {
+            const text = node.text.trim();
+            if(!text) { node.layout.w = 0; node.layout.h = 0; return; }
+            
+            const fs = s[19] && s[19].u !== 4 ? this.getVal(s[19], parentW) : 16;
+            const fw = s[21] ? s[21] : 400;
+            const ff = s[33] ? s[33] : "sans-serif";
+            
+            this.ctx.font = `${fw} ${fs}px ${ff}`;
+            
+            const words = text.split(/[ \t\n]+/);
+            let lines = [];
+            let currentLine = words[0];
+            let maxW = 0;
+            
+            const availInnerW = parentW;
+            
+            for(let i=1; i<words.length; i++) {
+                const w = words[i];
+                const width = this.ctx.measureText(currentLine + " " + w).width;
+                if(width < availInnerW) {
+                    currentLine += " " + w;
+                } else {
+                    lines.push(currentLine);
+                    maxW = Math.max(maxW, this.ctx.measureText(currentLine).width);
+                    currentLine = w;
+                }
+            }
+            lines.push(currentLine);
+            maxW = Math.max(maxW, this.ctx.measureText(currentLine).width);
+            
+            node.layout.lines = lines;
+            node.layout.innerW = maxW;
+            const lh = s[20] && s[20].u !== 4 ? this.getVal(s[20], parentW) : (fs * 1.2);
+            node.layout.innerH = lines.length * lh;
+            node.layout.fs = fs;
+            node.layout.lh = lh;
+            
+            node.layout.w = maxW;
+            node.layout.h = node.layout.innerH;
+            return;
+        }
+        
+        node.layout.innerW = Math.max(0, node.layout.w - node.layout.pl - node.layout.pr);
+        node.layout.innerH = Math.max(0, node.layout.h - node.layout.pt - node.layout.pb);
+
+        for(let i=0; i<node.children.length; i++) {
+            this.measureNode(node.children[i], node.layout.innerW);
+        }
+    }
+
+    paintNode(node, accX = 0, accY = 0) {
+        if(!node) return;
+        const s = node.isText ? (this.blbMap[node.parent?.id] || {}) : (this.blbMap[node.id] || {});
+        if(!node.isText && s[5] === 4) return;
+        
+        let rx = node.layout.x;
+        let ry = node.layout.y;
+        let rw = node.layout.w;
+        let rh = node.layout.h;
+        
+        let clipped = false;
+        if(s[32] === 1 || s[32] === 2) { // hidden or scroll
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.rect(rx, ry, rw, rh);
+            this.ctx.clip();
+            clipped = true;
+        }
+
+        if(!node.isText) {
+            const br = s[31] ? this.getVal(s[31], rw) : 0;
+            const hasOpacity = s[34] !== undefined && s[34] < 255;
+            if(hasOpacity) { this.ctx.save(); this.ctx.globalAlpha = s[34]/255; }
+            if(s[17]) {
+                let color = s[17];
+                if (node.isHovered) {
+                    const cr=(color>>>24)&0xFF,cg=(color>>>16)&0xFF,cb=(color>>>8)&0xFF,ca=color&0xFF;
+                    color = ((Math.min(255,cr+20))<<24) | ((Math.min(255,cg+20))<<16) | ((Math.min(255,cb+20))<<8) | ca;
+                }
+                this.ctx.fillStyle = rgba(color);
+                
+                if(s[36]) { // box-shadow
+                    const shadowMatch = s[36].match(/(rgba?\([^)]+\)|#[0-9a-fA-F]+)\s+([\d.-]+)px\s+([\d.-]+)px\s+([\d.-]+)px(?:\s+([\d.-]+)px)?/);
+                    if(shadowMatch) {
+                        this.ctx.shadowColor = shadowMatch[1];
+                        this.ctx.shadowOffsetX = parseFloat(shadowMatch[2]);
+                        this.ctx.shadowOffsetY = parseFloat(shadowMatch[3]);
+                        this.ctx.shadowBlur = parseFloat(shadowMatch[4]);
+                    }
+                }
+                
+                if(br > 0 && this.ctx.roundRect) { this.ctx.beginPath(); this.ctx.roundRect(rx, ry, rw, rh, br); this.ctx.fill(); }
+                else { this.ctx.fillRect(rx, ry, rw, rh); }
+                
+                if(s[36]) { this.ctx.shadowColor = 'transparent'; this.ctx.shadowBlur = 0; this.ctx.shadowOffsetX = 0; this.ctx.shadowOffsetY = 0; }
+            }
+            
+            if(s[37] && s[37].includes('linear-gradient')) {
+                const gradStr = s[37];
+                let match = gradStr.match(/linear-gradient\(((?:[^)(]+|\([^)(]*\))*)\)/);
+                if(!match) match = gradStr.match(/linear-gradient\((.*)\)/);
+                if(match) {
+                    let argsStr = match[1].trim();
+                    let dirStr = 'to bottom';
+                    let stopsStr = argsStr;
+                    const dirMatch = argsStr.match(/^(to [a-z ]+|[\d.]+deg),\s*(.*)$/);
+                    if(dirMatch) {
+                        dirStr = dirMatch[1];
+                        stopsStr = dirMatch[2];
+                    }
+                    let y1=ry, y0=ry, x0=rx, x1=rx;
+                    if(dirStr==='to bottom') { y1=ry+rh; }
+                    else if(dirStr==='to right') { x1=rx+rw; }
+                    else if(dirStr.includes('deg')) {
+                        const deg=parseFloat(dirStr);
+                        if(deg===180) y1=ry+rh;
+                        else if(deg===90) x1=rx+rw;
+                        else if(deg===0) { y1=ry; y0=ry+rh; }
+                    } else { y1=ry+rh; }
+                    
+                    const grad = this.ctx.createLinearGradient(x0, y0, x1, y1);
+                    const stopParts = stopsStr.split(/,(?![^(]*\))/);
+                    for(let i=0; i<stopParts.length; i++) {
+                        const pt = stopParts[i].trim();
+                        const colMatch = pt.match(/(rgba?\([^)]+\)|#[0-9a-fA-F]+|\w+)\s*(\d+%|\d+px)?/);
+                        if(colMatch) {
+                            const cStr = colMatch[1];
+                            let pos = i / (Math.max(1, stopParts.length - 1));
+                            if(colMatch[2] && colMatch[2].includes('%')) pos = parseFloat(colMatch[2])/100;
+                            grad.addColorStop(Math.min(1, Math.max(0, pos)), cStr);
+                        }
+                    }
+                    this.ctx.fillStyle = grad;
+                    if(br > 0 && this.ctx.roundRect) { this.ctx.beginPath(); this.ctx.roundRect(rx, ry, rw, rh, br); this.ctx.fill(); }
+                    else { this.ctx.fillRect(rx, ry, rw, rh); }
+                }
+            }
+            
+            if(s[37] && s[37].includes('url(')) {
+                const urlMatch = s[37].match(/url\(["']?([^"')]+)["']?\)/);
+                if(urlMatch) {
+                    const bgUrl = urlMatch[1];
+                    const cacheKey = bgUrl.substring(0, 200);
+                    if(!this._bgCache) this._bgCache = {};
+                    if(this._bgCache[cacheKey] === undefined) {
+                        this._bgCache[cacheKey] = null;
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => {
+                            this._bgCache[cacheKey] = img;
+                            this.draw();
+                        };
+                        img.onerror = () => { this._bgCache[cacheKey] = false; };
+                        img.src = bgUrl;
+                    } else if(this._bgCache[cacheKey]) {
+                        const bgImg = this._bgCache[cacheKey];
+                        this.ctx.save();
+                        if(br > 0 && this.ctx.roundRect) { this.ctx.beginPath(); this.ctx.roundRect(rx, ry, rw, rh, br); this.ctx.clip(); }
+                        else { this.ctx.beginPath(); this.ctx.rect(rx, ry, rw, rh); this.ctx.clip(); }
+                        const scale = Math.max(rw / bgImg.width, rh / bgImg.height);
+                        const dw = bgImg.width * scale;
+                        const dh = bgImg.height * scale;
+                        this.ctx.drawImage(bgImg, rx + (rw-dw)/2, ry + (rh-dh)/2, dw, dh);
+                        this.ctx.restore();
+                    }
+                }
+            }
+            
+            const el = findBMLElementForNode(node.id, currentBMLRoot);
+            if (el && (el.tag === 11 || el.tag === 43)) {
+                let srcAttr = null;
+                if(el.attributes) srcAttr = el.attributes.find(a => a.id === 19 || a.id === 33);
+                if (srcAttr) {
+                    const srcStr = new TextDecoder().decode(srcAttr.val);
+                    let bibId = null;
+                    if (srcStr.startsWith('bib://')) bibId = parseInt(srcStr.split('://')[1], 10);
+                    else bibId = parseInt(srcStr, 10);
+                    
+                    if (!isNaN(bibId) && window.bwebBIB && window.bwebBIB[bibId]) {
+                        this.ctx.drawImage(window.bwebBIB[bibId], rx + node.layout.pl, ry + node.layout.pt, rw - node.layout.pl - node.layout.pr, rh - node.layout.pt - node.layout.pb);
+                    }
+                }
+            }
+            
+            if(s[16] && s[25]) {
+                this.ctx.strokeStyle = rgba(s[16]);
+                this.ctx.lineWidth = s[25]/10;
+                if(br > 0 && this.ctx.roundRect) { this.ctx.beginPath(); this.ctx.roundRect(rx, ry, rw, rh, br); this.ctx.stroke(); }
+                else { this.ctx.strokeRect(rx, ry, rw, rh); }
+            }
+            if(hasOpacity) this.ctx.restore();
+        } else {
+            if(node.layout.lines && node.layout.lines.length > 0) {
+                const ff = s[33] || 'sans-serif';
+                this.ctx.fillStyle = s[18] ? rgba(s[18]) : '#000000';
+                this.ctx.font = `${s[21]||400} ${node.layout.fs}px ${ff}`;
+                this.ctx.textBaseline = "top";
+                const ta = s[22] || 0;
+                let lY = ry;
+                if(s[39] && s[39].v) { this.ctx.letterSpacing = (s[39].v/100) + 'px'; } else { this.ctx.letterSpacing = 'normal'; }
+                
+                for(let line of node.layout.lines) {
+                    if(s[38]===1) line = line.toUpperCase();
+                    else if(s[38]===2) line = line.toLowerCase();
+                    else if(s[38]===3) line = line.replace(/\b\w/g, c => c.toUpperCase());
+                    
+                    let lx = rx;
+                    if(ta === 1) lx = rx + (node.layout.w - this.ctx.measureText(line).width) / 2;
+                    else if(ta === 2) lx = rx + node.layout.w - this.ctx.measureText(line).width;
+                    this.ctx.fillText(line, lx, lY);
+                    if(s[35]) {
+                        const tw = this.ctx.measureText(line).width;
+                        this.ctx.strokeStyle = this.ctx.fillStyle;
+                        this.ctx.lineWidth = 1;
+                        if(s[35] & 1) { this.ctx.beginPath(); this.ctx.moveTo(lx, lY+node.layout.fs+1); this.ctx.lineTo(lx+tw, lY+node.layout.fs+1); this.ctx.stroke(); }
+                        if(s[35] & 2) { this.ctx.beginPath(); this.ctx.moveTo(lx, lY+node.layout.fs*0.5); this.ctx.lineTo(lx+tw, lY+node.layout.fs*0.5); this.ctx.stroke(); }
+                    }
+                    lY += node.layout.lh;
+                }
+            }
+        }
+        
+        for(const c of node.children) this.paintNode(c, 0, 0);
+        
+        if (clipped) {
+            this.ctx.restore();
+        }
+    }
+
+    measureAndLayout() {
+        if(!this.root) return;
+        const dpr = window.devicePixelRatio || 1;
+        const w = this.canvas.parentElement.clientWidth || window.innerWidth;
+        
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset for measureText
+        
+        this.measureNode(this.root, w);
+        
+        // Calculate max Y for layoutHeight
+        let maxY = 0;
+        const findMaxY = (n) => {
+            if(!n) return;
+            const bottom = n.layout.y + n.layout.h + n.layout.mb;
+            if(bottom > maxY) maxY = bottom;
+            for(const c of n.children) findMaxY(c);
+        };
+        findMaxY(this.root);
+        this.layoutHeight = maxY;
+        
+        this.canvas.style.height = this.layoutHeight + 'px';
+        this.canvas.height = this.layoutHeight * dpr;
+        this.canvas.width = w * dpr;
+        this.canvas.style.width = w + 'px';
+    }
+
+    draw() {
+        if(!this.root) return;
+        const dpr = window.devicePixelRatio || 1;
+        
+        // Sync A11y DOM Overlay
+        const syncA11y = (node, accX, accY) => {
+            if(!node) return;
+            const rx = node.layout.x - accX;
+            const ry = node.layout.y - accY;
+            const dom = this.a11yNodes.get(node.id);
+            if (dom) {
+                dom.style.left = rx + 'px';
+                dom.style.top = ry + 'px';
+                dom.style.width = node.layout.w + 'px';
+                dom.style.height = node.layout.h + 'px';
+            }
+            const nScrollX = node.layout.scrollX || 0;
+            const nScrollY = node.layout.scrollY || 0;
+            for(const c of node.children) syncA11y(c, accX + nScrollX, accY + nScrollY);
+        };
+        syncA11y(this.root, 0, 0);
+        
+        
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
+        
+        // Native Scrolling Integration
+        this.ctx.save();
+        // Since the canvas is positioned statically and grows in height, 
+        // the browser natively scrolls it. We don't need ctx.translate if the canvas itself is long!
+        // But if the container is fixed and we use canvas scroll, we do.
+        // Assuming the canvas is full height:
+        
+        this.paintNode(this.root);
+        this.ctx.restore();
+    }
+    
+    hitTest(x, y) {
+        if(!this.root) return null;
+        let result = null;
+        const search = (node, accX, accY) => {
+            if(!node) return;
+            const l = node.layout;
+            const rx = l.x - accX;
+            const ry = l.y - accY;
+            
+            const s = this.blbMap[node.id] || {};
+            let isInside = (x >= rx && x <= rx + l.w && y >= ry && y <= ry + l.h);
+            
+            if (isInside) {
+                result = node;
+            } else if (s[32] === 1 || s[32] === 2) {
+                // If clipped and click is outside, children cannot be hit
+                return; 
+            }
+            
+            const nScrollX = node.layout.scrollX || 0;
+            const nScrollY = node.layout.scrollY || 0;
+            for(const c of node.children) search(c, accX + nScrollX, accY + nScrollY);
+        };
+        search(this.root, 0, 0);
+        return result;
+    }
+}
+
+function applyBLB(rootEl, blocks) {}
 function rgba(v){
     if(v===0)return'transparent';
     const r=(v>>>24)&0xFF,g=(v>>>16)&0xFF,b=(v>>>8)&0xFF,a=v&0xFF;
     return`rgba(${r},${g},${b},${(a/255).toFixed(2)})`;
 }
 
-function applyBLB(rootEl,blocks){
-    const allNodes=rootEl.querySelectorAll('.rendered-node');
-    const nodeList=[rootEl,...allNodes];
-    blocks.forEach(bl=>{
-        const el=nodeList[bl.nid];
-        if(!el)return;
-        const s=el.style;
-        if(bl.display!==undefined)s.display=DISPLAY[bl.display]||'';
-        if(bl.position>0)s.position=POSITION[bl.position];
-        if(bl.boxSizing)s.boxSizing='border-box';
-        if(bl.width!==0xFFFF)s.width=cssVal(bl.width);
-        if(bl.height!==0xFFFF)s.height=cssVal(bl.height);
-        if(bl.margin.t)s.marginTop=cssVal(bl.margin.t);
-        if(bl.margin.r)s.marginRight=cssVal(bl.margin.r);
-        if(bl.margin.b)s.marginBottom=cssVal(bl.margin.b);
-        if(bl.margin.l)s.marginLeft=cssVal(bl.margin.l);
-        if(bl.padding.t)s.paddingTop=cssVal(bl.padding.t);
-        if(bl.padding.r)s.paddingRight=cssVal(bl.padding.r);
-        if(bl.padding.b)s.paddingBottom=cssVal(bl.padding.b);
-        if(bl.padding.l)s.paddingLeft=cssVal(bl.padding.l);
-        if(bl.borderWidth.t||bl.borderWidth.r||bl.borderWidth.b||bl.borderWidth.l){
-            s.borderStyle='solid';
-            s.borderTopWidth=bl.borderWidth.t/10+'px';
-            s.borderRightWidth=bl.borderWidth.r/10+'px';
-            s.borderBottomWidth=bl.borderWidth.b/10+'px';
-            s.borderLeftWidth=bl.borderWidth.l/10+'px';
-            if(bl.borderColor)s.borderColor=rgba(bl.borderColor);
-        }
-        if(bl.bgColor)s.backgroundColor=rgba(bl.bgColor);
-        if(bl.color!==0x000000FF&&bl.color!==0)s.color=rgba(bl.color);
-        if(bl.fontSize!==160)s.fontSize=bl.fontSize/10+'px';
-        if(bl.fontWeight!==400)s.fontWeight=bl.fontWeight;
-        if(bl.lineHeight>0)s.lineHeight=bl.lineHeight/10+'px';
-        if(bl.textAlign>0)s.textAlign=TEXT_ALIGN[bl.textAlign];
-        if(bl.display===2||bl.display===6){
-            if(bl.flexDir>0)s.flexDirection=FLEX_DIR[bl.flexDir];
-            if(bl.flexWrap)s.flexWrap='wrap';
-            if(bl.justifyContent>0)s.justifyContent=JUSTIFY[bl.justifyContent];
-            if(bl.alignItems!==3)s.alignItems=ALIGN_ITEMS[bl.alignItems];
-        }
-        if(bl.gap>0)s.gap=bl.gap/10+'px';
-        if(bl.borderRadius>0)s.borderRadius=bl.borderRadius/10+'px';
-        if(bl.overflow>0)s.overflow=OVERFLOW[bl.overflow];
-        if(bl.opacity<255)s.opacity=(bl.opacity/255).toFixed(2);
-        if(bl.zIndex!==0)s.zIndex=bl.zIndex;
-    });
-}
-
 async function applyBIB(rootEl,images){
-    const canvases=rootEl.querySelectorAll('canvas[data-bind]');
-    const promises = Array.from(canvases).map(async cvs=>{
-        const id=parseInt(cvs.getAttribute('data-bind'));
+    const canvases = Array.from(rootEl.querySelectorAll('canvas')).filter(c => c.getAttribute('data-bind') || c.getAttribute('src'));
+    const promises = canvases.map(async cvs=>{
+        const rawId = cvs.getAttribute('data-bind') || cvs.getAttribute('src');
+        let id = rawId;
+        if(typeof rawId === 'string' && rawId.startsWith('bib://')) id = parseInt(rawId.split('://')[1], 10);
+        else id = parseInt(rawId, 10);
         const img=images[id];
         if(img){
             cvs.width=img.w;
             cvs.height=img.h;
             const ctx=cvs.getContext('2d');
-            const imgData=new ImageData(img.data,img.w,img.h);
-            const bitmap=await createImageBitmap(imgData);
-            ctx.drawImage(bitmap,0,0);
+            if (img.comp === 0) {
+                const imgData = new ImageData(new Uint8ClampedArray(img.data.buffer, img.data.byteOffset, img.w * img.h * 4), img.w, img.h);
+                ctx.putImageData(imgData, 0, 0);
+            } else {
+                const mime = img.comp === 1 ? 'image/png' : img.comp === 2 ? 'image/jpeg' : img.comp === 3 ? 'image/webp' : 'application/octet-stream';
+                const blob = new Blob([img.data], { type: mime });
+                const bitmap = await createImageBitmap(blob);
+                ctx.drawImage(bitmap, 0, 0);
+            }
         }
     });
     await Promise.all(promises);
@@ -889,1032 +1343,819 @@ function renderBDTTree(nodes){
     tv.innerHTML=html;
 }
 
+async function clientSideConvert(htmlMap) {
+    return new Promise(async (resolve, reject) => {
+        const enc=new TextEncoder();
+        const SKIP_TAGS=new Set(['script','style','noscript','template','iframe','object','embed','applet','link','meta','base','head','source','track','slot']);
+
+        function colorToU32(c) {
+            const m = c.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+            if (!m) return 0;
+            const r=parseInt(m[1]),g=parseInt(m[2]),b=parseInt(m[3]);
+            const a=m[4]!==undefined?Math.round(parseFloat(m[4])*255):255;
+            return((r<<24)|(g<<16)|(b<<8)|a)>>>0;
+        }
+        const DM={'block':0,'inline':1,'flex':2,'grid':3,'none':4,'inline-block':5,'inline-flex':6,'list-item':7,'table':8,'table-row':9,'table-cell':10,'inline-grid':11};
+        const PM_={'static':0,'relative':1,'absolute':2,'fixed':3,'sticky':4};
+        const TAM={'left':0,'center':1,'right':2,'justify':3,'start':0,'end':2};
+        const FDM={'row':0,'column':1,'row-reverse':2,'column-reverse':3};
+        const FWM={'nowrap':0,'wrap':1,'wrap-reverse':2};
+        const JCM={'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'space-between':3,'space-around':4,'space-evenly':5,'normal':0};
+        const AIM={'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'stretch':3,'baseline':4,'normal':3};
+
+        const extractedImages = [];
+        
+        async function snapshotSinglePage(htmlContent) {
+            return new Promise((res) => {
+                const iframe = document.createElement('iframe');
+                iframe.style.position = 'absolute';
+                iframe.style.height = '1080px';
+                iframe.style.opacity = '0';
+                iframe.style.pointerEvents = 'none';
+                document.body.appendChild(iframe);
+
+                const cleanHtml = htmlContent
+                    .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '')
+                    .replace(/\son[a-z]+\s*=\s*(['"])(.*?)\1/gi, '');
+
+                const blob = new Blob([cleanHtml], {type: 'text/html'});
+                iframe.src = URL.createObjectURL(blob);
+                iframe.onload = async () => {
+                    try {
+                        const doc = iframe.contentWindow.document;
+                        for (const imgEl of doc.querySelectorAll('img')) {
+                            const src = imgEl.src;
+                            if (src && !src.startsWith('bib://')) {
+                                if (!globalImages.has(src)) {
+                                    globalImages.set(src, { id: globalImages.size, url: src });
+                                }
+                            }
+                        }
+                        const fontsExtracted = [];
+                        try {
+                            for (const sheet of iframe.contentWindow.document.styleSheets) {
+                                try {
+                                    for (const rule of sheet.cssRules) {
+                                        if (rule instanceof CSSFontFaceRule) {
+                                            const family = rule.style.fontFamily.replace(/['"]/g, '');
+                                            const srcMatch = rule.style.src.match(/url\(['"]?(.*?)['"]?\)/);
+                                            if (srcMatch) {
+                                                const url = srcMatch[1];
+                                                let weight = 400;
+                                                if(rule.style.fontWeight === 'bold') weight = 700;
+                                                else if(parseInt(rule.style.fontWeight)) weight = parseInt(rule.style.fontWeight);
+                                                const style = rule.style.fontStyle === 'italic' ? 1 : 0;
+                                                fontsExtracted.push({ family, url, weight, style });
+                                            }
+                                        }
+                                    }
+                                } catch(e) {}
+                            }
+                        } catch(e) {}
+
+                        // Materialize ::before and ::after pseudo-elements as real DOM nodes
+                        const allEls = doc.body.querySelectorAll('*');
+                        for (const el of allEls) {
+                            for (const pseudo of ['::before', '::after']) {
+                                const ps = iframe.contentWindow.getComputedStyle(el, pseudo);
+                                const content = ps.content;
+                                if (!content || content === 'none' || content === 'normal') continue;
+                                const pNode = doc.createElement('span');
+                                pNode.setAttribute('data-pseudo', pseudo);
+                                pNode.style.cssText = `display:${ps.display};position:${ps.position};width:${ps.width};height:${ps.height};background-color:${ps.backgroundColor};background-image:${ps.backgroundImage};color:${ps.color};font-size:${ps.fontSize};font-weight:${ps.fontWeight};font-family:${ps.fontFamily};top:${ps.top};left:${ps.left};right:${ps.right};bottom:${ps.bottom};border-radius:${ps.borderRadius};opacity:${ps.opacity};z-index:${ps.zIndex};overflow:hidden;pointer-events:none;`;
+                                const textContent = content.replace(/^["']|["']$/g, '');
+                                if (textContent && textContent !== '""' && textContent !== "''") {
+                                    pNode.textContent = textContent;
+                                }
+                                if (pseudo === '::before') el.insertBefore(pNode, el.firstChild);
+                                else el.appendChild(pNode);
+                            }
+                        }
+
+                        // Wrap bare text nodes in spans so they get their own BLB entries with accurate absolute positions
+                        const tw = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null, false);
+                        const textNodesToWrap = [];
+                        while(tw.nextNode()) textNodesToWrap.push(tw.currentNode);
+                        for(const tn of textNodesToWrap) {
+                            if(tn.textContent.trim() && tn.parentNode) {
+                                const wrapper = doc.createElement('span');
+                                wrapper.style.cssText = 'display:inline;margin:0;padding:0;border:0;';
+                                tn.parentNode.insertBefore(wrapper, tn);
+                                wrapper.appendChild(tn);
+                            }
+                        }
+
+                        const bmlBuf=[];
+                        const flatNodes=[];
+
+                        function serNode(el,parentIdx){
+                            if(el.nodeType===3){
+                                const t=el.textContent.trim();
+                                if(!t)return;
+                                const textBytes=enc.encode(t + " ");
+                                bmlBuf.push(0xFD, 0, 0, 0);
+                                bmlBuf.push((textBytes.length>>8)&0xFF,textBytes.length&0xFF);
+                                for(const b of textBytes)bmlBuf.push(b);
+                                return;
+                            }
+                            if (el.nodeType !== 1) return;
+                            let tag=el.tagName?el.tagName.toLowerCase():'div';
+                            if(SKIP_TAGS.has(tag))return;
+                            if (tag === 'img') tag = 'canvas';
+                            const myIdx=flatNodes.length;
+                            flatNodes.push({node:el,tag:TAG_FWD[tag]||255,parentIdx,children:[],id:myIdx});
+                            if(parentIdx>=0) flatNodes[parentIdx].children.push(myIdx);
+                            const attrs=[];
+                            for(const a of el.attributes){
+                                if (el.tagName && el.tagName.toLowerCase() === 'img' && a.name === 'src') {
+                                    if(globalImages.has(a.value)) {
+                                        attrs.push({id:ATTR_FWD['src']||19,val:enc.encode(`bib://${globalImages.get(a.value).id}`)});
+                                    }
+                                    continue;
+                                }
+                                if(a.name === 'data-bib') {
+                                    attrs.push({id:ATTR_FWD['src']||19,val:enc.encode(`bib://${a.value}`)});
+                                    continue;
+                                }
+                                const aid=ATTR_FWD[a.name];
+                                if(aid!==undefined){
+                                    attrs.push({id:aid,val:enc.encode(a.value)});
+                                } else if(a.name === 'href') {
+                                    attrs.push({id:ATTR_FWD['href']||18,val:enc.encode(a.value)});
+                                }
+                            }
+                            let nChild=0;
+                            for(const ch of el.childNodes){
+                                if(ch.nodeType===3&&ch.textContent.trim())nChild++;
+                                else if(ch.nodeType===1){const ct=ch.tagName?ch.tagName.toLowerCase():'';if(!SKIP_TAGS.has(ct))nChild++;}
+                            }
+                            bmlBuf.push(TAG_FWD[tag]||255);
+                            bmlBuf.push(attrs.length);
+                            bmlBuf.push((nChild>>8)&0xFF,nChild&0xFF);
+                            bmlBuf.push(0,0);
+                            for(const a of attrs){
+                                bmlBuf.push(a.id);
+                                bmlBuf.push((a.val.length>>8)&0xFF,a.val.length&0xFF);
+                                for(const b of a.val)bmlBuf.push(b);
+                            }
+                            for(const ch of el.childNodes) serNode(ch,myIdx);
+                        }
+                        
+                        serNode(doc.body,-1);
+                        
+                        const bdtBuf=new ArrayBuffer(4+4+flatNodes.length*16);
+                        const bdtView=new DataView(bdtBuf);
+                        bdtView.setUint8(0,0x42);bdtView.setUint8(1,0x44);bdtView.setUint8(2,0x54);bdtView.setUint8(3,0x01);
+                        bdtView.setUint32(4,flatNodes.length);
+                        const depths=new Array(flatNodes.length).fill(0);
+                        for(let i=0;i<flatNodes.length;i++){if(flatNodes[i].parentIdx>=0)depths[i]=depths[flatNodes[i].parentIdx]+1;}
+                        for(let i=0;i<flatNodes.length;i++){
+                            const off=8+i*16;
+                            const n=flatNodes[i];
+                            bdtView.setUint16(off,i);
+                            bdtView.setUint16(off+2,n.parentIdx>=0?n.parentIdx:0xFFFF);
+                            bdtView.setUint16(off+4,n.children.length?n.children[0]:0xFFFF);
+                            let ns=0xFFFF,ps=0xFFFF;
+                            if(n.parentIdx>=0){
+                                const siblings=flatNodes[n.parentIdx].children;
+                                const myPos=siblings.indexOf(i);
+                                if(myPos>=0&&myPos<siblings.length-1)ns=siblings[myPos+1];
+                                if(myPos>0)ps=siblings[myPos-1];
+                            }
+                            bdtView.setUint16(off+6,ns);
+                            bdtView.setUint16(off+8,n.children.length?n.children[n.children.length-1]:0xFFFF);
+                            bdtView.setUint16(off+10,ps);
+                            bdtView.setUint8(off+12,1);
+                            bdtView.setUint8(off+13,n.tag);
+                            bdtView.setUint8(off+14,depths[i]);
+                        }
+
+
+                        function parseUnitValue(val) {
+                            if(!val || val==='auto' || val==='none') return {u:4, v:0};
+                            if(val.endsWith('%')) return {u:1, v:Math.round(parseFloat(val)*10)};
+                            if(val.endsWith('vw')) return {u:2, v:Math.round(parseFloat(val)*10)};
+                            if(val.endsWith('vh')) return {u:3, v:Math.round(parseFloat(val)*10)};
+                            const n = parseFloat(val);
+                            return isNaN(n) ? {u:4, v:0} : {u:0, v:Math.round(n*10)};
+                        }
+
+                        const extractBLB = () => {
+                            const blbBuf = new ArrayBuffer(50 * 1024 * 1024); // 50MB to fit large base64 background images
+                            const blbView = new DataView(blbBuf);
+                            blbView.setUint32(0, flatNodes.length);
+                            let off = 4;
+                            for(let i=0; i<flatNodes.length; i++){
+                                const n = flatNodes[i].node;
+                                blbView.setUint16(off, flatNodes[i].id); off += 2;
+                                if(n.nodeType!==1) { blbView.setUint8(off++, 0); continue; }
+                                const s = iframe.contentWindow.getComputedStyle(n);
+                                const props = [];
+                                const addDim = (tag, cssProp) => {
+                                    const raw = s[cssProp]; // ALWAYS use computed px
+                                    const {u,v} = parseUnitValue(raw);
+                                    if(u!==4 || (tag===1 || tag===2)) props.push({tag, type:0, len:5, write:(vwr, o)=>{ vwr.setUint8(o, u); vwr.setInt32(o+1, v); }});
+                                };
+                                const addEnum = (tag, val) => { if(val!==undefined) props.push({tag, type:1, len:1, write:(vwr, o)=>vwr.setUint8(o, val)}); };
+                                const addColor = (tag, val) => {
+                                    const c = colorToU32(val);
+                                    if(c!==0) props.push({tag, type:2, len:4, write:(vwr, o)=>vwr.setUint32(o, c)});
+                                };
+                                addDim(1, 'width'); addDim(2, 'height'); addDim(3, 'minWidth'); addDim(4, 'minHeight');
+                                addEnum(5, DM[s.display]); addEnum(6, PM_[s.position]); addEnum(7, s.boxSizing==='border-box'?1:0);
+                                addDim(8, 'marginTop'); addDim(9, 'marginRight'); addDim(10, 'marginBottom'); addDim(11, 'marginLeft');
+                                addDim(12, 'paddingTop'); addDim(13, 'paddingRight'); addDim(14, 'paddingBottom'); addDim(15, 'paddingLeft');
+                                addColor(16, s.borderColor); addColor(17, s.backgroundColor); addColor(18, s.color);
+                                addDim(19, 'fontSize'); addDim(20, 'lineHeight');
+                                props.push({tag: 21, type:1, len:2, write:(vwr,o)=>vwr.setUint16(o, parseInt(s.fontWeight)||400)});
+                                addEnum(22, TAM[s.textAlign]);
+                                if (DM[s.display]===2 || DM[s.display]===6 || DM[s.display]===11) { 
+                                    addEnum(23, FDM[s.flexDirection]);
+                                    addEnum(24, FWM[s.flexWrap]);
+                                    addEnum(25, JCM[s.justifyContent]);
+                                    addEnum(26, AIM[s.alignItems]||0);
+                                    props.push({tag:27, type:1, len:2, write:(vwr,o)=>vwr.setUint16(o, Math.round(parseFloat(s.flexGrow||0)*100))});
+                                    props.push({tag:28, type:1, len:2, write:(vwr,o)=>vwr.setUint16(o, Math.round(parseFloat(s.flexShrink||1)*100))});
+                                    addDim(30, 'gap');
+                                }
+                                addDim(31, 'borderRadius');
+                                const ovMap={'visible':0,'hidden':1,'scroll':2,'auto':3};
+                                addEnum(32, ovMap[s.overflow]||0);
+                                const ff=s.fontFamily;
+                                if(ff){const ffClean=ff.split(',')[0].replace(/['"]/g,'').trim();const ffB=enc.encode(ffClean);props.push({tag:33,type:3,len:4+ffB.length,write:(vwr,o)=>{vwr.setUint32(o,ffB.length);new Uint8Array(vwr.buffer).set(ffB,o+vwr.byteOffset+4);}});}
+                                const opVal=parseFloat(s.opacity);if(opVal<1.0)props.push({tag:34,type:1,len:1,write:(vwr,o)=>vwr.setUint8(o,Math.round(opVal*255))});
+                                const tdLine=s.textDecorationLine||s.textDecoration||'';if(tdLine!=='none'&&tdLine!==''){let tdV=0;if(tdLine.includes('underline'))tdV|=1;if(tdLine.includes('line-through'))tdV|=2;if(tdV)props.push({tag:35,type:1,len:1,write:(vwr,o)=>vwr.setUint8(o,tdV)});}
+                                const bs=s.boxShadow;if(bs&&bs!=='none'){const bsB=enc.encode(bs);props.push({tag:36,type:3,len:4+bsB.length,write:(vwr,o)=>{vwr.setUint32(o,bsB.length);new Uint8Array(vwr.buffer).set(bsB,o+vwr.byteOffset+4);}});}
+                                const bi=s.backgroundImage;if(bi&&bi!=='none'){const biB=enc.encode(bi);props.push({tag:37,type:3,len:4+biB.length,write:(vwr,o)=>{vwr.setUint32(o,biB.length);new Uint8Array(vwr.buffer).set(biB,o+vwr.byteOffset+4);}});}
+                                const ttMap={'none':0,'uppercase':1,'lowercase':2,'capitalize':3};if(s.textTransform&&ttMap[s.textTransform]){props.push({tag:38,type:1,len:1,write:(vwr,o)=>vwr.setUint8(o,ttMap[s.textTransform])});}
+                                const ls=parseFloat(s.letterSpacing);if(!isNaN(ls)&&ls!==0){props.push({tag:39,type:0,len:5,write:(vwr,o)=>{vwr.setUint8(o,0);vwr.setInt32(o+1,Math.round(ls*100));}});}
+                                addDim(40, 'top'); addDim(41, 'right'); addDim(42, 'bottom'); addDim(43, 'left');
+                                if(s.zIndex&&s.zIndex!=='auto'){const zi=parseInt(s.zIndex);if(!isNaN(zi))props.push({tag:44,type:1,len:2,write:(vwr,o)=>vwr.setInt16(o,zi)});}
+                                if(s.visibility==='hidden')addEnum(45, 1);
+                                
+                                const rect=n.getBoundingClientRect();
+                                props.push({tag:46,type:0,len:5,write:(vwr,o)=>{vwr.setUint8(o,0);vwr.setInt32(o+1,Math.round(rect.left*10))}});
+                                props.push({tag:47,type:0,len:5,write:(vwr,o)=>{vwr.setUint8(o,0);vwr.setInt32(o+1,Math.round(rect.top*10))}});
+                                props.push({tag:48,type:0,len:5,write:(vwr,o)=>{vwr.setUint8(o,0);vwr.setInt32(o+1,Math.round(rect.width*10))}});
+                                props.push({tag:49,type:0,len:5,write:(vwr,o)=>{vwr.setUint8(o,0);vwr.setInt32(o+1,Math.round(rect.height*10))}});
+                                
+                                blbView.setUint8(off++, props.length);
+                                for(const p of props) {
+                                    blbView.setUint8(off++, p.tag);
+                                    blbView.setUint8(off++, p.type);
+                                    p.write(blbView, off); off += p.len;
+                                }
+                            }
+                            return blbBuf.slice(0, off);
+                        };
+
+                        const runViewport = (width) => new Promise(resolvePass => {
+                            iframe.style.width = width + 'px';
+                            setTimeout(() => {
+                                resolvePass(extractBLB());
+                            }, 100);
+                        });
+
+                        const blbDesktop = await runViewport(1920);
+                        const blbTablet = await runViewport(768);
+                        const blbMobile = await runViewport(375);
+                        
+                        const bmlData = new Uint8Array([0x42,0x4D,0x4C,0x01, ...bmlBuf]);
+                        document.body.removeChild(iframe);
+                        
+                        res({ bml: bmlData, bdt: bdtBuf, blbDesktop, blbTablet, blbMobile, fontsExtracted });
+                    } catch(e) {
+                        console.error(e);
+                        res(null);
+                    }
+                };
+            });
+        }
+
+        const vfsBlocks = [];
+        const globalFonts = new Map();
+        const globalImages = new Map();
+        const toc = {};
+        
+        let fileIndex = 0;
+        const htmlKeys = typeof htmlMap === 'object' ? Object.keys(htmlMap) : [];
+        if (htmlKeys.length === 0 && typeof htmlMap === 'string') {
+            htmlKeys.push('index.html');
+            htmlMap = { 'index.html': htmlMap };
+        }
+
+        for (let path of htmlKeys) {
+            updateLoader(50 + (fileIndex/htmlKeys.length)*30, "VFS Compilation", `Kompiliere Seite ${path}...`);
+            const snap = await snapshotSinglePage(htmlMap[path]);
+            if (snap) {
+                // Normalize path
+                if(!path.startsWith('/')) path = '/' + path;
+                toc[path] = { index: fileIndex };
+                vfsBlocks.push(snap);
+                fileIndex++;
+            }
+        }
+
+        const tocBytes = enc.encode(JSON.stringify(toc));
+        let secCount = 1 + (vfsBlocks.length * 5);
+        
+        const sections = [];
+        function appendSection(type, data) {
+            const head = new DataView(new ArrayBuffer(5));
+            head.setUint8(0, type);
+            head.setUint32(1, data.byteLength || data.length);
+            sections.push(new Uint8Array(head.buffer));
+            sections.push(new Uint8Array(data));
+            return 5 + (data.byteLength || data.length);
+        }
+
+        let archiveSize = 6;
+        
+        // Custom TOC Header: "VFS\x01" at the beginning of the TOC block
+        const tocHeader = new Uint8Array([0x56, 0x46, 0x53, 0x01]);
+        const tocPayload = new Uint8Array(4 + tocBytes.length);
+        tocPayload.set(tocHeader, 0);
+        tocPayload.set(tocBytes, 4);
+        
+        archiveSize += appendSection(9, tocPayload);
+        
+        
+        const validImages = [];
+        for (const img of Array.from(globalImages.values())) {
+            try {
+                const fr = await fetch(img.url);
+                if (fr.ok) {
+                    const blob = await fr.blob();
+                    const buf = await blob.arrayBuffer();
+                    let comp = 0;
+                    if(blob.type.includes('png')) comp=1;
+                    else if(blob.type.includes('jpeg')) comp=2;
+                    else if(blob.type.includes('webp')) comp=3;
+                    
+                    const imgEl = new Image();
+                    imgEl.src = URL.createObjectURL(blob);
+                    await new Promise(r => { imgEl.onload = r; imgEl.onerror = r; });
+                    
+                    validImages.push({
+                        id: img.id,
+                        w: imgEl.naturalWidth || 0,
+                        h: imgEl.naturalHeight || 0,
+                        comp,
+                        data: new Uint8Array(buf)
+                    });
+                }
+            } catch(e) {}
+        }
+        
+        let bibBuf = null;
+        if (validImages.length > 0) {
+            let totalBytes = 8;
+            for(const img of validImages) totalBytes += 24 + 2 + 4 + img.data.byteLength;
+            const bibArr = new ArrayBuffer(totalBytes);
+            const v = new DataView(bibArr);
+            v.setUint8(0, 0x42); v.setUint8(1, 0x49); v.setUint8(2, 0x42); v.setUint8(3, 0x01); // BIB
+            v.setUint32(4, validImages.length);
+            let off = 8;
+            for(const img of validImages) {
+                v.setUint32(off, img.id); off+=4;
+                v.setUint16(off, img.w); off+=2;
+                v.setUint16(off, img.h); off+=2;
+                v.setUint8(off++, 1); // RGBA type
+                v.setUint8(off++, img.comp); // Compression
+                off+=6; // Padding
+                v.setUint16(off, 0); off+=2; // Block Count
+                v.setUint32(off, img.data.byteLength); off+=4;
+                const srcView = img.data;
+                for(let i=0; i<srcView.length; i++) v.setUint8(off++, srcView[i]);
+            }
+            bibBuf = bibArr;
+        }
+
+        let bfbBuf = null;
+        if (globalFonts.size > 0) {
+            const fontList = Array.from(globalFonts.values());
+            let totalFontBytes = 0;
+            for(const f of fontList) {
+                try {
+                    const fr = await fetch(f.url);
+                    if(fr.ok) {
+                        f.data = await fr.arrayBuffer();
+                        totalFontBytes += f.data.byteLength;
+                    }
+                } catch(e) {}
+            }
+            
+            const validFonts = fontList.filter(f => f.data);
+            if (validFonts.length > 0) {
+                const bfbSize = 8 + validFonts.reduce((acc, f) => acc + 2 + 1 + f.family.length + 2 + 1 + 1 + 4 + f.data.byteLength, 0);
+                const bfbArr = new ArrayBuffer(bfbSize);
+                const v = new DataView(bfbArr);
+                v.setUint8(0, 0x42); v.setUint8(1, 0x46); v.setUint8(2, 0x53); v.setUint8(3, 0x01); // BFS
+                v.setUint32(4, validFonts.length);
+                let off = 8;
+                for(let i=0; i<validFonts.length; i++) {
+                    const f = validFonts[i];
+                    v.setUint16(off, i); off += 2;
+                    const famBytes = new TextEncoder().encode(f.family);
+                    v.setUint8(off++, famBytes.length);
+                    for(const b of famBytes) v.setUint8(off++, b);
+                    v.setUint16(off, f.weight); off += 2;
+                    v.setUint8(off++, f.style);
+                    v.setUint8(off++, 0); // format woff2=0
+                    v.setUint32(off, f.data.byteLength); off += 4;
+                    const srcView = new Uint8Array(f.data);
+                    for(const b of srcView) v.setUint8(off++, b);
+                }
+                bfbBuf = bfbArr;
+            }
+        }
+
+        for(const vfs of vfsBlocks) {
+            archiveSize += appendSection(1, vfs.bml);
+            archiveSize += appendSection(2, vfs.bdt);
+            archiveSize += appendSection(7, vfs.blbDesktop);
+            archiveSize += appendSection(8, vfs.blbTablet);
+            archiveSize += appendSection(10, vfs.blbMobile);
+        }
+        if (bfbBuf) {
+            archiveSize += appendSection(11, bfbBuf);
+        }
+        if (bibBuf) {
+            archiveSize += appendSection(4, bibBuf);
+        }
+
+        const bwebBuf = new ArrayBuffer(archiveSize);
+        const bwebView = new Uint8Array(bwebBuf);
+        bwebView.set([0x42, 0x57, 0x45, 0x42, 0x01, secCount], 0);
+        let curOffset = 6;
+        for(const chunk of sections) {
+            bwebView.set(chunk, curOffset);
+            curOffset += chunk.length;
+        }
+
+        updateLoader(90, "Zusammenbau", `VFS TOC erstellt: ${Object.keys(toc).length} Seiten, ${archiveSize} Bytes`);
+        resolve(bwebBuf);
+    });
+}
+
+
+function parseBIB(buf) {
+    const view = new DataView(buf);
+    let off = 4; // skip BIB\x01
+    const count = view.getUint32(off); off+=4;
+    const images = {};
+    for(let i=0; i<count; i++){
+        const id = view.getUint32(off); off+=4;
+        const w = view.getUint16(off); off+=2;
+        const h = view.getUint16(off); off+=2;
+        const type = view.getUint8(off++);
+        const comp = view.getUint8(off++);
+        off += 6; // padding
+        const bCount = view.getUint16(off); off+=2; // block count usually 0
+        const pLen = view.getUint32(off); off+=4;
+        const payload = new Uint8Array(buf, off, pLen);
+        off += pLen;
+        images[id] = {id, w, h, comp, data: payload};
+    }
+    return images;
+}
+
+async function prepareGlobalBIB(bibBufs) {
+    window.bwebBIB = {};
+    if(!bibBufs) return;
+    for (const buf of bibBufs) {
+        const parsed = parseBIB(buf);
+        for(const [id, img] of Object.entries(parsed)) {
+            if (img.comp === 0) {
+                const imgData = new ImageData(new Uint8ClampedArray(img.data.buffer, img.data.byteOffset, img.w * img.h * 4), img.w, img.h);
+                const tcvs = document.createElement('canvas');
+                tcvs.width = img.w; tcvs.height = img.h;
+                tcvs.getContext('2d').putImageData(imgData, 0, 0);
+                window.bwebBIB[id] = tcvs;
+            } else {
+                const mime = img.comp === 1 ? 'image/png' : img.comp === 2 ? 'image/jpeg' : img.comp === 3 ? 'image/webp' : 'application/octet-stream';
+                const blob = new Blob([img.data], { type: mime });
+                window.bwebBIB[id] = await createImageBitmap(blob);
+            }
+        }
+    }
+}
+
 function parseBWEB(buf){
     const u8=new Uint8Array(buf);
     const magic=String.fromCharCode(u8[0],u8[1],u8[2],u8[3]);
     if(magic==='BWEB'){
         const version=u8[4],secCount=u8[5];
-        let off=6;const sections={};
+        let off=6;
+        const sections={ vfs: [] };
+        let currentVfs = null;
+
         for(let i=0;i<secCount;i++){
             if(off>=u8.length) break;
             const secType=u8[off++];
             const secLen=new DataView(buf).getUint32(off);off+=4;
-            sections[secType]=buf.slice(off,off+secLen);
+            const chunk = buf.slice(off,off+secLen);
             off+=secLen;
+
+            if (secType === 9) { // TOC
+                sections[9] = chunk;
+            } else if (secType === 1) {
+                currentVfs = { bml: chunk };
+            } else if (secType === 2 && currentVfs) {
+                currentVfs.bdt = chunk;
+            } else if (secType === 7 && currentVfs) {
+                currentVfs.blbDesktop = chunk;
+            } else if (secType === 8 && currentVfs) {
+                currentVfs.blbTablet = chunk;
+            } else if (secType === 10 && currentVfs) {
+                currentVfs.blbMobile = chunk;
+                sections.vfs.push(currentVfs);
+                currentVfs = null;
+            } else if (secType === 11) {
+                if(!sections[11]) sections[11] = [];
+                sections[11].push(chunk);
+            } else {
+                if(!sections[secType]) sections[secType] = [];
+                sections[secType].push(chunk);
+            }
         }
         return sections;
     }
-    if(u8[0]===0x42&&u8[1]===0x4D&&u8[2]===0x4C) return{1:buf};
-    return{1:buf};
+    if(u8[0]===0x42&&u8[1]===0x4D&&u8[2]===0x4C) return{1:[buf], vfs:[{bml:buf}]};
+    return{1:[buf], vfs:[{bml:buf}]};
 }
+
+let currentVFSMap = {};
+let globalEngine = null;
+let currentBMLRoot = null;
+
+let cachedFlatBML=null,cachedBMLRoot=null;
+function findBMLElementForNode(id, el) {
+    if(!el) return null;
+    if(el!==cachedBMLRoot){
+        cachedBMLRoot=el;
+        cachedFlatBML=[];
+        const flatten=(n)=>{
+            if(!n.isText) cachedFlatBML.push(n);
+            if(n.children) for(const ch of n.children) flatten(ch);
+        };
+        flatten(el);
+    }
+    return cachedFlatBML[id]||null;
+}
+
+async function loadPage(path) {
+    if (!currentVFSMap[path]) {
+        console.warn("VFS: Page not found:", path);
+        // Fallback to first page if not found
+        path = Object.keys(currentVFSMap)[0];
+        if(!path) return;
+    }
+    
+    const vfsData = window.bwebVFS[currentVFSMap[path].index];
+    if (!vfsData) return;
+
+    window.history.pushState({path}, "", path);
+    updateLoader(100, "VFS Routing", `Lade Seite: ${path}`);
+
+    // 1. Parse BML
+    let bmlStart=0;
+    const bmlView=new Uint8Array(vfsData.bml);
+    if(bmlView[0]===0x42&&bmlView[1]===0x4D&&bmlView[2]===0x4C)bmlStart=4;
+    const parser=new BMLParser(vfsData.bml, bmlStart);
+    currentBMLRoot = parser.parse();
+
+    // 2. Parse BDT
+    let bdtNodes = null;
+    if(vfsData.bdt){
+        bdtNodes = parseBDT(vfsData.bdt);
+        renderBDTTree(bdtNodes);
+    }
+
+    // 3. Parse BLBs
+    let blbs = {};
+    if(vfsData.blbDesktop) blbs.desktop = parseBLB(vfsData.blbDesktop);
+    if(vfsData.blbTablet) blbs.tablet = parseBLB(vfsData.blbTablet);
+    if(vfsData.blbMobile) blbs.mobile = parseBLB(vfsData.blbMobile);
+
+    // 4. Update Engine
+    const canvasContainer = document.getElementById('renderTarget');
+    if (!globalEngine) {
+        globalEngine = new CanvasEngine();
+        globalEngine.mount(canvasContainer);
+        
+        // --- VFS Router Hit-Testing ---
+        globalEngine.canvas.addEventListener('click', (e) => {
+            const rect = globalEngine.canvas.getBoundingClientRect();
+            const scaleX = globalEngine.canvas.width / rect.width;
+            const scaleY = globalEngine.canvas.height / rect.height;
+            const cx = (e.clientX - rect.left) * scaleX;
+            // Native scrolling means e.clientY is relative to the canvas's visible top,
+            // but the canvas itself is very tall.
+            // Wait, rect.top already accounts for scroll! So e.clientY - rect.top is the exact Y position inside the canvas, even if scrolled!
+            const cy = (e.clientY - rect.top) * scaleY;
+            
+            const hitNode = globalEngine.hitTest(cx, cy);
+            if (hitNode) {
+                const el = findBMLElementForNode(hitNode.id, currentBMLRoot);
+                if (el && el.attributes) {
+                    const hrefAttr = el.attributes.find(a => a.id === 18 || a.id === ATTR_FWD['href']); 
+                    if (hrefAttr) {
+                        const hrefStr = new TextDecoder().decode(hrefAttr.val);
+                        let newPath = hrefStr;
+                        if (!newPath.startsWith('/')) {
+                            const parts = window.location.pathname.split('/');
+                            parts.pop();
+                            parts.push(newPath);
+                            newPath = parts.join('/');
+                            newPath = newPath.replace(/\/\//g, '/');
+                        }
+                        newPath = newPath.split('?')[0].split('#')[0];
+                        if(!newPath.startsWith('/')) newPath = '/' + newPath;
+                        if (currentVFSMap[newPath]) {
+                            showLoader("VFS Router", "Navigiere...");
+                            setTimeout(() => loadPage(newPath), 50);
+                        }
+                    }
+                }
+            }
+        });
+
+                globalEngine.canvas.addEventListener('wheel', (e) => {
+            const rect = globalEngine.canvas.getBoundingClientRect();
+            const scaleX = globalEngine.canvas.width / rect.width;
+            const scaleY = globalEngine.canvas.height / rect.height;
+            const cx = (e.clientX - rect.left) * scaleX;
+            const cy = (e.clientY - rect.top) * scaleY;
+            
+            let hitNode = globalEngine.hitTest(cx, cy);
+            let scrolled = false;
+            while(hitNode) {
+                const s = globalEngine.blbMap[hitNode.id] || {};
+                if (s[32] === 2 || s[32] === 3) { // scroll or auto
+                    hitNode.layout.scrollY = (hitNode.layout.scrollY || 0) + e.deltaY;
+                    if(hitNode.layout.scrollY < 0) hitNode.layout.scrollY = 0;
+                    const maxScroll = Math.max(0, hitNode.layout.innerH - hitNode.layout.h);
+                    if(hitNode.layout.scrollY > maxScroll) hitNode.layout.scrollY = maxScroll;
+                    scrolled = true;
+                    e.preventDefault();
+                    break;
+                }
+                
+                // traverse up BDT parents
+                if(hitNode.parentIdx !== undefined && hitNode.parentIdx >= 0) {
+                    // wait, hitNode in CanvasEngine doesn't have parent pointer by default, let's add it in update()
+                    hitNode = hitNode.parent;
+                } else {
+                    hitNode = null;
+                }
+            }
+            if(scrolled) globalEngine.draw();
+        }, {passive: false});
+
+        globalEngine.canvas.addEventListener('mousemove', (e) => {
+            const rect = globalEngine.canvas.getBoundingClientRect();
+            const scaleX = globalEngine.canvas.width / rect.width;
+            const scaleY = globalEngine.canvas.height / rect.height;
+            const cx = (e.clientX - rect.left) * scaleX;
+            const cy = (e.clientY - rect.top) * scaleY;
+            
+            const hitNode = globalEngine.hitTest(cx, cy);
+            let isInteractive = false;
+            let needsRedraw = false;
+            const clearHover = (n) => {
+                if(!n) return;
+                if(n.isHovered) { n.isHovered = false; needsRedraw = true; }
+                for(const c of n.children) clearHover(c);
+            };
+            clearHover(globalEngine.root);
+            
+            if (hitNode) {
+                const el = findBMLElementForNode(hitNode.id, currentBMLRoot);
+                if (el && el.attributes) {
+                    if (el.attributes.find(a => a.id === 18 || a.id === ATTR_FWD['href'])) isInteractive = true;
+                }
+                hitNode.isHovered = true;
+                needsRedraw = true;
+            }
+            globalEngine.canvas.style.cursor = isInteractive ? 'pointer' : 'default';
+            if(needsRedraw) globalEngine.draw();
+        });
+    }
+
+    if(currentBMLRoot && blbs.desktop) {
+        globalEngine.update(currentBMLRoot, bdtNodes, blbs);
+    }
+    
+    setTimeout(() => hideLoader(), 200);
+}
+
+window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.path) loadPage(e.state.path);
+});
 
 async function renderBinary(buf){
     const t0=performance.now();
     const sections=parseBWEB(buf);
-
-    const bmlBuf=sections[1];
-    const bdtBuf=sections[2];
-    const blbBuf=sections[3];
-
-    let rootEl=null,blbBlocks=null;
-
-    if(bmlBuf){
-        const bmlView=new Uint8Array(bmlBuf);
-        let bmlStart=0;
-        if(bmlView[0]===0x42&&bmlView[1]===0x4D&&bmlView[2]===0x4C)bmlStart=4;
-        const parser=new BMLParser(bmlBuf,bmlStart);
-        rootEl=parser.parseNode();
-    }
-
-    if(bdtBuf){
-        const bdtView=new Uint8Array(bdtBuf);
-        let bdtStart=0;
-        if(bdtView[0]===0x42&&bdtView[1]===0x44&&bdtView[2]===0x54)bdtStart=4;
-        bdtNodes=new BDTParser(bdtBuf,bdtStart).parse();
-    }
-
-    if(blbBuf&&rootEl){
-        const blbView=new Uint8Array(blbBuf);
-        let blbStart=0;
-        if(blbView[0]===0x42&&blbView[1]===0x4C&&blbView[2]===0x42)blbStart=4;
-        blbBlocks=new BLBParser(blbBuf,blbStart).parse();
-        applyBLB(rootEl,blbBlocks);
-    }
-
-    if(sections[4]&&rootEl){
-        const bibBuf=sections[4];
-        const bibView=new Uint8Array(bibBuf);
-        let bibStart=0;
-        if(bibView[0]===0x42&&bibView[1]===0x49&&bibView[2]===0x42)bibStart=4;
-        const images=new BIBParser(bibBuf,bibStart).parse();
-        await applyBIB(rootEl,images);
-    }
-
-    if(sections[5]&&rootEl){
-        const bvsBuf=sections[5];
-        const bvsView=new Uint8Array(bvsBuf);
-        let bvsStart=0;
-        if(bvsView[0]===0x42&&bvsView[1]===0x56&&bvsView[2]===0x53)bvsStart=4;
-        const videos=new BVSParser(bvsBuf,bvsStart).parse();
-        await applyBVS(rootEl,videos);
-    }
-
-    if(sections[6]&&rootEl){
-        const basBuf=sections[6];
-        const basView=new Uint8Array(basBuf);
-        let basStart=0;
-        if(basView[0]===0x42&&basView[1]===0x41&&basView[2]===0x53)basStart=4;
-        const audios=new BASParser(basBuf,basStart).parse();
-        await applyBAS(rootEl,audios);
-    }
-
-    const target=document.getElementById('renderTarget');
-    const empty=document.getElementById('viewportEmpty');
-    target.innerHTML='';
-    if(rootEl){
-        target.appendChild(rootEl);
-        empty.style.display='none';
-    }
-
-    const t1=performance.now();
-
-    document.getElementById('statsGrid').style.display='';
-    document.getElementById('statTotal').textContent=buf.byteLength+' B';
-    document.getElementById('statTime').textContent=(t1-t0).toFixed(2)+' ms';
-    document.getElementById('statBml').textContent=bmlBuf?bmlBuf.byteLength+' B':'–';
-    document.getElementById('statBdt').textContent=bdtBuf?bdtBuf.byteLength+' B':'–';
-    document.getElementById('statBlb').textContent=blbBuf?blbBuf.byteLength+' B':'–';
-    document.getElementById('statBib').textContent=sections[4]?sections[4].byteLength+' B':'–';
-    document.getElementById('statBvs').textContent=sections[5]?sections[5].byteLength+' B':'–';
-    document.getElementById('statBas').textContent=sections[6]?sections[6].byteLength+' B':'–';
-    document.getElementById('statNodes').textContent=bdtNodes?bdtNodes.length:'–';
-
-    if(bmlBuf&&bdtBuf&&blbBuf){
-        const total=buf.byteLength;
-        const bibBuf=sections[4];
-        const bvsBuf=sections[5];
-        const basBuf=sections[6];
-        const map=document.getElementById('sectionMap');
-        map.style.display='';
-        const bar=document.getElementById('sectionBar');
-        bar.innerHTML=`<div class="sec-bml" style="width:${bmlBuf.byteLength/total*100}%"></div><div class="sec-bdt" style="width:${bdtBuf.byteLength/total*100}%"></div><div class="sec-blb" style="width:${blbBuf.byteLength/total*100}%"></div>`+(bibBuf?`<div class="sec-bib" style="width:${bibBuf.byteLength/total*100}%"></div>`:'')+(bvsBuf?`<div class="sec-bvs" style="width:${bvsBuf.byteLength/total*100}%; background:#d946ef"></div>`:'')+(basBuf?`<div class="sec-bas" style="width:${basBuf.byteLength/total*100}%; background:#eab308"></div>`:'');
-    }
-
-    renderBDTTree(bdtNodes);
-
-    // Show viewport action bar and update stats
-    const actions = document.getElementById('viewportActions');
-    const statsEl = document.getElementById('viewportStats');
-    if (actions && statsEl && buf) {
-        actions.style.display = 'flex';
-        const kb = (buf.byteLength / 1024).toFixed(1);
-        statsEl.innerHTML = `⚡ ${kb} KB | ${bdtNodes ? bdtNodes.length : 0} Nodes`;
-    }
-}
-
-let lastBweb=null;
-let currentSessionId=null;
-let bdtNodes=null;
-
-document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('fileInput').click());
-document.getElementById('fileInput').addEventListener('change',e=>{
-    const f=e.target.files[0];if(!f)return;
-    f.arrayBuffer().then(async buf=>await renderBinary(buf));
-});
-const dz=document.getElementById('dropZone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
-dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-dz.addEventListener('drop',async(e)=>{
-    e.preventDefault();
-    dz.classList.remove('drag-over');
     
-    // Check if dynamic directory entry dropping is supported
-    const items = Array.from(e.dataTransfer.items || []);
-    if (items.length > 0) {
-        const entry = typeof items[0].webkitGetAsEntry === 'function' ? items[0].webkitGetAsEntry() : null;
-        if (entry && entry.isDirectory) {
-            const files = [];
-            await readEntryRecursively(entry, '', files);
-            if (files.length > 0) {
-                await compileFilesList(files);
-                return;
-            }
-        }
-    }
-    
-    const f=e.dataTransfer.files[0];
-    if(!f)return;
-    if (f.name.endsWith('.bweb')) {
-        f.arrayBuffer().then(async buf=>await renderBinary(buf));
-    } else if (f.name.endsWith('.html') || f.name.endsWith('.htm')) {
-        const text = await f.text();
-        document.getElementById('htmlInput').value = text;
-        alert("HTML-Inhalt geladen! Klicke auf 'Konvertieren', um BWEB zu erzeugen.");
-    }
-});
+    window.bwebVFS = sections.vfs || [];
+    currentVFSMap = {};
 
-document.getElementById('btnConvert').addEventListener('click',async()=>{
-    const html=document.getElementById('htmlInput').value.trim();
-    if(!html)return;
-    try {
-        const bweb=await clientSideConvert(html);
-        lastBweb=bweb;
-        await renderBinary(bweb);
-        document.getElementById('btnDownload').style.display='';
-        showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
-    } catch(err) {
-        alert("Fehler bei der Konvertierung: " + err);
-    }
-});
-
-document.getElementById('btnFolderUpload').addEventListener('click', () => {
-    document.getElementById('folderInput').click();
-});
-
-document.getElementById('folderInput').addEventListener('change', async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    await compileFilesList(files);
-    e.target.value = '';
-});
-
-// Recursive Directory Reader via HTML5 File System API
-async function readEntryRecursively(entry, path = '', filesList = []) {
-    if (entry.isFile) {
-        const file = await new Promise((resolve, reject) => {
-            entry.file(resolve, reject);
-        });
-        file.customRelativePath = path ? `${path}/${file.name}` : file.name;
-        filesList.push(file);
-    } else if (entry.isDirectory) {
-        const dirReader = entry.createReader();
-        const entries = await new Promise((resolve) => {
-            const allEntries = [];
-            function readBatch() {
-                dirReader.readEntries((batch) => {
-                    if (batch.length === 0) {
-                        resolve(allEntries);
-                    } else {
-                        allEntries.push(...batch);
-                        readBatch();
-                    }
-                }, () => resolve(allEntries));
-            }
-            readBatch();
-        });
-        const currentPath = path ? `${path}/${entry.name}` : entry.name;
-        for (const childEntry of entries) {
-            await readEntryRecursively(childEntry, currentPath, filesList);
-        }
-    }
-    return filesList;
-}
-
-// Robust Folder Compiler with Regex Path-Mapping
-async function compileFilesList(files) {
-    let indexFile = files.find(f => f.name === 'index.html' || f.name === 'index.htm');
-    if (!indexFile) indexFile = files.find(f => f.name.endsWith('.html'));
-    if (!indexFile) {
-        alert("Keine index.html im hochgeladenen Ordner gefunden!");
-        return;
-    }
-
-    const btn = document.getElementById('btnFolderUpload');
-    const oldText = btn.textContent;
-    btn.textContent = 'Lese lokale Dateien...';
-    btn.disabled = true;
-
-    showLoader("Ordner-Kompilierung", "Analysiere hochgeladene Ordner-Struktur...");
-    updateLoader(5, "Scanne Dateien...", `Gefunden: ${files.length} Dateien in der Struktur.`);
-
-    try {
-        let htmlContent = await indexFile.text();
-        updateLoader(10, "Lese index.html...", `Hauptdokument index.html eingelesen (${(htmlContent.length / 1024).toFixed(1)} KB).`);
-        
-        const fileDataMap = {};
-        let readCount = 0;
-        for (const file of files) {
-            if (file === indexFile) continue;
-            
-            readCount++;
-            const pct = Math.round(10 + (readCount / files.length) * 35);
-            updateLoader(pct, `Lese ${file.name}...`, `Verarbeite Asset: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
-
-            let dataUrl = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = ev => resolve(ev.target.result);
-                reader.readAsDataURL(file);
-            });
-            
-            // Fix missing or incorrect MIME types (common on Linux)
-            if (file.name.endsWith('.css')) {
-                dataUrl = dataUrl.replace(/^data:[^;]*;/, 'data:text/css;');
-            } else if (file.name.endsWith('.js')) {
-                dataUrl = dataUrl.replace(/^data:[^;]*;/, 'data:application/javascript;');
-            } else if (file.name.endsWith('.svg')) {
-                dataUrl = dataUrl.replace(/^data:[^;]*;/, 'data:image/svg+xml;');
-            } else if (file.name.endsWith('.html')) {
-                dataUrl = dataUrl.replace(/^data:[^;]*;/, 'data:text/html;');
-            }
-            
-            let relativePath = file.customRelativePath;
-            if (!relativePath && file.webkitRelativePath) {
-                const pathParts = file.webkitRelativePath.split('/');
-                pathParts.shift();
-                relativePath = pathParts.join('/');
-            }
-            if (!relativePath) {
-                relativePath = file.name;
-            }
-            
-            fileDataMap[relativePath] = dataUrl;
-            fileDataMap[file.name] = dataUrl;
-        }
-
-        btn.textContent = 'Ersetze relative Pfade...';
-        updateLoader(50, "Inlining relative Pfade...", "Dedupliziere und ersetze Dateireferenzen in HTML/CSS...");
-        
-        // Replace relative paths using regex to match nested paths, prefixing, quotes variations
-        let replaceCount = 0;
-        const totalPaths = Object.keys(fileDataMap).length;
-        for (const [path, dataUrl] of Object.entries(fileDataMap)) {
-            replaceCount++;
-            const pct = Math.round(50 + (replaceCount / totalPaths) * 20);
-            updateLoader(pct, `Inlining: ${path}`, `Ersetze Pfad ${replaceCount}/${totalPaths}: ${path}`);
-            
-            const escapedPath = path.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-            // Matches src="path", src='./path', src='/path', src='path?v=1' etc.
-            const regex = new RegExp(`(["'\\(])(?:\\.\\/|\\/)?${escapedPath}(?:\\?[^"'\\)]*)?(?:#[^"'\\)]*)?(["'\\)])`, 'g');
-            htmlContent = htmlContent.replace(regex, `$1${dataUrl}$2`);
-        }
-
-        btn.textContent = 'Kompiliere in BWEB...';
-        updateLoader(75, "Kompiliere in BWEB...", "Rendere HTML-Dokument in Iframe und extrahiere DOM/CSS Layout...");
-        
-        const bweb = await clientSideConvert(htmlContent);
-        
-        updateLoader(90, "Rendere Binärdaten...", "Konstruiere binäre BML, BDT und BLB Datenblöcke...");
-        lastBweb = bweb;
-        await renderBinary(bweb);
-        document.getElementById('btnDownload').style.display = '';
-        
-        updateLoader(100, "Kompilierung erfolgreich!", "Das binäre BWEB-Paket wurde erfolgreich gerendert.");
-        setTimeout(hideLoader, 800);
-        
-        showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
-    } catch(err) {
-        hideLoader();
-        alert("Fehler beim Inlining oder Konvertieren des Ordners: " + err);
-    } finally {
-        btn.textContent = oldText;
-        btn.disabled = false;
-    }
-}
-
-document.getElementById('btnDownload').addEventListener('click',()=>{
-    if(!lastBweb)return;
-    const blob=new Blob([lastBweb],{type:'application/octet-stream'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);a.download='page.bweb';a.click();
-});
-
-document.getElementById('btnDownloadViewport').addEventListener('click',()=>{
-    if(!lastBweb)return;
-    const blob=new Blob([lastBweb],{type:'application/octet-stream'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);a.download='page.bweb';a.click();
-});
-
-document.getElementById('btnDownloadZip').addEventListener('click',()=>{
-    if(!lastBweb)return;
-    function getEngineScript(){
-        const fullScript=Array.from(document.scripts).find(s=>s.textContent.includes('class BMLParser')).textContent;
-        const uiBoundary="let lastBweb=";
-        const boundaryIndex=fullScript.indexOf(uiBoundary);
-        if(boundaryIndex!==-1){
-            return fullScript.substring(0,boundaryIndex).trim();
-        }
-        return fullScript;
-    }
-    const indexHtml=`<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BWEB Webseite</title>
-    <style>
-        *, *::before, *::after { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
-        body { margin: 0; padding: 0; background: #fff; color: #000; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
-        #renderTarget { width: 100%; min-height: 100vh; position: relative; }
-        .rendered-node { box-sizing: border-box; }
-    </style>
-</head>
-<body>
-    <div id="renderTarget"></div>
-    <script>
-        ${getEngineScript()}
-        
-        async function initBweb() {
-            try {
-                const response = await fetch('page.bweb');
-                if (!response.ok) throw new Error('page.bweb konnte nicht geladen werden');
-                const buffer = await response.arrayBuffer();
-                await renderBinary(buffer);
-            } catch(e) {
-                console.error("BWEB Engine Error:", e);
-                document.getElementById('renderTarget').innerHTML = \`
-                    <div style="padding: 2rem; max-width: 600px; margin: 40px auto; background: #1e1b4b; border: 1px solid #312e81; border-radius: 8px; text-align: center;">
-                        <h2 style="color: #ef4444; margin-top: 0;">Ladefehler</h2>
-                        <p style="color: #cbd5e1; line-height: 1.6;">Die BWEB Binärdatei <strong>page.bweb</strong> konnte nicht geladen werden.</p>
-                        <p style="color: #94a3b8; font-size: 0.85rem;">Stelle sicher, dass die Dateien auf einem Webserver (z.B. Apache, Nginx oder lokaler Python-Server) laufen und nicht über file:// geöffnet wurden.</p>
-                    </div>
-                \`;
-            }
-        }
-        window.addEventListener('DOMContentLoaded', initBweb);
-    <\/script>
-</body>
-</html>`;
-
-    const htaccess=`# BWEB Apache Deployment Configuration
-AddType application/x-bweb .bweb
-AddType application/x-bml .bml
-
-<IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "*"
-</IfModule>
-`;
-
-    const sw=`const CACHE_NAME = 'bweb-cache-v1';
-const ASSETS = [
-    './',
-    './index.html',
-    './page.bweb'
-];
-self.addEventListener('install', e => {
-    e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
-    self.skipWaiting();
-});
-self.addEventListener('activate', e => {
-    e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))));
-    self.clients.claim();
-});
-self.addEventListener('fetch', e => {
-    e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request)));
-});
-`;
-
-    function createSimpleZip(files){
-        const crc32Table=[];
-        for(let i=0;i<256;i++){
-            let c=i;
-            for(let j=0;j<8;j++){
-                c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);
-            }
-            crc32Table[i]=c;
-        }
-        function getCrc32(data){
-            let crc=0^(-1);
-            for(let i=0;i<data.length;i++){
-                crc=(crc>>>8)^crc32Table[(crc^data[i])&0xFF];
-            }
-            return (crc^(-1))>>>0;
-        }
-        let offset=0;
-        const parts=[];
-        const cdEntries=[];
-        for(const file of files){
-            const nameBytes=new TextEncoder().encode(file.name);
-            const dataBytes=file.data;
-            const crc=getCrc32(dataBytes);
-            const lfh=new Uint8Array(30+nameBytes.length);
-            const lfhView=new DataView(lfh.buffer);
-            lfhView.setUint32(0,0x04034b50,true);
-            lfhView.setUint16(4,10,true);
-            lfhView.setUint16(6,0,true);
-            lfhView.setUint16(8,0,true);
-            lfhView.setUint32(10,0,true);
-            lfhView.setUint32(14,crc,true);
-            lfhView.setUint32(18,dataBytes.length,true);
-            lfhView.setUint32(22,dataBytes.length,true);
-            lfhView.setUint16(26,nameBytes.length,true);
-            lfhView.setUint16(28,0,true);
-            lfh.set(nameBytes,30);
-            parts.push(lfh);parts.push(dataBytes);
-            const cdh=new Uint8Array(46+nameBytes.length);
-            const cdhView=new DataView(cdh.buffer);
-            cdhView.setUint32(0,0x02014b50,true);
-            cdhView.setUint16(4,20,true);
-            cdhView.setUint16(6,10,true);
-            cdhView.setUint16(8,0,true);
-            cdhView.setUint16(10,0,true);
-            cdhView.setUint32(12,0,true);
-            cdhView.setUint32(16,crc,true);
-            cdhView.setUint32(20,dataBytes.length,true);
-            cdhView.setUint32(24,dataBytes.length,true);
-            cdhView.setUint16(28,nameBytes.length,true);
-            cdhView.setUint16(30,0,true);
-            cdhView.setUint16(32,0,true);
-            cdhView.setUint16(34,0,true);
-            cdhView.setUint16(36,0,true);
-            cdhView.setUint32(38,0,true);
-            cdhView.setUint32(42,offset,true);
-            cdh.set(nameBytes,46);
-            cdEntries.push(cdh);
-            offset+=lfh.length+dataBytes.length;
-        }
-        const cdStart=offset;
-        let cdSize=0;
-        for(const cdh of cdEntries){
-            parts.push(cdh);
-            cdSize+=cdh.length;
-        }
-        const eocd=new Uint8Array(22);
-        const eocdView=new DataView(eocd.buffer);
-        eocdView.setUint32(0,0x06054b50,true);
-        eocdView.setUint16(4,0,true);
-        eocdView.setUint16(6,0,true);
-        eocdView.setUint16(8,cdEntries.length,true);
-        eocdView.setUint16(10,cdEntries.length,true);
-        eocdView.setUint32(12,cdSize,true);
-        eocdView.setUint32(16,cdStart,true);
-        eocdView.setUint16(20,0,true);
-        parts.push(eocd);
-        return new Blob(parts,{type:'application/zip'});
-    }
-    const readme=`========================================================================
-             BWEB BINARY WEB DEPLOYMENT ANLEITUNG
-========================================================================
-
-Herzlichen Glückwunsch! Sie haben erfolgreich ein hochperformantes, 
-binäres BWEB-Projekt generiert. Dieses Verzeichnis ist sofort
-einsatzbereit für die Bereitstellung auf jedem Webserver.
-
-Inhalt dieses ZIP-Archivs:
---------------------------
-1. page.bweb      - Die komprimierten binären Bytes Ihrer Website.
-2. index.html     - Die HTML-Einstiegsseite mit der BWEB-Engine.
-3. .htaccess      - Die Serverkonfiguration (MIME-Types für Apache).
-4. bweb-sw.js     - Der Service Worker für Offline-Caching (<1ms Ladezeit).
-5. ANLEITUNG.txt  - Dieses Dokument.
-
-SCHRITT-FÜR-SCHRITT ANLEITUNG ZUM DEPLOYMENT:
-=============================================
-
-SCHRITT 1: Dateien auf den Server hochladen
--------------------------------------------
-Laden Sie alle 4 Kern-Dateien (index.html, page.bweb, .htaccess, bweb-sw.js)
-in das Hauptverzeichnis (Root) oder ein beliebiges Unterverzeichnis
-Ihres Webservers (z. B. Apache, Nginx oder Shared Hosting wie cPanel/Plesk) hoch.
-
-SCHRITT 2: MIME-Types verifizieren
-----------------------------------
-Die .htaccess-Datei konfiguriert die MIME-Types für Apache-Server
-automatisch. Wenn Sie Nginx nutzen, fügen Sie folgende Zeilen in Ihre
-'nginx.conf' oder 'mime.types' ein:
-
-    types {
-        application/x-bweb bweb;
-        application/x-bml bml;
-    }
-
-SCHRITT 3: Testen & Aufrufen
-----------------------------
-Rufen Sie die URL Ihres Servers im Browser auf (z. B. https://ihredomain.de/).
-Die BWEB-Engine lädt page.bweb vollkommen binär und rendert sie in Echtzeit.
-
-WICHTIGER HINWEIS FÜR LOKALES TESTEN:
--------------------------------------
-Öffnen Sie die 'index.html' NICHT direkt per Doppelklick (file://-Protokoll)
-im Browser. Browser blockieren AJAX-Requests (fetch) aus Sicherheitsgründen
-bei lokalen Dateien. Nutzen Sie zum lokalen Testen einen lokalen Server,
-beispielsweise mit Python:
-
-    python3 -m http.server 8000
-
-Und rufen Sie anschließend http://localhost:8000 auf.
-
-========================================================================
-                Viel Erfolg mit Ihrem Binary Web Projekt!
-========================================================================`;
-
-    const enc=new TextEncoder();
-    const zipBlob=createSimpleZip([
-        {name:'page.bweb',data:new Uint8Array(lastBweb)},
-        {name:'index.html',data:enc.encode(indexHtml)},
-        {name:'.htaccess',data:enc.encode(htaccess)},
-        {name:'bweb-sw.js',data:enc.encode(sw)},
-        {name:'ANLEITUNG.txt',data:enc.encode(readme)}
-    ]);
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(zipBlob);
-    a.download='bweb-deployment.zip';
-    a.click();
-});
-
-document.getElementById('aiBackendSelect').addEventListener('change', (e) => {
-    document.getElementById('geminiApiKey').style.display = e.target.value === 'gemini' ? '' : 'none';
-});
-
-document.getElementById('btnGenerate').addEventListener('click',async()=>{
-    const prompt=document.getElementById('promptInput').value.trim();
-    const apiKey=document.getElementById('geminiApiKey').value.trim();
-    const backend=document.getElementById('aiBackendSelect').value;
-    if(!prompt)return;
-    
-    const btn=document.getElementById('btnGenerate');
-    const oldText=btn.textContent;
-    btn.textContent='⏳ Generiere KI-Modell...';
-    btn.disabled=true;
-    
-    try{
-        if (backend === 'nvme') {
-            // Lokale NVMe-KI via RAG-NVMe Server /generate-site (Echte Binär-Verkettung)
-            const nvmeUrl = 'http://127.0.0.1:8090/generate-site';
-            
-            const resp = await fetch(nvmeUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    prompt: prompt,
-                    slices: ['header', 'hero', 'features', 'pricing', 'footer'],
-                    binary: true
-                })
-            });
-            if (resp.ok) {
-                const sessId = resp.headers.get('X-Session-Id');
-                if (sessId) {
-                    currentSessionId = sessId;
-                    initMutationChat(prompt);
-                }
-                const bweb = await resp.arrayBuffer();
-                lastBweb = bweb;
-                await renderBinary(bweb);
-                document.getElementById('btnDownload').style.display = '';
-                showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
-            } else {
-                const data = await resp.json().catch(() => ({}));
-                alert("Fehler bei der Website-Generierung via RAG-NVMe: " + (data.error || "Server-Fehler. Läuft der RAG-Server?"));
-            }
-        } else if (backend === 'gemini') {
-            if (!apiKey) {
-                alert("Bitte gib einen Gemini API-Key ein.");
-                return;
-            }
-            // Lokale Client-Side Generierung via Google API
-            const payload = {
-                contents: [{
-                    role: "user",
-                    parts: [{ text: `Generate a beautiful, modern, responsive HTML/CSS webpage based on this prompt. Use inline styles or <style> tags. Include some realistic images via unsplash. Return ONLY the raw HTML code, no markdown block, no explanation. Prompt: ${prompt}` }]
-                }]
-            };
-            const aiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            if (aiResp.ok) {
-                const data = await aiResp.json();
-                let html = data.candidates[0].content.parts[0].text;
-                html = html.replace(/^```html?\n?/i, '').replace(/\n?```\s*$/i, '').trim();
-                
-                btn.textContent = 'Kompiliere in BWEB...';
-                const bweb = await clientSideConvert(html);
-                lastBweb = bweb;
-                await renderBinary(bweb);
-                document.getElementById('btnDownload').style.display = '';
-                document.getElementById('mutationPanel').style.display = 'none'; // Hide mutation panel for gemini
-                showSuccessModal(lastBweb.byteLength, bdtNodes ? bdtNodes.length : 0);
-            } else {
-                alert("Fehler bei der lokalen Gemini API-Anfrage (Key ungültig?).");
-            }
-        }
-    }catch(e){
-        alert("Server oder API nicht erreichbar: " + e);
-    }finally{
-        btn.textContent=oldText;
-        btn.disabled=false;
-    }
-});
-
-// AI Design Assistent (RAG-NVMe) Mutation Chat Logic
-document.getElementById('btnMutate').addEventListener('click', async () => {
-    const prompt = document.getElementById('mutationInput').value.trim();
-    if (!prompt || !currentSessionId) return;
-
-    const btn = document.getElementById('btnMutate');
-    const oldText = btn.textContent;
-    btn.textContent = '⏳ Mutierte BLB-Blöcke...';
-    btn.disabled = true;
-
-    addMutationChatMsg('user', prompt);
-    document.getElementById('mutationInput').value = '';
-
-    try {
-        const resp = await fetch('http://127.0.0.1:8090/mutate-site', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                session_id: currentSessionId,
-                prompt: prompt
-            })
-        });
-
-        if (resp.ok) {
-            const mutationsCount = resp.headers.get('X-Mutations-Applied') || '0';
-            const bweb = await resp.arrayBuffer();
-            lastBweb = bweb;
-            await renderBinary(bweb);
-            addMutationChatMsg('ai', `Erfolgreich! <strong>${mutationsCount} BLB-Knoten-Eigenschaften</strong> wurden direkt im binären Layout-Block-Format im RAM mutiert und instant neu gerendert.`);
-        } else {
-            const d = await resp.json().catch(() => ({}));
-            addMutationChatMsg('ai', `Fehler bei der Mutation: ${d.error || 'Server-Fehler'}`);
-        }
-    } catch(err) {
-        addMutationChatMsg('ai', `Verbindungsfehler zum RAG-Server: ${err}`);
-    } finally {
-        btn.textContent = oldText;
-        btn.disabled = false;
-    }
-});
-
-function initMutationChat(prompt) {
-    const history = document.getElementById('mutationChatHistory');
-    history.innerHTML = '';
-    document.getElementById('mutationPanel').style.display = 'block';
-    addMutationChatMsg('ai', `Webseite erfolgreich assembliert für: "<strong>${prompt}</strong>"<br>Session ID: <code>${currentSessionId}</code><br><br>Wie soll ich das Design anpassen? Du kannst mir Befehle geben wie:<br>• "Hintergrundfarbe auf dunkelrot ändern"<br>• "Schriftfarbe gelb machen"<br>• "Rundungen vergrößern"<br>• "Abstände / Padding verringern"`);
-}
-
-function addMutationChatMsg(sender, text) {
-    const history = document.getElementById('mutationChatHistory');
-    const div = document.createElement('div');
-    div.className = `mutation-msg mutation-msg-${sender}`;
-    div.innerHTML = text;
-    history.appendChild(div);
-    history.scrollTop = history.scrollHeight;
-}
-
-async function clientSideConvert(html){
-    return new Promise((resolve, reject) => {
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'absolute';
-        iframe.style.width = '1920px'; // Standard desktop width for layout computation
-        iframe.style.height = '1080px';
-        iframe.style.opacity = '0';
-        iframe.style.pointerEvents = 'none';
-        document.body.appendChild(iframe);
-
-        // Clean HTML to prevent script execution inside layout iframe
-        const cleanHtml = html
-            .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '')
-            .replace(/<script\b[^>]*\/>/gi, '')
-            .replace(/\son[a-z]+\s*=\s*(['"])(.*?)\1/gi, '')
-            .replace(/\son[a-z]+\s*=\s*[^>\s]+/gi, '');
-
-        const doc = iframe.contentWindow.document;
-        doc.open();
-        doc.write(cleanHtml);
-        doc.close();
-
-        // Robust Timeout to guarantee full DOM parsing, font loading, and layout calculation
-        setTimeout(async () => {
-            try {
-                const body = doc.body;
-                
-                // Force reveal elements to be visible for the conversion
-                const reveals = doc.querySelectorAll('.reveal');
-                reveals.forEach(el => el.classList.add('active'));
-
-                
-                const TAG_FWD={};
-                for(const[k,v]of Object.entries(TAG_REV))TAG_FWD[v]=parseInt(k);
-                const ATTR_FWD={};
-                for(const[k,v]of Object.entries(ATTR_REV))ATTR_FWD[v]=parseInt(k);
-
-                const enc=new TextEncoder();
-                const bmlBuf=[];
-                const flatNodes=[];
-                const extractedImages = [];
-
-                function colorToU32(c) {
-                    const m = c.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-                    if (!m) return 0;
-                    const r=parseInt(m[1]),g=parseInt(m[2]),b=parseInt(m[3]);
-                    const a=m[4]!==undefined?Math.round(parseFloat(m[4])*255):255;
-                    return((r<<24)|(g<<16)|(b<<8)|a)>>>0;
-                }
-                function cssV(v){if(!v||v==='auto'||v==='none')return 0xFFFF;const n=parseFloat(v);return isNaN(n)?0xFFFF:Math.round(n*10)}
-                const DM={'block':0,'inline':1,'flex':2,'grid':3,'none':4,'inline-block':5,'inline-flex':6};
-                const PM_={'static':0,'relative':1,'absolute':2,'fixed':3,'sticky':4};
-                const TAM={'left':0,'start':0,'center':1,'right':2,'end':2,'justify':3};
-                const FDM={'row':0,'column':1,'row-reverse':2,'column-reverse':3};
-                const JCM={'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'space-between':3,'space-around':4,'space-evenly':5};
-                const AIM={'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'stretch':3,'baseline':4};
-                const OFM={'visible':0,'hidden':1,'scroll':2,'auto':3};
-
-                function serNode(el,parentIdx){
-                    // Ensure it is an element
-                    if (el.nodeType !== 1) return;
+    if (sections[11]) { // BFB
+        for (const chunk of sections[11]) {
+            const v = new DataView(chunk);
+            if (v.getUint8(0)===0x42 && v.getUint8(1)===0x46 && v.getUint8(2)===0x53) {
+                let off = 4;
+                const cnt = v.getUint32(off); off+=4;
+                for (let i=0; i<cnt; i++) {
+                    const id = v.getUint16(off); off+=2;
+                    const flen = v.getUint8(off++);
+                    const family = new TextDecoder().decode(new Uint8Array(chunk, off, flen)); off+=flen;
+                    const weight = v.getUint16(off); off+=2;
+                    const style = v.getUint8(off++);
+                    const fmt = v.getUint8(off++);
+                    const pLen = v.getUint32(off); off+=4;
+                    const data = new Uint8Array(chunk, off, pLen); off+=pLen;
                     
-                    let tag=el.tagName?el.tagName.toLowerCase():'div';
-                    const attrs=[];
-                    
-                    // Image Extraction (BIB)
-                    if (tag === 'img') {
-                        tag = 'canvas'; // Replace with canvas for BWEB rendering
-                        try {
-                            const cvs = document.createElement('canvas');
-                            cvs.width = el.width || el.naturalWidth || 100;
-                            cvs.height = el.height || el.naturalHeight || 100;
-                            const ctx = cvs.getContext('2d');
-                            ctx.drawImage(el, 0, 0, cvs.width, cvs.height);
-                            const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-                            const bibId = extractedImages.length;
-                            extractedImages.push({
-                                id: bibId,
-                                w: cvs.width,
-                                h: cvs.height,
-                                data: new Uint8Array(imgData.data.buffer)
-                            });
-                            // Add data-bind attribute for the parser
-                            const aid = ATTR_FWD['data-bind'];
-                            if (aid !== undefined) {
-                                attrs.push({id: aid, val: enc.encode(bibId.toString())});
+                    try {
+                        const fontFace = new FontFace(family, data, { weight: weight.toString(), style: style===1?'italic':'normal' });
+                        fontFace.load().then(loadedFace => {
+                            document.fonts.add(loadedFace);
+                            if (typeof globalEngine !== 'undefined' && globalEngine) {
+                                globalEngine.measureAndLayout();
+                                globalEngine.draw();
                             }
-                        } catch(e) {
-                            console.warn("CORS blockiert Bild-Extraktion", e);
-                        }
-                    }
-
-                    const tagByte=TAG_FWD[tag]||0x01;
-                    const nodeIdx=flatNodes.length;
-                    
-                    const cs=iframe.contentWindow.getComputedStyle(el);
-                    flatNodes.push({
-                        tag: tagByte, parentIdx, children: [],
-                        cs:{
-                            display:cs.display,position:cs.position,boxSizing:cs.boxSizing,
-                            width:cs.width,height:cs.height,
-                            marginTop:cs.marginTop,marginRight:cs.marginRight,
-                            marginBottom:cs.marginBottom,marginLeft:cs.marginLeft,
-                            paddingTop:cs.paddingTop,paddingRight:cs.paddingRight,
-                            paddingBottom:cs.paddingBottom,paddingLeft:cs.paddingLeft,
-                            borderTopWidth:cs.borderTopWidth,borderRightWidth:cs.borderRightWidth,
-                            borderBottomWidth:cs.borderBottomWidth,borderLeftWidth:cs.borderLeftWidth,
-                            borderColor:cs.borderTopColor,
-                            backgroundColor:cs.backgroundColor,color:cs.color,
-                            fontSize:cs.fontSize,fontWeight:cs.fontWeight,
-                            lineHeight:cs.lineHeight,textAlign:cs.textAlign,
-                            flexDirection:cs.flexDirection,flexWrap:cs.flexWrap,
-                            justifyContent:cs.justifyContent,alignItems:cs.alignItems,
-                            gap:cs.rowGap||'0px',borderRadius:cs.borderTopLeftRadius||'0px',
-                            overflow:cs.overflowY||'visible',opacity:cs.opacity,zIndex:cs.zIndex,
-                        }
-                    });
-                    
-                    if(parentIdx>=0)flatNodes[parentIdx].children.push(nodeIdx);
-
-                    if(el.attributes){
-                        for(const attr of el.attributes){
-                            if(attr.name === 'src' && tag === 'canvas') continue; // Handled by BIB
-                            const aid=ATTR_FWD[attr.name];
-                            if(aid!==undefined&&attr.name!=='style'){
-                                const vb=enc.encode(attr.value);
-                                attrs.push({id:aid,val:vb});
-                            }
-                        }
-                    }
-
-                    let textContent='';
-                    for(const cn of el.childNodes){
-                        if(cn.nodeType===3){
-                            const t=cn.textContent.trim();
-                            if(t)textContent+=t+' ';
-                        }
-                    }
-                    textContent=textContent.trim();
-                    const textBytes=textContent?enc.encode(textContent):new Uint8Array(0);
-
-                    const childElements=[];
-                    for(const cn of el.childNodes){
-                        if(cn.nodeType===1)childElements.push(cn);
-                    }
-
-                    bmlBuf.push(tagByte);
-                    bmlBuf.push(attrs.length);
-                    bmlBuf.push((childElements.length>>8)&0xFF,childElements.length&0xFF);
-                    bmlBuf.push((textBytes.length>>24)&0xFF,(textBytes.length>>16)&0xFF,(textBytes.length>>8)&0xFF,textBytes.length&0xFF);
-
-                    for(const a of attrs){
-                        bmlBuf.push(a.id);
-                        bmlBuf.push((a.val.length>>24)&0xFF,(a.val.length>>16)&0xFF,(a.val.length>>8)&0xFF,a.val.length&0xFF);
-                        for(const b of a.val)bmlBuf.push(b);
-                    }
-                    for(const b of textBytes)bmlBuf.push(b);
-
-                    for(const ce of childElements)serNode(ce,nodeIdx);
+                        }).catch(e => console.error('Font load error:', e));
+                    } catch(e) { console.error('Font load error:', e); }
                 }
-
-                const topChildren=[...body.children];
-                const wrapDiv=doc.createElement('div');
-                for(const c of topChildren)wrapDiv.appendChild(c.cloneNode(true));
-                serNode(wrapDiv,-1);
-
-                const bmlData=new Uint8Array([0x42,0x4D,0x4C,0x02,...bmlBuf]);
-
-                const bdtBuf=new ArrayBuffer(4+4+flatNodes.length*16);
-                const bdtView=new DataView(bdtBuf);
-                bdtView.setUint8(0,0x42);bdtView.setUint8(1,0x44);bdtView.setUint8(2,0x54);bdtView.setUint8(3,0x01);
-                bdtView.setUint32(4,flatNodes.length);
-                for(let i=0;i<flatNodes.length;i++){
-                    const off=8+i*16;
-                    const n=flatNodes[i];
-                    bdtView.setUint16(off,i);
-                    bdtView.setUint16(off+2,n.parentIdx>=0?n.parentIdx:0xFFFF);
-                    bdtView.setUint16(off+4,n.children.length?n.children[0]:0xFFFF);
-                    let ns=0xFFFF;
-                    if(n.parentIdx>=0){
-                        const siblings=flatNodes[n.parentIdx].children;
-                        const myPos=siblings.indexOf(i);
-                        if(myPos>=0&&myPos<siblings.length-1)ns=siblings[myPos+1];
-                    }
-                    bdtView.setUint16(off+6,ns);
-                    bdtView.setUint8(off+8,1);
-                    bdtView.setUint8(off+9,n.tag);
-                    let depth=0,p=n.parentIdx;
-                    while(p>=0&&depth<255){depth++;p=flatNodes[p].parentIdx}
-                    bdtView.setUint8(off+10,depth);
-                }
-
-                const blbSize=4+4+flatNodes.length*BLB_BLOCK_SIZE;
-                const blbBuf=new ArrayBuffer(blbSize);
-                const blbView=new DataView(blbBuf);
-                blbView.setUint8(0,0x42);blbView.setUint8(1,0x4C);blbView.setUint8(2,0x42);blbView.setUint8(3,0x01);
-                blbView.setUint32(4,flatNodes.length);
-                for(let i=0;i<flatNodes.length;i++){
-                    const off=8+i*BLB_BLOCK_SIZE;
-                    const s=flatNodes[i].cs;
-                    blbView.setUint16(off,i);
-                    blbView.setUint8(off+2,DM[s.display]??0);
-                    blbView.setUint8(off+3,PM_[s.position]??0);
-                    blbView.setUint8(off+4,s.boxSizing==='border-box'?1:0);
-                    blbView.setUint16(off+5,cssV(s.width));
-                    blbView.setUint16(off+7,cssV(s.height));
-                    blbView.setInt16(off+9,Math.round((parseFloat(s.marginTop)||0)*10));
-                    blbView.setInt16(off+11,Math.round((parseFloat(s.marginRight)||0)*10));
-                    blbView.setInt16(off+13,Math.round((parseFloat(s.marginBottom)||0)*10));
-                    blbView.setInt16(off+15,Math.round((parseFloat(s.marginLeft)||0)*10));
-                    blbView.setUint16(off+17,Math.max(0,Math.round((parseFloat(s.paddingTop)||0)*10)));
-                    blbView.setUint16(off+19,Math.max(0,Math.round((parseFloat(s.paddingRight)||0)*10)));
-                    blbView.setUint16(off+21,Math.max(0,Math.round((parseFloat(s.paddingBottom)||0)*10)));
-                    blbView.setUint16(off+23,Math.max(0,Math.round((parseFloat(s.paddingLeft)||0)*10)));
-                    blbView.setUint8(off+25,Math.min(Math.round((parseFloat(s.borderTopWidth)||0)*10),255));
-                    blbView.setUint8(off+26,Math.min(Math.round((parseFloat(s.borderRightWidth)||0)*10),255));
-                    blbView.setUint8(off+27,Math.min(Math.round((parseFloat(s.borderBottomWidth)||0)*10),255));
-                    blbView.setUint8(off+28,Math.min(Math.round((parseFloat(s.borderLeftWidth)||0)*10),255));
-                    blbView.setUint32(off+29,colorToU32(s.borderColor));
-                    blbView.setUint32(off+33,colorToU32(s.backgroundColor));
-                    blbView.setUint32(off+37,colorToU32(s.color));
-                    blbView.setUint16(off+41,Math.round((parseFloat(s.fontSize)||16)*10));
-                    blbView.setUint16(off+43,parseInt(s.fontWeight)||400);
-                    blbView.setUint16(off+45,Math.max(0,Math.round((parseFloat(s.lineHeight)||0)*10)));
-                    blbView.setUint8(off+47,TAM[s.textAlign]??0);
-                    blbView.setUint8(off+48,FDM[s.flexDirection]??0);
-                    blbView.setUint8(off+49,s.flexWrap==='wrap'?1:0);
-                    blbView.setUint8(off+50,JCM[s.justifyContent]??0);
-                    blbView.setUint8(off+51,AIM[s.alignItems]??3);
-                    blbView.setUint16(off+52,Math.max(0,Math.round((parseFloat(s.gap)||0)*10)));
-                    blbView.setUint16(off+54,Math.max(0,Math.round((parseFloat(s.borderRadius)||0)*10)));
-                    blbView.setUint8(off+56,OFM[s.overflow]??0);
-                    const op = parseFloat(s.opacity);
-                    blbView.setUint8(off+57, isNaN(op) ? 255 : Math.round(op * 255));
-                    const zi=parseInt(s.zIndex);blbView.setInt16(off+58,isNaN(zi)?0:Math.max(-32768,Math.min(32767,zi)));
-                }
-
-                let bibData=new Uint8Array(0);
-                let bibLen=0;
-                if(extractedImages.length>0){
-                    const bibChunks=[new Uint8Array([0x42,0x49,0x42,0x01])];
-                    bibLen+=4;
-                    const dv4=new DataView(new ArrayBuffer(4));
-                    dv4.setUint32(0,extractedImages.length);
-                    bibChunks.push(new Uint8Array(dv4.buffer));
-                    bibLen+=4;
-                    for(const img of extractedImages){
-                        const h=new DataView(new ArrayBuffer(22));
-                        h.setUint32(0,img.id);
-                        h.setUint16(4,img.w);
-                        h.setUint16(6,img.h);
-                        h.setUint8(8,1);
-                        h.setUint8(9,0);
-                        h.setUint16(16,0);
-                        h.setUint32(18,img.data.length);
-                        bibChunks.push(new Uint8Array(h.buffer));
-                        bibChunks.push(img.data);
-                        bibLen+=22+img.data.length;
-                    }
-                    bibData=new Uint8Array(bibLen);
-                    let offset=0;
-                    for(const chunk of bibChunks){bibData.set(chunk,offset);offset+=chunk.length;}
-                }
-
-                let secCount = 3;
-                if (bibLen > 0) secCount = 4;
-
-                const totalSize=6 + 
-                    (1+4+bmlData.length) + 
-                    (1+4+bdtBuf.byteLength) + 
-                    (1+4+blbBuf.byteLength) + 
-                    (bibLen > 0 ? (1+4+bibLen) : 0);
-                    
-                const out=new ArrayBuffer(totalSize);
-                const ov=new DataView(out);
-                const ou=new Uint8Array(out);
-                let off=0;
-                ou[off++]=0x42;ou[off++]=0x57;ou[off++]=0x45;ou[off++]=0x42;
-                ou[off++]=1;
-                ou[off++]=secCount;
-
-                ou[off++]=1;
-                ov.setUint32(off,bmlData.length);off+=4;
-                ou.set(bmlData,off);off+=bmlData.length;
-
-                ou[off++]=2;
-                ov.setUint32(off,bdtBuf.byteLength);off+=4;
-                ou.set(new Uint8Array(bdtBuf),off);off+=bdtBuf.byteLength;
-
-                ou[off++]=3;
-                ov.setUint32(off,blbBuf.byteLength);off+=4;
-                ou.set(new Uint8Array(blbBuf),off);off+=blbBuf.byteLength;
-
-                if (bibLen > 0) {
-                    ou[off++]=4;
-                    ov.setUint32(off,bibLen);off+=4;
-                    ou.set(bibData,off);off+=bibLen;
-                }
-
-                document.body.removeChild(iframe);
-                resolve(out);
-            } catch(e) {
-                console.error(e);
-                document.body.removeChild(iframe);
-                reject(e);
             }
-        }, 2500);
-    });
+        }
+    }
+    
+    if (sections[9]) {
+        const tocView = new Uint8Array(sections[9]);
+        if (tocView[0]===0x56 && tocView[1]===0x46 && tocView[2]===0x53 && tocView[3]===0x01) {
+            const tocBytes = tocView.slice(4);
+            const tocStr = new TextDecoder().decode(tocBytes);
+            try { currentVFSMap = JSON.parse(tocStr); } catch(e){}
+        }
+    }
+
+    let startPage = '/index.html';
+    if (!currentVFSMap[startPage] && Object.keys(currentVFSMap).length > 0) {
+        startPage = Object.keys(currentVFSMap)[0];
+    }
+    
+    // If no TOC, fake one for the single page
+    if(Object.keys(currentVFSMap).length === 0 && window.bwebVFS.length > 0) {
+        currentVFSMap['/index.html'] = { index: 0 };
+    }
+
+    if (sections[4]) { await prepareGlobalBIB(sections[4]); }
+    await loadPage(startPage);
+
+    // Update Stats
+    document.getElementById('statsGrid').style.display = 'grid';
+    document.getElementById('statTotal').textContent = (buf.byteLength/1024).toFixed(1) + ' KB';
+    document.getElementById('statTime').textContent = (performance.now()-t0).toFixed(1) + ' ms';
+    if(window.bwebVFS.length > 0) {
+        document.getElementById('statBml').textContent = (window.bwebVFS[0].bml.byteLength/1024).toFixed(1) + ' KB';
+        document.getElementById('statBdt').textContent = window.bwebVFS[0].bdt ? (window.bwebVFS[0].bdt.byteLength/1024).toFixed(1) + ' KB' : '-';
+        document.getElementById('statBlb').textContent = window.bwebVFS[0].blb ? (window.bwebVFS[0].blb.byteLength/1024).toFixed(1) + ' KB' : '-';
+    }
+    document.getElementById('sectionMap').style.display = 'block';
+    const sbar=document.getElementById('sectionBar');
+    sbar.innerHTML='';
+    const total=buf.byteLength;
+    if(sections[1]) sections[1].forEach(s => sbar.innerHTML+=`<div class="sec-bml" style="width:${(s.byteLength/total)*100}%"></div>`);
+    if(sections[2]) sections[2].forEach(s => sbar.innerHTML+=`<div class="sec-bdt" style="width:${(s.byteLength/total)*100}%"></div>`);
+    if(sections[3]) sections[3].forEach(s => sbar.innerHTML+=`<div class="sec-blb" style="width:${(s.byteLength/total)*100}%"></div>`);
+    if(sections[4]) sections[4].forEach(s => sbar.innerHTML+=`<div class="sec-bib" style="width:${(s.byteLength/total)*100}%"></div>`);
 }
 
 (async()=>{
     try{
         const r=await fetch('page.bweb');
-        if(r.ok){await renderBinary(await r.arrayBuffer());return}
+        if(r.ok){
+            const buf = await r.arrayBuffer();
+            if(buf.byteLength >= 4 && new DataView(buf).getUint32(0) === 0x42574542) {
+                await renderBinary(buf);
+                return;
+            }
+        }
     }catch(e){}
     try{
         const r=await fetch('page.bml');
-        if(r.ok){await renderBinary(await r.arrayBuffer());return}
+        if(r.ok){
+            const buf = await r.arrayBuffer();
+            if(buf.byteLength >= 4 && new DataView(buf).getUint32(0) === 0x424D4C01) {
+                await renderBinary(buf);
+                return;
+            }
+        }
     }catch(e){}
 })();
+
 
 // Progress Bar & Overlay Helper Functions (Globally Accessible)
 function showLoader(title, status) {
@@ -1931,7 +2172,9 @@ function updateLoader(percent, status, logText = null) {
     if (logText) {
         const logEl = document.getElementById('loadingLog');
         const div = document.createElement('div');
-        div.textContent = `[${new Date().toLocaleTimeString()}] ${logText}`;
+        const timeStr = new Date().toLocaleTimeString();
+        const fullMsg = `[${timeStr}] ${logText}`;
+        div.textContent = fullMsg;
         logEl.appendChild(div);
         logEl.scrollTop = logEl.scrollHeight;
     }
@@ -1971,6 +2214,285 @@ document.getElementById('modalBtnDownloadZip').addEventListener('click', () => {
     document.getElementById('btnDownloadZip').click();
     hideSuccessModal();
 });
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const buf = await file.arrayBuffer();
+    renderBinary(buf);
+});
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    
+    const items = e.dataTransfer.items;
+    if(!items) return;
+    
+    const filesList = [];
+    let hasFolder = false;
+    
+    for(let i=0; i<items.length; i++) {
+        const item = items[i];
+        if(item.kind === 'file') {
+            const entry = item.webkitGetAsEntry();
+            if(entry) {
+                if(entry.isDirectory) hasFolder = true;
+                await readEntryRecursively(entry, '', filesList);
+            }
+        }
+    }
+    
+    if(filesList.length > 0) {
+        if(filesList.length === 1 && filesList[0].name.match(/\.(bweb|bml|bdt|blb)$/i)) {
+            const buf = await filesList[0].arrayBuffer();
+            renderBinary(buf);
+        } else {
+            await compileFilesList(filesList);
+        }
+    }
+});
+
+document.getElementById('btnFolderUpload').addEventListener('click', () => {
+    document.getElementById('folderInput').click();
+});
+
+document.getElementById('folderInput').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    await compileFilesList(files);
+    e.target.value = '';
+});
+
+async function readEntryRecursively(entry, path = '', filesList = []) {
+    if (entry.isFile) {
+        const file = await new Promise((resolve, reject) => {
+            entry.file(resolve, reject);
+        });
+        file.customRelativePath = path ? `${path}/${file.name}` : file.name;
+        filesList.push(file);
+    } else if (entry.isDirectory) {
+        const dirReader = entry.createReader();
+        const entries = await new Promise((resolve) => {
+            const allEntries = [];
+            function readBatch() {
+                dirReader.readEntries((batch) => {
+                    if (batch.length === 0) resolve(allEntries);
+                    else { allEntries.push(...batch); readBatch(); }
+                }, () => resolve(allEntries));
+            }
+            readBatch();
+        });
+        const currentPath = path ? `${path}/${entry.name}` : entry.name;
+        for (const childEntry of entries) {
+            await readEntryRecursively(childEntry, currentPath, filesList);
+        }
+    }
+    return filesList;
+}
+
+async function compileFilesList(files) {
+    const htmlFiles = files.filter(f => f.name.endsWith('.html') || f.name.endsWith('.htm'));
+    const assetFiles = files.filter(f => !f.name.endsWith('.html') && !f.name.endsWith('.htm'));
+
+    if (htmlFiles.length === 0) {
+        alert("Keine HTML Dateien im Ordner gefunden!");
+        return;
+    }
+
+    const btn = document.getElementById('btnFolderUpload');
+    const oldText = btn.textContent;
+    btn.textContent = 'Lese lokale Dateien...';
+    btn.disabled = true;
+
+    showLoader("Ordner-Kompilierung", "Analysiere hochgeladene Ordner-Struktur...");
+    
+    try {
+        const fileDataMap = {};
+        const fileTextMap = {};
+        for (const file of assetFiles) {
+            let relativePath = file.customRelativePath || file.webkitRelativePath || file.name;
+            if (relativePath && relativePath.includes('/')) {
+                const pathParts = relativePath.split('/');
+                pathParts.shift();
+                relativePath = pathParts.join('/');
+            }
+
+            if (file.name.endsWith('.css') || file.name.endsWith('.js')) {
+                const text = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = ev => resolve(ev.target.result);
+                    reader.readAsText(file);
+                });
+                fileTextMap[relativePath] = text;
+                fileTextMap[file.name] = text;
+            } else {
+                const dataUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = ev => resolve(ev.target.result);
+                    reader.readAsDataURL(file);
+                });
+                fileDataMap[relativePath] = dataUrl;
+                fileDataMap[file.name] = dataUrl;
+            }
+        }
+
+        function resolveAssetPathName(refPath, basePath) {
+            let clean = refPath.replace(/^\.\//, '').replace(/['"]/g, '').replace(/\?.*$/, '');
+            if (basePath && !clean.startsWith('/')) {
+                const baseDir = basePath.substring(0, basePath.lastIndexOf('/') + 1);
+                const combined = baseDir + clean;
+                const parts = combined.split('/').filter(p => p !== '.');
+                const resolved = [];
+                for (const p of parts) {
+                    if (p === '..') resolved.pop();
+                    else resolved.push(p);
+                }
+                clean = resolved.join('/');
+            }
+            if (clean.startsWith('/')) clean = clean.substring(1);
+            return fileTextMap[clean] ? clean : (fileTextMap[clean.split('/').pop()] ? clean.split('/').pop() : clean);
+        }
+
+        function resolveAssetPathData(refPath, basePath) {
+            let clean = refPath.replace(/^\.\//, '').replace(/['"]/g, '').replace(/\?.*$/, '');
+            if (basePath && !clean.startsWith('/')) {
+                const baseDir = basePath.substring(0, basePath.lastIndexOf('/') + 1);
+                const combined = baseDir + clean;
+                const parts = combined.split('/').filter(p => p !== '.');
+                const resolved = [];
+                for (const p of parts) {
+                    if (p === '..') resolved.pop();
+                    else resolved.push(p);
+                }
+                clean = resolved.join('/');
+            }
+            if (clean.startsWith('/')) clean = clean.substring(1);
+            return fileDataMap[clean] || fileDataMap[clean.split('/').pop()] || null;
+        }
+
+        function resolveCssUrls(cssText, cssFilePath) {
+            // First, recursively resolve @import
+            let resolvedCss = cssText.replace(/@import\s+(?:url\()?['"]?([^'"()]+)['"]?\)?;/gi, (match, ref) => {
+                const resolvedPath = resolveAssetPathName(ref, cssFilePath);
+                const importedText = fileTextMap[resolvedPath];
+                if (importedText) {
+                    return resolveCssUrls(importedText, resolvedPath);
+                }
+                return match;
+            });
+
+            // Then resolve url() for background images, fonts, etc.
+            return resolvedCss.replace(/url\(\s*['"]?([^'")]+)['"]?\s*\)/gi, (match, ref) => {
+                if (ref.startsWith('data:') || ref.startsWith('http://') || ref.startsWith('https://') || ref.startsWith('blob:')) return match;
+                const resolved = resolveAssetPathData(ref, cssFilePath);
+                return resolved ? `url("${resolved}")` : match;
+            });
+        }
+
+        const htmlMap = {};
+        for (const file of htmlFiles) {
+            let relativePath = file.customRelativePath || file.webkitRelativePath || file.name;
+            if (relativePath && relativePath.includes('/')) {
+                const pathParts = relativePath.split('/');
+                pathParts.shift();
+                relativePath = pathParts.join('/');
+            }
+            if(!relativePath.startsWith('/')) relativePath = '/' + relativePath;
+            
+            let html = await new Promise(r => {
+                const reader = new FileReader();
+                reader.onload = ev => r(ev.target.result);
+                reader.readAsText(file);
+            });
+
+            // Replace <link rel="stylesheet" href="..."> with inline <style> blocks
+            html = html.replace(/<link\b[^>]*href=["']([^"']+\.css)["'][^>]*>/gi, (match, p1) => {
+                if (!match.match(/rel=["']stylesheet["']/i) && !match.includes('.css')) return match;
+                let cleanPath = resolveAssetPathName(p1, relativePath.substring(1));
+                const cssText = fileTextMap[cleanPath];
+                if (cssText) {
+                    const resolved = resolveCssUrls(cssText, cleanPath);
+                    return `<style>/* inlined: ${cleanPath} */\n${resolved}\n</style>`;
+                }
+                return match;
+            });
+            
+            // Resolve url() in inline <style> blocks
+            html = html.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, (match, content) => {
+                const resolved = resolveCssUrls(content, relativePath.substring(1));
+                return match.replace(content, resolved);
+            });
+
+            // Replace <script src="..."> with inline <script> blocks
+            html = html.replace(/<script\b[^>]*src=["']([^"']+\.js)["'][^>]*><\/script>/gi, (match, p1) => {
+                let cleanPath = resolveAssetPathName(p1, relativePath.substring(1));
+                const jsText = fileTextMap[cleanPath];
+                if (jsText) {
+                    return `<script>/* inlined: ${cleanPath} */\n${jsText}\n<\/script>`;
+                }
+                return match;
+            });
+
+            // Resolve img src
+            html = html.replace(/src=["']([^"']+\.(png|jpe?g|svg|webp|gif|ico|avif))/gi, (match, p1) => {
+                let cleanPath = p1.replace(/^\.\//, '');
+                const resolved = fileDataMap[cleanPath] || fileDataMap[cleanPath.split('/').pop()];
+                return resolved ? `src="${resolved}"` : match;
+            });
+
+            // Resolve inline style url() references
+            html = html.replace(/style=["']([^"']*url\([^)]+\)[^"']*)["']/gi, (match, styleContent) => {
+                const resolved = resolveCssUrls(styleContent, relativePath.substring(1));
+                return `style="${resolved}"`;
+            });
+            
+            htmlMap[relativePath] = html;
+        }
+        
+        const bwebBuf = await clientSideConvert(htmlMap);
+        
+        const blob = new Blob([bwebBuf], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        document.getElementById('btnDownloadViewport').onclick = () => {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'website.bweb';
+            a.click();
+        };
+        document.getElementById('viewportActions').style.display = 'flex';
+        document.getElementById('viewportStats').textContent = (bwebBuf.byteLength/1024).toFixed(1) + ' KB';
+        
+        hideLoader();
+        showSuccessModal(bwebBuf.byteLength, Object.keys(htmlMap).length);
+        
+        await renderBinary(bwebBuf);
+
+        btn.textContent = oldText;
+        btn.disabled = false;
+    } catch(e) {
+        console.error(e);
+        alert("Fehler bei der Konvertierung: " + e);
+        btn.textContent = oldText;
+        btn.disabled = false;
+        hideLoader();
+    }
+}
 </script>
 </body>
 </html>
+

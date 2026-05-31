@@ -9,21 +9,26 @@ AddType application/x-bml .bml
     RewriteCond %{HTTP:X-BWEB-Native} true
     RewriteRule ^ - [L]
 
-    # 2. Wenn der Query-String "raw=true" enthält: Direkt ausliefern (für das Polyfill-Fetch)
+    # 2. raw=true nur von eigenem Referer akzeptieren (Polyfill-Fetch)
     RewriteCond %{QUERY_STRING} (^|&)raw=true(&|$)
+    RewriteCond %{HTTP_REFERER} ^https?://(www\.)?mediclean-pro\.at/ [NC,OR]
+    RewriteCond %{HTTP_REFERER} ^https?://localhost [NC]
     RewriteRule ^ - [L]
 
-    # 3. Für BWEB-Dateien (.bweb, .bml, .bdt, .blb, .bib), die direkt aufgerufen werden:
-    #    Rewrite auf die polyfill.html unter Übergabe des Pfades
+    # 3. raw=true ohne gültigen Referer → blockieren
+    RewriteCond %{QUERY_STRING} (^|&)raw=true(&|$)
+    RewriteRule ^ - [F,L]
+
+    # 4. Für BWEB-Dateien, die direkt aufgerufen werden:
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^(.*)\.(bweb|bml|bdt|blb|bib)$ polyfill.html?file=$1.$2 [QSA,L]
 </IfModule>
 
-# CORS für lokale NVMe-KI Requests
+# CORS auf eigene Domain beschränken
 <IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "*"
-    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
-    Header set Access-Control-Allow-Headers "Content-Type"
+    Header set Access-Control-Allow-Origin "https://mediclean-pro.at"
+    Header set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, X-BWEB-Native"
 </IfModule>
 
 # Kompression für HTML/CSS/JS (BWEB hat eigene Kompression)

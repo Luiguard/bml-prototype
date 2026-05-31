@@ -14,7 +14,7 @@ tabs.forEach(tab => {
 // Inspector logic
 async function checkCurrentTab() {
     try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const [tab] = await brw.tabs.query({ active: true, currentWindow: true });
         if (!tab) return;
         
         const isBwebPage = tab.url && (tab.url.endsWith('.bweb') || tab.url.includes('/bweb-converter/'));
@@ -35,12 +35,15 @@ async function checkCurrentTab() {
     }
 }
 
+const brw = globalThis.browser || globalThis.chrome;
+
 document.getElementById('btnInspectCurrent').addEventListener('click', async () => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await brw.tabs.query({ active: true, currentWindow: true });
+    
     if (tab && tab.url) {
         // Redirect to our production converter with the tab URL as target to convert
         const converterUrl = 'https://mediclean-pro.at/bweb-converter/converter.html?source=' + encodeURIComponent(tab.url);
-        chrome.tabs.create({ url: converterUrl });
+        brw.tabs.create({ url: converterUrl });
     }
 });
 

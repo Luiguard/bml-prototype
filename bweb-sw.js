@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bweb-cache-v3';
+const CACHE_NAME = 'bweb-cache-v2';
 const STATIC_ASSETS = [
     '/',
     '/index.html',

@@ -21,8 +21,7 @@ from html.parser import HTMLParser
 
 BML_MAGIC = b'BML\x02'
 BDT_MAGIC = b'BDT\x01'
-BLB_MAGIC = b'BLB\x02'
-BLB_MAGIC_V1 = b'BLB\x01'
+BLB_MAGIC = b'BLB\x01'
 BWEB_MAGIC = b'BWEB'
 BWEB_VERSION = 1
 
@@ -190,18 +189,22 @@ def serialize_bdt(root: DOMNode) -> bytes:
     buf += _u32(len(flat))
 
     for i, node in enumerate(flat):
-        first_child = node.children[0].node_id if node.children else 0xFFFF
-        last_child = node.children[-1].node_id if node.children else 0xFFFF
-
-        prev_sibling = 0xFFFF
+        first_child = 0xFFFF
         next_sibling = 0xFFFF
-        if node.parent_id != 0xFFFF:
-            parent_node = flat[node.parent_id]
-            my_idx = parent_node.children.index(node)
-            if my_idx > 0:
-                prev_sibling = parent_node.children[my_idx-1].node_id
-            if my_idx < len(parent_node.children) - 1:
-                next_sibling = parent_node.children[my_idx+1].node_id
+
+        for j, n in enumerate(flat):
+            if n.parent_id == i:
+                first_child = j
+                break
+
+        found_self = False
+        for j, n in enumerate(flat):
+            if j == i:
+                found_self = True
+                continue
+            if found_self and n.parent_id == node.parent_id:
+                next_sibling = j
+                break
 
         depth = 0
         pid = node.parent_id
@@ -213,12 +216,9 @@ def serialize_bdt(root: DOMNode) -> bytes:
         buf += _u16(node.parent_id)
         buf += _u16(first_child)
         buf += _u16(next_sibling)
-        buf += _u16(last_child)
-        buf += _u16(prev_sibling)
         buf.append(1)  # node_type=element
         buf.append(TAG.get(node.tag, 0x01))
         buf.append(depth)
-        buf.append(0)  # padding 16-byte alignment
 
     return bytes(buf)
 
@@ -309,39 +309,6 @@ FLEXDIR_MAP = {'row':0,'column':1,'row-reverse':2,'column-reverse':3}
 JUSTIFY_MAP = {'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'space-between':3,'space-around':4,'space-evenly':5}
 ALIGN_MAP = {'flex-start':0,'start':0,'flex-end':1,'end':1,'center':2,'stretch':3,'baseline':4}
 OVERFLOW_MAP = {'visible':0,'hidden':1,'scroll':2,'auto':3}
-TEXTDECO_MAP = {'none':0,'underline':1,'line-through':2,'overline':3}
-CURSOR_MAP = {'default':0,'auto':0,'pointer':1,'text':2,'move':3,'not-allowed':4,'grab':5,'crosshair':6,'wait':7,'help':8}
-WHITESPACE_MAP = {'normal':0,'nowrap':1,'pre':2,'pre-wrap':3,'pre-line':4}
-VISIBILITY_MAP = {'visible':0,'hidden':1,'collapse':2}
-ALIGNSELF_MAP = {'auto':0,'flex-start':1,'start':1,'flex-end':2,'end':2,'center':3,'stretch':4,'baseline':5}
-FONTSTYLE_MAP = {'normal':0,'italic':1,'oblique':2}
-
-
-def _parse_box_shadow(s):
-    raw = s.get('box-shadow', '')
-    if not raw or raw == 'none':
-        return
-    import re
-    raw = re.sub(r',.*', '', raw.strip())
-    parts = raw.split()
-    nums = []
-    color = None
-    for p in parts:
-        if re.match(r'^-?[\d.]+', p):
-            nums.append(p)
-        else:
-            color = p
-    if len(nums) >= 2:
-        s['_shadow_x'] = nums[0]
-        s['_shadow_y'] = nums[1]
-    if len(nums) >= 3:
-        s['_shadow_blur'] = nums[2]
-    if len(nums) >= 4:
-        s['_shadow_spread'] = nums[3]
-    if color:
-        s['_shadow_color'] = color
-    elif len(nums) >= 2:
-        s['_shadow_color'] = 'black'
 
 
 def serialize_blb(root: DOMNode) -> bytes:
@@ -409,40 +376,6 @@ def _write_blb_block(buf, node_id, s, default_display):
     try: z = int(s.get('z-index','0'))
     except: z = 0
     buf += _i16(z)
-
-    # === BLB v2 Extended (Offset 60–95) ===
-    buf.append(TEXTDECO_MAP.get(s.get('text-decoration',''), 0))
-    buf.append(CURSOR_MAP.get(s.get('cursor',''), 0))
-    buf.append(WHITESPACE_MAP.get(s.get('white-space',''), 0))
-    buf.append(VISIBILITY_MAP.get(s.get('visibility',''), 0))
-    buf += _u16(_parse_css_value(s.get('min-width'), 0xFFFF))
-    buf += _u16(_parse_css_value(s.get('max-width'), 0xFFFF))
-    buf += _u16(_parse_css_value(s.get('min-height'), 0xFFFF))
-    buf += _u16(_parse_css_value(s.get('max-height'), 0xFFFF))
-
-    try: fg = int(float(s.get('flex-grow','0')) * 100)
-    except: fg = 0
-    buf += _u16(min(fg, 65535))
-    try: fs = int(float(s.get('flex-shrink','1')) * 100)
-    except: fs = 100
-    buf += _u16(min(fs, 65535))
-    buf += _u16(_parse_css_value(s.get('flex-basis'), 0xFFFF))
-
-    try: order = int(s.get('order','0'))
-    except: order = 0
-    buf.append(max(-128, min(127, order)) & 0xFF)
-    buf.append(ALIGNSELF_MAP.get(s.get('align-self',''), 0))
-
-    _parse_box_shadow(s)
-    buf += _u32(_parse_color(s.get('_shadow_color'), 0))
-    buf += _i16(_parse_css_value(s.get('_shadow_x', '0'), 0))
-    buf += _i16(_parse_css_value(s.get('_shadow_y', '0'), 0))
-    buf += _u16(_parse_css_value(s.get('_shadow_blur', '0'), 0))
-    buf += _u16(_parse_css_value(s.get('_shadow_spread', '0'), 0))
-
-    buf += _u16(0xFFFF)  # font-family-id (placeholder, resolved by BFS)
-    buf.append(FONTSTYLE_MAP.get(s.get('font-style',''), 0))
-    buf.append(0xFF)  # animation-id (placeholder, resolved by BAM)
 
 # ═══════════════════════════════════════════════════════════════
 #  BIB Serializer
@@ -630,407 +563,22 @@ def serialize_bas(audios: list) -> bytes:
     return bytes(buf)
 
 # ═══════════════════════════════════════════════════════════════
-#  BFS Serializer (Binary Font Streams)
-# ═══════════════════════════════════════════════════════════════
-
-BFS_MAGIC = b'BFS\x01'
-SEC_BFS = 7
-FONT_FORMAT = {'woff2': 0, 'woff': 1, 'ttf': 2, 'otf': 3}
-
-def serialize_bfs(fonts: list) -> bytes:
-    if not fonts:
-        return b''
-    buf = bytearray(BFS_MAGIC)
-    buf += _u32(len(fonts))
-    for font in fonts:
-        buf += _u16(font['id'])
-        family = font['family'].encode('utf-8')
-        buf.append(min(len(family), 255))
-        buf += family[:255]
-        buf += _u16(font.get('weight', 400))
-        buf.append({'normal': 0, 'italic': 1, 'oblique': 2}.get(font.get('style', 'normal'), 0))
-        fmt = FONT_FORMAT.get(font.get('format', 'woff2'), 0)
-        buf.append(fmt)
-        data = font['data']
-        buf += _u32(len(data))
-        buf += data
-    return bytes(buf)
-
-
-def extract_fonts_from_html(html_path: str) -> list:
-    import re
-    base = Path(html_path).parent
-    fonts = []
-    html_text = Path(html_path).read_text(encoding='utf-8', errors='ignore')
-    
-    face_re = re.compile(
-        r'@font-face\s*\{([^}]+)\}', re.IGNORECASE | re.DOTALL
-    )
-    for match in face_re.finditer(html_text):
-        block = match.group(1)
-        family_m = re.search(r"font-family\s*:\s*['\"]?([^;'\"]+)", block)
-        src_m = re.search(r"url\(['\"]?([^)'\"]+'?)\)?", block)
-        weight_m = re.search(r'font-weight\s*:\s*(\d+|bold|normal)', block)
-        style_m = re.search(r'font-style\s*:\s*(normal|italic|oblique)', block)
-        
-        if not family_m or not src_m:
-            continue
-        
-        family = family_m.group(1).strip()
-        src_url = src_m.group(1).strip().rstrip("'\"")
-        
-        font_path = base / src_url
-        if not font_path.exists():
-            continue
-        
-        weight = 400
-        if weight_m:
-            w = weight_m.group(1)
-            weight = 700 if w == 'bold' else 400 if w == 'normal' else int(w)
-        
-        style = style_m.group(1) if style_m else 'normal'
-        ext = font_path.suffix.lower().lstrip('.')
-        fmt = ext if ext in FONT_FORMAT else 'woff2'
-        
-        fonts.append({
-            'id': len(fonts),
-            'family': family,
-            'weight': weight,
-            'style': style,
-            'format': fmt,
-            'data': font_path.read_bytes()
-        })
-    
-    return fonts
-
-
-# ═══════════════════════════════════════════════════════════════
-#  BAM Serializer (Binary Animation Map)
-# ═══════════════════════════════════════════════════════════════
-
-BAM_MAGIC = b'BAM\x01'
-SEC_BAM = 8
-
-BAM_TIMING = {'ease':0,'linear':1,'ease-in':2,'ease-out':3,'ease-in-out':4}
-BAM_DIR = {'normal':0,'reverse':1,'alternate':2}
-BAM_FILL = {'none':0,'forwards':1,'backwards':2,'both':3}
-BAM_PROP = {
-    'transform:translateX': 1, 'transform:translateY': 2, 'transform:translateZ': 3,
-    'transform:rotate': 4, 'transform:rotateX': 5, 'transform:rotateY': 6,
-    'transform:scaleX': 7, 'transform:scaleY': 8, 'transform:skewX': 9, 'transform:skewY': 10,
-    'opacity': 16, 'background-color': 17, 'color': 18, 'width': 19, 'height': 20
-}
-
-def serialize_bam(animations: list) -> bytes:
-    if not animations:
-        return b''
-    buf = bytearray(BAM_MAGIC)
-    buf += _u32(len(animations))
-    for anim in animations:
-        buf.append(anim['id'])
-        buf.append(anim['type']) # 0=transition, 1=keyframes
-        name = anim['name'].encode('ascii')
-        buf.append(min(len(name), 255))
-        buf += name[:255]
-        buf += _u32(anim.get('duration', 0))
-        buf += _u32(anim.get('delay', 0))
-        buf.append(BAM_TIMING.get(anim.get('timing', 'ease'), 0))
-        iters = anim.get('iterations', 1)
-        buf += _u16(0xFFFF if iters == 'infinite' else min(int(iters), 65534))
-        buf.append(BAM_DIR.get(anim.get('direction', 'normal'), 0))
-        buf.append(BAM_FILL.get(anim.get('fill', 'none'), 0))
-        
-        keyframes = anim.get('keyframes', [])
-        buf += _u16(len(keyframes))
-        for kf in keyframes:
-            buf.append(min(100, max(0, int(kf['pct']))))
-            props = kf.get('props', [])
-            buf.append(min(len(props), 255))
-            for p in props[:255]:
-                pid = BAM_PROP.get(p['name'], 0)
-                buf.append(pid)
-                val = str(p['value']).encode('utf-8')
-                buf += _u16(len(val))
-                buf += val
-    return bytes(buf)
-
-def extract_animations_from_html(html_path: str) -> list:
-    import re
-    animations = []
-    html_text = Path(html_path).read_text(encoding='utf-8', errors='ignore')
-    
-    # Very basic CSS keyframe parser for MVP
-    kf_re = re.compile(r'@keyframes\s+([\w-]+)\s*\{([^}]+(?:\{[^}]+\}[^}]*)*)\}', re.IGNORECASE)
-    for match in kf_re.finditer(html_text):
-        name = match.group(1)
-        body = match.group(2)
-        
-        anim = {
-            'id': len(animations),
-            'type': 1,
-            'name': name,
-            'keyframes': []
-        }
-        
-        # Split body into frames by matching "XX% {" or "from {" or "to {"
-        frame_re = re.compile(r'(?:([\d\.]+%)\s*|from\s*|to\s*)\{([^}]+)\}', re.IGNORECASE)
-        for f_match in frame_re.finditer(body):
-            pct_str = (f_match.group(1) or '').lower()
-            if not pct_str:
-                if 'from' in f_match.group(0).lower(): pct_str = '0%'
-                elif 'to' in f_match.group(0).lower(): pct_str = '100%'
-                else: continue
-            
-            pct = float(pct_str.replace('%', ''))
-            props_str = f_match.group(2)
-            
-            props = []
-            for p_str in props_str.split(';'):
-                if ':' not in p_str: continue
-                k, v = p_str.split(':', 1)
-                k = k.strip().lower()
-                v = v.strip()
-                if k == 'transform':
-                    t_re = re.finditer(r'(translateX|translateY|translateZ|rotate|rotateX|rotateY|scaleX|scaleY|skewX|skewY)\(([^)]+)\)', v)
-                    for tm in t_re:
-                        props.append({'name': f'transform:{tm.group(1)}', 'value': tm.group(2)})
-                else:
-                    props.append({'name': k, 'value': v})
-                    
-            if props:
-                anim['keyframes'].append({'pct': pct, 'props': props})
-                
-        if anim['keyframes']:
-            animations.append(anim)
-            
-    return animations
-
-# ═══════════════════════════════════════════════════════════════
-#  BRS Serializer (Binary Responsive Specs)
-# ═══════════════════════════════════════════════════════════════
-
-BRS_MAGIC = b'BRS\x01'
-SEC_BRS = 9
-
-def serialize_brs(queries: list) -> bytes:
-    if not queries:
-        return b''
-    buf = bytearray(BRS_MAGIC)
-    buf += _u32(len(queries))
-    for mq in queries:
-        qstr = mq['query'].encode('ascii')
-        buf.append(min(len(qstr), 255))
-        buf += qstr[:255]
-        
-        blocks = mq.get('blocks', [])
-        buf += _u32(len(blocks))
-        for b in blocks:
-            style_dict = _parse_inline_style(b.get('style', ''))
-            style_dict = _expand_shorthand(style_dict)
-            _write_blb_block(buf, b['id'], style_dict, b.get('default_display', 0))
-    return bytes(buf)
-
-def extract_brs_from_html(html_path: str, dom) -> list:
-    return []
-
-# ═══════════════════════════════════════════════════════════════
-#  BSG Serializer (Binary SVG Graphics)
-# ═══════════════════════════════════════════════════════════════
-
-BSG_MAGIC = b'BSG\x01'
-SEC_BSG = 10
-
-def serialize_bsg(graphics: list) -> bytes:
-    if not graphics:
-        return b''
-    buf = bytearray(BSG_MAGIC)
-    buf += _u32(len(graphics))
-    for g in graphics:
-        buf += _u32(g['id'])
-        buf += _u16(g.get('width', 0))
-        buf += _u16(g.get('height', 0))
-        paths = g.get('paths', [])
-        buf += _u16(len(paths))
-        for p in paths:
-            buf += _u32(_parse_color(p.get('fill'), 0))
-            buf += _u32(_parse_color(p.get('stroke'), 0))
-            buf += _u16(_parse_css_value(p.get('stroke_width'), 0))
-            
-            d_str = p.get('d', '').encode('ascii')
-            buf += _u32(len(d_str))
-            buf += d_str
-    return bytes(buf)
-
-def extract_bsg_from_html(html_path: str, dom) -> list:
-    return []
-
-# ═══════════════════════════════════════════════════════════════
-#  BJS Serializer (Binary JavaScript Source)
-# ═══════════════════════════════════════════════════════════════
-
-BJS_MAGIC = b'BJS\x01'
-SEC_BJS = 11
-
-def serialize_bjs(scripts: list) -> bytes:
-    if not scripts:
-        return b''
-    buf = bytearray(BJS_MAGIC)
-    buf += _u32(len(scripts))
-    for s in scripts:
-        buf += _u32(s['id'])
-        c_str = s.get('content', '').encode('utf-8')
-        buf += _u32(len(c_str))
-        buf += c_str
-    return bytes(buf)
-
-def extract_bjs_from_html(html_path: str, dom) -> list:
-    return []
-
-# ═══════════════════════════════════════════════════════════════
-#  BPR Serializer (Binary Page Routes)
-# ═══════════════════════════════════════════════════════════════
-
-BPR_MAGIC = b'BPR\x01'
-SEC_BPR = 12
-
-def serialize_bpr(routes: list) -> bytes:
-    if not routes:
-        return b''
-    buf = bytearray(BPR_MAGIC)
-    buf += _u32(len(routes))
-    for r in routes:
-        buf += _u16(r['id'])
-        p_str = r.get('path', '/').encode('ascii')
-        buf.append(min(len(p_str), 255))
-        buf += p_str[:255]
-        buf += _u16(r.get('node_id', 0))
-    return bytes(buf)
-
-def extract_bpr_from_html(html_path: str, dom) -> list:
-    return []
-
-# ═══════════════════════════════════════════════════════════════
-#  BCS Serializer (Binary Class Styles / Deduplication)
-# ═══════════════════════════════════════════════════════════════
-
-BCS_MAGIC = b'BCS\x01'
-SEC_BCS = 13
-
-def serialize_bcs(root) -> bytes:
-    flat = []
-    _flatten_tree(root, flat)
-    
-    unique_blocks = {}
-    unique_list = []
-    node_mapping = []
-    
-    for i, node in enumerate(flat):
-        style = _parse_inline_style(node.attrs.get('style', ''))
-        style = _expand_shorthand(style)
-        default_display = 1 if node.tag in INLINE_TAGS else 0
-        
-        temp_buf = bytearray()
-        _write_blb_block(temp_buf, 0, style, default_display)
-        block = bytes(temp_buf)
-        
-        if block not in unique_blocks:
-            style_id = len(unique_list)
-            unique_blocks[block] = style_id
-            unique_list.append(block)
-        else:
-            style_id = unique_blocks[block]
-            
-        node_mapping.append(style_id)
-        
-    if not unique_list:
-        return b''
-        
-    buf = bytearray(BCS_MAGIC)
-    buf += _u32(len(unique_list))
-    buf += _u32(len(node_mapping))
-    
-    for block in unique_list:
-        buf += block
-        
-    for sid in node_mapping:
-        buf += _u16(sid)
-        
-    return bytes(buf)
-
-# ═══════════════════════════════════════════════════════════════
-#  BWA Serializer (Binary WebAssembly)
-# ═══════════════════════════════════════════════════════════════
-
-BWA_MAGIC = b'BWA\x01'
-SEC_BWA = 14
-
-def serialize_bwa(wasms: list) -> bytes:
-    if not wasms:
-        return b''
-    buf = bytearray(BWA_MAGIC)
-    buf.append(min(len(wasms), 255))
-    for w in wasms:
-        buf.append(w['id'] & 0xFF)
-        name = w.get('name', '').encode('ascii')
-        buf.append(min(len(name), 255))
-        buf += name[:255]
-        buf += _u32(len(w['data']))
-        buf += w['data']
-    return bytes(buf)
-
-def extract_bwa_from_html(html_path: str, dom) -> list:
-    # MVP: Empty extractor, could be populated from <script type="application/wasm">
-    return []
-
-# ═══════════════════════════════════════════════════════════════
-#  B3D Serializer (Binary 3D Shaders)
-# ═══════════════════════════════════════════════════════════════
-
-B3D_MAGIC = b'B3D\x01'
-SEC_B3D = 15
-
-def serialize_b3d(shaders: list) -> bytes:
-    if not shaders:
-        return b''
-    buf = bytearray(B3D_MAGIC)
-    buf.append(min(len(shaders), 255))
-    for s in shaders:
-        buf.append(s['id'] & 0xFF)
-        buf.append(s.get('type', 0) & 0xFF) # 0=Vertex, 1=Fragment, 2=Compute
-        data = s['data'] if isinstance(s['data'], bytes) else s['data'].encode('utf-8')
-        buf += _u32(len(data))
-        buf += data
-    return bytes(buf)
-
-def extract_b3d_from_html(html_path: str, dom) -> list:
-    # MVP: Empty extractor, could be populated from <script type="x-shader/x-vertex">
-    return []
-
-# ═══════════════════════════════════════════════════════════════
 #  BWEB Container
 # ═══════════════════════════════════════════════════════════════
 
-def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes, bib: bytes = b'', bvs: bytes = b'', bas: bytes = b'', bfs: bytes = b'', bam: bytes = b'', brs: bytes = b'', bsg: bytes = b'', bjs: bytes = b'', bpr: bytes = b'', bcs: bytes = b'', bwa: bytes = b'', b3d: bytes = b'', compress: bool = False) -> bytes:
+def bundle_bweb(bml: bytes, bdt: bytes, blb: bytes, bib: bytes = b'', bvs: bytes = b'', bas: bytes = b'', compress: bool = False) -> bytes:
     import zlib
     buf = bytearray(BWEB_MAGIC)
     buf.append(BWEB_VERSION)
     
-    sections = []
-    if bml: sections.append((SEC_BML, bml, compress))
-    if bdt: sections.append((SEC_BDT, bdt, False))
-    if blb: sections.append((SEC_BLB, blb, compress))
+    sections = [
+        (SEC_BML, bml, compress),
+        (SEC_BDT, bdt, False),
+        (SEC_BLB, blb, compress)
+    ]
     if bib: sections.append((SEC_BIB, bib, False))
     if bvs: sections.append((SEC_BVS, bvs, False))
     if bas: sections.append((SEC_BAS, bas, False))
-    if bfs: sections.append((SEC_BFS, bfs, False))
-    if bam: sections.append((SEC_BAM, bam, False))
-    if brs: sections.append((SEC_BRS, brs, False))
-    if bsg: sections.append((SEC_BSG, bsg, False))
-    if bjs: sections.append((SEC_BJS, bjs, False))
-    if bpr: sections.append((SEC_BPR, bpr, False))
-    if bcs: sections.append((SEC_BCS, bcs, False))
-    if bwa: sections.append((SEC_BWA, bwa, False))
-    if b3d: sections.append((SEC_B3D, b3d, False))
     
     buf.append(len(sections))
 
@@ -1073,19 +621,12 @@ def unbundle_bweb(data: bytes) -> dict:
 #  HTML → BWEB Pipeline
 # ═══════════════════════════════════════════════════════════════
 
-def html_to_bweb(html_str: str, bib: bytes = b'', bvs: bytes = b'', bas: bytes = b'', bfs: bytes = b'', bam: bytes = b'', brs: bytes = b'', bsg: bytes = b'', bjs: bytes = b'', bpr: bytes = b'', bcs_enabled: bool = False, bwa: bytes = b'', b3d: bytes = b'', compress: bool = False) -> bytes:
+def html_to_bweb(html_str: str, bib: bytes = b'', bvs: bytes = b'', bas: bytes = b'', compress: bool = False) -> bytes:
     dom = html_to_dom(html_str)
     bml = serialize_bml(dom)
     bdt = serialize_bdt(dom)
-    
-    blb = b''
-    bcs = b''
-    if bcs_enabled:
-        bcs = serialize_bcs(dom)
-    else:
-        blb = serialize_blb(dom)
-        
-    return bundle_bweb(bml, bdt, blb, bib=bib, bvs=bvs, bas=bas, bfs=bfs, bam=bam, brs=brs, bsg=bsg, bjs=bjs, bpr=bpr, bcs=bcs, bwa=bwa, b3d=b3d, compress=compress)
+    blb = serialize_blb(dom)
+    return bundle_bweb(bml, bdt, blb, bib=bib, bvs=bvs, bas=bas, compress=compress)
 
 
 def html_file_to_bweb(html_path: str, output_path: str = None, compress: bool = False) -> str:
@@ -1125,35 +666,13 @@ def html_file_to_bweb(html_path: str, output_path: str = None, compress: bool = 
             process_node(child)
             
     process_node(dom)
-    
-    fonts = extract_fonts_from_html(html_path)
-    animations = extract_animations_from_html(html_path)
-    queries = extract_brs_from_html(html_path, dom)
-    graphics = extract_bsg_from_html(html_path, dom)
-    scripts = extract_bjs_from_html(str(html_path), dom)
-    routes = extract_bpr_from_html(str(html_path), dom)
-    wasms = extract_bwa_from_html(str(html_path), dom)
-    shaders = extract_b3d_from_html(str(html_path), dom)
-    
     bvs_data = serialize_bvs(videos) if videos else b''
     bas_data = serialize_bas(audios) if audios else b''
-    bfs_data = serialize_bfs(fonts) if fonts else b''
-    bam_data = serialize_bam(animations) if animations else b''
-    brs_data = serialize_brs(queries) if queries else b''
-    bsg_data = serialize_bsg(graphics) if graphics else b''
-    bjs_data = serialize_bjs(scripts) if scripts else b''
-    bpr_data = serialize_bpr(routes) if routes else b''
-    bwa_data = serialize_bwa(wasms) if wasms else b''
-    b3d_data = serialize_b3d(shaders) if shaders else b''
     
     bml = serialize_bml(dom)
     bdt = serialize_bdt(dom)
-    
-    # We enforce BCS by default to maximize CO2 savings
-    blb = b''
-    bcs_data = serialize_bcs(dom)
-    
-    bweb = bundle_bweb(bml, bdt, blb, bib=b'', bvs=bvs_data, bas=bas_data, bfs=bfs_data, bam=bam_data, brs=brs_data, bsg=bsg_data, bjs=bjs_data, bpr=bpr_data, bcs=bcs_data, bwa=bwa_data, b3d=b3d_data, compress=compress)
+    blb = serialize_blb(dom)
+    bweb = bundle_bweb(bml, bdt, blb, bib=b'', bvs=bvs_data, bas=bas_data, compress=compress)
     
     out.write_bytes(bweb)
     return str(out)
@@ -1179,33 +698,6 @@ def bweb_stats(data: bytes) -> dict:
     bas = sections.get(SEC_BAS, b'')
     bas_audios = struct.unpack('>I', bas[4:8])[0] if len(bas) >= 8 else 0
 
-    bfs = sections.get(SEC_BFS, b'')
-    bfs_fonts = struct.unpack('>I', bfs[4:8])[0] if len(bfs) >= 8 else 0
-
-    bam = sections.get(SEC_BAM, b'')
-    bam_anims = struct.unpack('>I', bam[4:8])[0] if len(bam) >= 8 else 0
-
-    brs = sections.get(SEC_BRS, b'')
-    brs_queries = struct.unpack('>I', brs[4:8])[0] if len(brs) >= 8 else 0
-
-    bsg = sections.get(SEC_BSG, b'')
-    bsg_graphics = struct.unpack('>I', bsg[4:8])[0] if len(bsg) >= 8 else 0
-
-    bjs = sections.get(SEC_BJS, b'')
-    bjs_scripts = struct.unpack('>I', bjs[4:8])[0] if len(bjs) >= 8 else 0
-
-    bpr = sections.get(SEC_BPR, b'')
-    bpr_routes = struct.unpack('>I', bpr[4:8])[0] if len(bpr) >= 8 else 0
-
-    bcs = sections.get(SEC_BCS, b'')
-    bcs_blocks = struct.unpack('>I', bcs[4:8])[0] if len(bcs) >= 8 else 0
-
-    bwa = sections.get(SEC_BWA, b'')
-    bwa_modules = bwa[4] if len(bwa) >= 5 else 0
-
-    b3d = sections.get(SEC_B3D, b'')
-    b3d_shaders = b3d[4] if len(b3d) >= 5 else 0
-
     return {
         'total_bytes': len(data),
         'bml_bytes': len(bml),
@@ -1214,29 +706,11 @@ def bweb_stats(data: bytes) -> dict:
         'bib_bytes': len(bib),
         'bvs_bytes': len(bvs),
         'bas_bytes': len(bas),
-        'bfs_bytes': len(bfs),
-        'bam_bytes': len(bam),
-        'brs_bytes': len(brs),
-        'bsg_bytes': len(bsg),
-        'bjs_bytes': len(bjs),
-        'bpr_bytes': len(bpr),
-        'bcs_bytes': len(bcs),
-        'bwa_bytes': len(bwa),
-        'b3d_bytes': len(b3d),
         'bdt_nodes': bdt_nodes,
         'blb_blocks': blb_blocks,
         'bib_images': bib_images,
         'bvs_videos': bvs_videos,
         'bas_audios': bas_audios,
-        'bfs_fonts': bfs_fonts,
-        'bam_anims': bam_anims,
-        'brs_queries': brs_queries,
-        'bsg_graphics': bsg_graphics,
-        'bjs_scripts': bjs_scripts,
-        'bpr_routes': bpr_routes,
-        'bcs_blocks': bcs_blocks,
-        'bwa_modules': bwa_modules,
-        'b3d_shaders': b3d_shaders,
     }
 
 # ═══════════════════════════════════════════════════════════════

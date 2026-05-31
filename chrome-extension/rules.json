@@ -9,7 +9,7 @@
       ]
     },
     "condition": {
-      "regexFilter": "^https?:\\/\\/[^\\/]+\\/[^?#]+\\.(bml|bdt|blb|bib|bweb)($|\\?|#)",
+      "regexFilter": "^https?:\\/\\/[^\\/]+\\/[^?#]+\\.(bpg|bml|bdt|blb|bib|bweb)($|\\?|#)",
       "resourceTypes": ["main_frame", "sub_frame", "xmlhttprequest"]
     }
   }
