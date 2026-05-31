@@ -850,7 +850,7 @@ function showBWEBExtensionModal() {
     else if (ua.match(/firefox|fxios/i)) browser = 'firefox';
     else if (ua.match(/safari/i)) browser = 'safari';
 
-    const githubRepo = 'https://github.com/Luiguard/bweb-native-engine/releases/latest/download';
+    const githubRepo = 'https://github.com/Luiguard/bml-prototype/releases/latest/download';
     const links = {
         'chrome': `${githubRepo}/bweb-extension-chrome.zip`,
         'firefox': `${githubRepo}/bweb-extension-firefox.xpi`,
