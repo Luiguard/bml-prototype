@@ -850,12 +850,13 @@ function showBWEBExtensionModal() {
     else if (ua.match(/safari/i)) browser = 'safari';
 
     const githubRepo = 'https://github.com/Luiguard/bml-prototype/releases/latest/download';
-            'chrome': `${githubRepo}/bweb-extension-chrome.zip`,
+    const links = {
+        'chrome': `${githubRepo}/bweb-extension-chrome.zip`,
         'firefox': `${githubRepo}/bweb-extension-firefox.xpi`,
         'edge': `${githubRepo}/bweb-extension-edge.zip`,
         'safari': `${githubRepo}/bweb-extension-safari.zip`,
         'opera': `${githubRepo}/bweb-extension-chrome.zip`,
-        'unknown': 'https://github.com/mediclean-pro/bweb-native-engine/releases'
+        'unknown': 'https://github.com/Luiguard/bml-prototype/releases'
     };
 
     const downloadBtn = document.getElementById('bweb-download-btn');
