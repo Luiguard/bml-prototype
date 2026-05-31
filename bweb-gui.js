@@ -280,11 +280,26 @@ app.get('/api/convert', async (req, res) => {
         }
 
         const htmlFiles = getHtmlFiles(inputDir);
+        
+        // Inject dynamic query parameter pages manually for compilation
+        const dynamicRoutes = [
+            'service.html?type=ordination',
+            'service.html?type=buero',
+            'service.html?type=grund',
+            'service.html?type=fenster',
+            'service.html?type=stiegenhaus',
+            'service.html?type=haushalt',
+            'consulting.html?type=hygiene',
+            'consulting.html?type=qualitaet',
+            'consulting.html?type=datenschutz'
+        ];
+        htmlFiles.push(...dynamicRoutes);
+        
         if (htmlFiles.length === 0) {
             throw new Error(`Keine .html Dateien im Ordner ${inputDir} gefunden.`);
         }
 
-        sendLog(`[VFS] ${htmlFiles.length} HTML-Dateien gefunden.`);
+        sendLog(`[VFS] ${htmlFiles.length} Routen/Seiten gefunden.`);
 
         const tempApp = express();
         tempApp.use(express.static(inputDir));
@@ -757,8 +772,11 @@ const port = localServer.address().port;
                 }
                 if (path === '' || path === '/') path = 'index.html';
                 
-                // Find in VFS
-                const targetPage = bwebData.vfs.find(p => p.name === path || p.name === path.split('?')[0]);
+                // Construct the full path including search query for matching
+                const fullPath = path + url.search;
+                
+                // Find in VFS (match exact full path first, then fallback to base path without query)
+                const targetPage = bwebData.vfs.find(p => p.name === fullPath || p.name === path);
                 if(targetPage) {
                     window.scrollTo(0, 0); // Reset scroll
                     let bmlStart = 0;

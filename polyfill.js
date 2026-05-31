@@ -363,7 +363,8 @@ class CanvasEngine {
     paintNode(node, accX = 0, accY = 0) {
         if(!node) return;
         const s = node.isText ? (this.blbMap[node.parent?.id] || {}) : (this.blbMap[node.id] || {});
-        if(!node.isText && s[5] === 4) return;
+        if(!node.isText && s[5] === 4) return; // display: none
+        if(s[45] === 1) return; // visibility: hidden
         
         let rx = node.layout.x;
         let ry = node.layout.y;
@@ -849,7 +850,7 @@ function showBWEBExtensionModal() {
     else if (ua.match(/firefox|fxios/i)) browser = 'firefox';
     else if (ua.match(/safari/i)) browser = 'safari';
 
-    const githubRepo = 'https://github.com/Luiguard/bml-prototype/releases/latest/download';
+    const githubRepo = 'https://github.com/Luiguard/bweb-native-engine/releases/latest/download';
     const links = {
         'chrome': `${githubRepo}/bweb-extension-chrome.zip`,
         'firefox': `${githubRepo}/bweb-extension-firefox.xpi`,
