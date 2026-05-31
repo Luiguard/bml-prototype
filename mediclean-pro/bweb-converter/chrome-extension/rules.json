@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "X-BWEB-Native", "operation": "set", "value": "true" }
+      ]
+    },
+    "condition": {
+      "regexFilter": "^https?:\\/\\/[^\\/]+\\/[^?#]+\\.(bpg|bml|bdt|blb|bib|bweb)($|\\?|#)",
+      "resourceTypes": ["main_frame", "sub_frame", "xmlhttprequest"]
+    }
+  }
+]

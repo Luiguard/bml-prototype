@@ -1,0 +1,16 @@
+{
+  "files": {
+    "index.html": {
+      "id": "vfs_000",
+      "type": "html",
+      "hash": "27c16eab879601dec0f88379fa8bd5c76d3eb7fb99fec5d925235ec981b89419",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-converter/src/index.html"
+    },
+    "style.css": {
+      "id": "vfs_001",
+      "type": "css",
+      "hash": "ef85f559558d52a223670e651a24bed74f29234590df4d8b57d62b1f096ed400",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-converter/src/style.css"
+    }
+  }
+}

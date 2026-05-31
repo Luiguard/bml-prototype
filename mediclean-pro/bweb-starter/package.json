@@ -1,0 +1,11 @@
+{
+  "name": "bweb-starter",
+  "version": "1.0.0",
+  "description": "Minimales Starter-Template für BWEB Webanwendungen",
+  "scripts": {
+    "build": "node ../bweb-converter/bwebc.js build ./src ./dist/app.bweb"
+  },
+  "dependencies": {
+    "bweb-engine": "file:../bweb-engine"
+  }
+}

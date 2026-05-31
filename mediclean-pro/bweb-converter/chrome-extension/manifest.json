@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "BWEB Inspector & Privacy Companion",
+  "version": "1.0.0",
+  "description": "Inspektiere binäre BWEB-Seiten, analysiere die cookie-freie Architektur und entdecke die Zukunft der Privatsphäre.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs",
+    "storage",
+    "declarativeNetRequest"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "devtools_page": "devtools.html",
+  "background": {
+    "service_worker": "service-worker.js",
+    "scripts": ["service-worker.js"]
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "bweb-inspector@mediclean-pro.at",
+      "strict_min_version": "109.0"
+    }
+  }
+}

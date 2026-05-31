@@ -1,0 +1,343 @@
+:root {
+    --bg-dark: #030305;
+    --bg-card: rgba(20, 20, 30, 0.45);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --border-glass-glow: rgba(79, 172, 254, 0.2);
+    --text-main: #ffffff;
+    --text-muted: #9ca3af;
+    --accent-1: rgba(0, 242, 254, 0.8);
+    --accent-2: rgba(79, 172, 254, 0.8);
+    --accent-3: rgba(161, 140, 209, 0.8);
+    --success: #10b981;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background: radial-gradient(circle at top, #0c0e15 0%, var(--bg-dark) 100%);
+    color: var(--text-main);
+    line-height: 1.6;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.text-center { text-align: center; }
+
+/* Mesh Background */
+.mesh-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+}
+
+.orb-1 {
+    top: -20%;
+    left: -10%;
+    width: 600px;
+    height: 600px;
+    background-color: var(--accent-1);
+}
+
+.orb-2 {
+    top: 40%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background-color: var(--accent-2);
+}
+
+.orb-3 {
+    top: -10%;
+    right: 30%;
+    width: 400px;
+    height: 400px;
+    background-color: var(--accent-3);
+}
+
+/* Hero Section */
+.hero {
+    position: relative;
+    padding: 10rem 0 6rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+h1 {
+    font-size: 4.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: #ffffff;
+}
+
+.accent {
+    color: #4facfe;
+}
+
+.subtitle {
+    font-size: 1.35rem;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    font-weight: 300;
+}
+
+.alert-box {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 1rem 1.5rem;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    color: #d1fae5;
+    backdrop-filter: blur(20px);
+}
+
+.pulse {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--success);
+    margin-right: 12px;
+}
+
+/* Intro */
+.intro {
+    padding: 6rem 0 2rem;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.intro h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.intro p {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    font-weight: 300;
+}
+
+/* Pillars */
+.pillars {
+    padding: 4rem 0;
+}
+
+.pillars h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 4rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-top: 1px solid var(--border-glass-glow);
+    border-radius: 24px;
+    padding: 2.5rem;
+    backdrop-filter: blur(30px);
+}
+
+.icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(79, 172, 254, 0.2);
+    color: #4facfe;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    border: 1px solid rgba(79, 172, 254, 0.3);
+}
+
+.card h3 {
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+}
+
+.card p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    font-weight: 300;
+}
+
+/* Benchmarks */
+.benchmarks {
+    padding: 4rem 0 8rem;
+}
+
+.benchmarks h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 4rem;
+}
+
+.bench-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-top: 1px solid var(--border-glass-glow);
+    border-radius: 24px;
+    padding: 3rem;
+    margin-bottom: 2.5rem;
+    backdrop-filter: blur(30px);
+}
+
+.bench-row {
+    margin-bottom: 2.5rem;
+}
+
+.bench-row:last-child {
+    margin-bottom: 0;
+}
+
+.bench-label {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.bench-bar-container {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    overflow: hidden;
+    height: 44px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.bench-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding-left: 1.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: white;
+}
+
+.dom-bar {
+    background: #ef4444;
+}
+
+.bweb-bar {
+    background: var(--success);
+}
+
+.bench-note {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 700px;
+    margin: 0 auto;
+    font-weight: 300;
+}
+
+/* Footer */
+footer {
+    border-top: 1px solid var(--border-glass);
+    padding: 4rem 0;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 300;
+}
+
+/* Interactive Showcase */
+.interactive {
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.interactive h2 {
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+}
+
+.interactive-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-top: 1px solid var(--border-glass-glow);
+    border-radius: 24px;
+    padding: 3rem;
+    backdrop-filter: blur(30px);
+    margin: 0 auto 3rem;
+    max-width: 600px;
+}
+
+.btn {
+    background: var(--accent-2);
+    color: #fff;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.counter-display {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.tab-nav {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.tab-btn {
+    background: transparent;
+    border: 1px solid var(--border-glass);
+    color: var(--text-muted);
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.tab-content {
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    padding: 2rem;
+    min-height: 150px;
+    color: var(--text-main);
+}
+
