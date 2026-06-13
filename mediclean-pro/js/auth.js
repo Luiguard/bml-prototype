@@ -100,16 +100,27 @@ const AuthService = {
             if (!user.apiKey && data.apiKey) user.apiKey = data.apiKey;
             if (!user.apiKey) user.apiKey = user.id; // Consistent with Electron fallback
 
+            const safeUser = {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                apiKey: user.apiKey,
+                permissions: user.permissions
+            };
+
             // Bridge to React App (mediclean_v3_session)
             try {
-                let perms = user.permissions;
+                let perms = safeUser.permissions;
                 try {
                     if (typeof perms === 'string') perms = JSON.parse(perms);
                 } catch (e) { }
 
                 const sessionObj = {
-                    ...user,
-                    token: user.apiKey,
+                    id: safeUser.id,
+                    username: safeUser.username,
+                    role: safeUser.role,
+                    token: safeUser.apiKey,
                     permissions: perms || []
                 };
                 sessionStorage.setItem('mediclean_v3_session', JSON.stringify(sessionObj));
@@ -117,7 +128,7 @@ const AuthService = {
                 console.warn("Auth Bridge Error:", e);
             }
 
-            localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+            localStorage.setItem(SESSION_KEY, JSON.stringify(safeUser));
 
             // 📲 PWA PUSH REGISTRATION
             if (window.subscribeForPush) {

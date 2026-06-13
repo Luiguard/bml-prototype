@@ -5,10 +5,21 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
+const rateLimit = require('express-rate-limit');
+
 const app = express();
 const port = 4000;
 
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100
+});
+app.use(limiter);
+
 app.use(express.json());
+
+const activePaths = new Map();
 
 // Main GUI Dashboard
 app.get('/', (req, res) => {
@@ -130,6 +141,7 @@ app.get('/', (req, res) => {
                 <label>Quellordner (Website-Projekt)</label>
                 <div class="input-group">
                     <input type="text" id="inputPath" placeholder="Wähle den Ordner mit deiner HTML/CSS/JS Struktur" readonly>
+                    <input type="hidden" id="inputId">
                     <button onclick="browse('folder')">Browse...</button>
                 </div>
             </div>
@@ -138,6 +150,7 @@ app.get('/', (req, res) => {
                 <label>Output-Datei (.bpg)</label>
                 <div class="input-group">
                     <input type="text" id="outputPath" placeholder="Wo soll das BWEB-Format gespeichert werden?" readonly>
+                    <input type="hidden" id="outputId">
                     <button onclick="browse('file')">Browse...</button>
                 </div>
             </div>
@@ -172,8 +185,14 @@ app.get('/', (req, res) => {
                 const res = await fetch('/api/browse?type=' + type);
                 const data = await res.json();
                 if (data.path) {
-                    if (type === 'folder') inputPath.value = data.path;
-                    if (type === 'file') outputPath.value = data.path;
+                    if (type === 'folder') {
+                        inputPath.value = data.path;
+                        document.getElementById('inputId').value = data.id;
+                    }
+                    if (type === 'file') {
+                        outputPath.value = data.path;
+                        document.getElementById('outputId').value = data.id;
+                    }
                     checkReady();
                 }
             } catch (e) {
@@ -194,7 +213,9 @@ app.get('/', (req, res) => {
             terminal.innerHTML = '';
             btnStart.disabled = true;
             
-            const evtSource = new EventSource(\`/api/convert?input=\${encodeURIComponent(inputPath.value)}&output=\${encodeURIComponent(outputPath.value)}\`);
+            const inId = encodeURIComponent(document.getElementById('inputId').value);
+            const outId = encodeURIComponent(document.getElementById('outputId').value);
+            const evtSource = new EventSource(\`/api/convert?inputId=\${inId}&outputId=\${outId}\`);
             
             evtSource.onmessage = function(event) {
                 const data = JSON.parse(event.data);
@@ -228,9 +249,12 @@ app.get('/api/browse', (req, res) => {
     exec(cmd, (error, stdout, stderr) => {
         if (error) {
             // Error usually means user cancelled the dialog
-            return res.json({ path: null });
+            return res.json({ path: null, id: null });
         }
-        res.json({ path: stdout.trim() });
+        const cleanPath = stdout.trim();
+        const id = Date.now().toString() + Math.random().toString().substring(2);
+        activePaths.set(id, cleanPath);
+        res.json({ path: cleanPath, id: id });
     });
 });
 
@@ -247,8 +271,8 @@ app.get('/api/convert', async (req, res) => {
         res.write(`data: ${JSON.stringify({ msg, type })}\n\n`);
     };
 
-    const inputDir = req.query.input;
-    const outputFile = req.query.output;
+    const inputDir = activePaths.get(req.query.inputId);
+    const outputFile = activePaths.get(req.query.outputId);
 
     if (!inputDir || !outputFile) {
         sendLog('Fehlerhafte Pfade übermittelt.', 'error');

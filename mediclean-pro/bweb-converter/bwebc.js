@@ -49,7 +49,7 @@ switch (command) {
     case 'test': {
         console.log(`[bwebc] Starte Testsuite...`);
         try {
-            execSync(`node ${path.join(__dirname, 'tests/runner.js')}`, { stdio: 'inherit' });
+            require('child_process').spawnSync('node', [path.join(__dirname, 'tests/runner.js')], { stdio: 'inherit' });
         } catch(e) {
             console.error('[bwebc] Tests fehlgeschlagen.');
             process.exit(1);
@@ -59,7 +59,7 @@ switch (command) {
     case 'roundtrip': {
         console.log(`[bwebc] Starte Roundtrip Validator...`);
         try {
-            execSync(`node ${path.join(__dirname, 'tests/roundtrip.js')}`, { stdio: 'inherit' });
+            require('child_process').spawnSync('node', [path.join(__dirname, 'tests/roundtrip.js')], { stdio: 'inherit' });
         } catch(e) {
             console.error('[bwebc] Roundtrip Validator fehlgeschlagen (Drift erkannt!).');
             process.exit(1);

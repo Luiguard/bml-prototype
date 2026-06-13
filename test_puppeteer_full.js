@@ -44,32 +44,32 @@ const path = require('path');
             iframe.style.visibility = 'hidden';
             document.body.appendChild(iframe);
 
-            const cleanHtml = htmlContent
-                .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '')
-                .replace(/<script\b[^>]*\/>/gi, '')
-                .replace(/\son[a-z]+\s*=\s*(['"])(.*?)\1/gi, '')
-                .replace(/\son[a-z]+\s*=\s*[^>\s]+/gi, '');
+            // Load DOMPurify from CDN first, then sanitize
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js';
+            script.onload = () => {
+                const cleanHtml = window.DOMPurify.sanitize(htmlContent, { WHOLE_DOCUMENT: true });
+                const doc = iframe.contentWindow.document;
+                doc.open();
+                doc.write(cleanHtml);
+                doc.close();
 
-            const doc = iframe.contentWindow.document;
-            doc.open();
-            doc.write(cleanHtml);
-            doc.close();
-
-            setTimeout(() => {
-                const skipLink = doc.querySelector('.skip-link');
-                const header = doc.querySelector('header');
-                const body = doc.body;
-                
-                // Let's also check if the <link> tags were actually replaced in doc.head!
-                const links = Array.from(doc.querySelectorAll('link[rel="stylesheet"]')).map(l => l.href);
-                
-                resolve({
-                    skipLinkDisplay: iframe.contentWindow.getComputedStyle(skipLink).display,
-                    headerDisplay: header ? iframe.contentWindow.getComputedStyle(header).display : 'null',
-                    bodyColor: iframe.contentWindow.getComputedStyle(body).color,
-                    links: links
-                });
-            }, 2500);
+                setTimeout(() => {
+                    const skipLink = doc.querySelector('.skip-link');
+                    const header = doc.querySelector('header');
+                    const body = doc.body;
+                    
+                    const links = Array.from(doc.querySelectorAll('link[rel="stylesheet"]')).map(l => l.href);
+                    
+                    resolve({
+                        skipLinkDisplay: skipLink ? iframe.contentWindow.getComputedStyle(skipLink).display : 'null',
+                        headerDisplay: header ? iframe.contentWindow.getComputedStyle(header).display : 'null',
+                        bodyColor: iframe.contentWindow.getComputedStyle(body).color,
+                        links: links
+                    });
+                }, 2500);
+            };
+            document.head.appendChild(script);
         });
     }, files);
     

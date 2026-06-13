@@ -8,6 +8,7 @@
     <meta name="keywords" content="HTML to Binary, HTML Converter, BWEB Engine, BWEB Tool, Website umwandeln, Polyfill, Web Performance Tool, Binary DOM Generator">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
     <style>
         @keyframes pulse {
             0% { transform: scale(0.95); opacity: 0.5; }
@@ -1374,9 +1375,7 @@ async function clientSideConvert(htmlMap) {
                 iframe.style.pointerEvents = 'none';
                 document.body.appendChild(iframe);
 
-                const cleanHtml = htmlContent
-                    .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '')
-                    .replace(/\son[a-z]+\s*=\s*(['"])(.*?)\1/gi, '');
+                const cleanHtml = DOMPurify.sanitize(htmlContent, { WHOLE_DOCUMENT: true });
 
                 const blob = new Blob([cleanHtml], {type: 'text/html'});
                 iframe.src = URL.createObjectURL(blob);

@@ -839,22 +839,24 @@
                     data.files.forEach(f => {
                         const date = new Date(f.date * 1000).toLocaleDateString('de-AT');
                         const size = (f.size / 1024).toFixed(1) + ' KB';
-                        list.innerHTML += `
-                            <div class="doc-item">
+                        const docItem = document.createElement('div');
+                        docItem.className = 'doc-item';
+                        docItem.innerHTML = `
                                 <div class="doc-info">
                                     <div style="background: rgba(255,255,255,0.1); padding: 0.8rem; border-radius: 10px; color: var(--text-secondary);">
                                         <i data-lucide="file-text" style="width: 24px; height: 24px;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-weight: 600; margin-bottom: 0.2rem;">${f.name}</div>
+                                        <div style="font-weight: 600; margin-bottom: 0.2rem;" class="doc-name-display"></div>
                                         <div class="doc-meta">${date} • ${size}</div>
                                     </div>
                                 </div>
                                 <button class="btn-outline" style="border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="alert('Download-Link folgt in Kürze')">
                                     <i data-lucide="download" style="width: 16px; height: 16px;"></i>
                                 </button>
-                            </div>
                         `;
+                        docItem.querySelector('.doc-name-display').textContent = f.name;
+                        list.appendChild(docItem);
                     });
                     lucide.createIcons();
                 }
@@ -868,7 +870,8 @@
             const file = files[0];
             
             const dropZone = document.getElementById('drop-zone');
-            dropZone.innerHTML = `<div style="color: var(--v3-primary); font-weight: bold;">Lade "${file.name}" hoch...</div>`;
+            dropZone.innerHTML = `<div style="color: var(--v3-primary); font-weight: bold;" id="upload-status-text"></div>`;
+            document.getElementById('upload-status-text').textContent = `Lade "${file.name}" hoch...`;
 
             const formData = new FormData();
             formData.append('file', file);
