@@ -222,6 +222,9 @@ class BLBParser{
                     videos[id]={w,h,codec,chunks};
                 }
                 return videos;
+            }
+        }
+
         class BASParser{
             constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf)}
             parse(){
@@ -286,37 +289,6 @@ class BLBParser{
                 return rules;
             }
         }
-            }
-        }
-
-        class BASParser{
-            constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset;this.u8=new Uint8Array(buf)}
-            parse(){
-                const count=this.v.getUint32(this.o);this.o+=4;
-                const audios={};
-                for(let i=0;i<count;i++){
-                    const id=this.v.getUint32(this.o);this.o+=4;
-                    const codecLen=this.v.getUint8(this.o++);
-                    const codec=new TextDecoder('ascii').decode(this.u8.slice(this.o,this.o+codecLen));
-                    this.o+=codecLen;
-                    const sampleRate=this.v.getUint32(this.o);this.o+=4;
-                    const channels=this.v.getUint8(this.o++);
-                    const chunkCount=this.v.getUint32(this.o);this.o+=4;
-                    const chunks=[];
-                    for(let j=0;j<chunkCount;j++){
-            const targetNode = this.v.getUint32(this.o); this.o += 4;
-            const paramLen = this.v.getUint16(this.o); this.o += 2;
-            
-            if (this.o + paramLen > this.v.byteLength) break;
-            const paramStr = this.d.decode(new Uint8Array(this.v.buffer, this.o, paramLen));
-            this.o += paramLen;
-            
-            rules.push({ triggerNode, eventType, actionType, targetNode, paramStr });
-        }
-        return rules;
-    }
-}
-
         // BWEB Container Section Unpacker
         function parseBWEB(buf){
             const dv=new DataView(buf);
@@ -418,8 +390,7 @@ class BLBParser{
                         const imgData=new ImageData(new Uint8ClampedArray(img.data.buffer, img.data.byteOffset, img.w * img.h * 4),img.w,img.h);
                         const bitmap=await createImageBitmap(imgData);
                         ctx.drawImage(bitmap,0,0);
-                    if (targetUrl.endsWith("/")) targetUrl = targetUrl.slice(0, -1);
-        } else {
+                    } else {
                         const mime = img.comp === 1 ? 'image/png' : img.comp === 2 ? 'image/jpeg' : img.comp === 3 ? 'image/webp' : 'application/octet-stream';
                         const blob = new Blob([img.data], { type: mime });
                         const bitmap = await createImageBitmap(blob);

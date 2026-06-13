@@ -29,13 +29,14 @@ switch (command) {
     case 'build': {
         const inputDir = args[1];
         const outFile = args[2] || 'website.bweb';
+        const inputHtml = args[3] || null;
         if (!inputDir) {
             console.error('Fehler: Eingabeverzeichnis fehlt.');
             process.exit(1);
         }
         console.log(`[bwebc] Starte Build-Prozess für ${inputDir}...`);
         
-        buildBweb(path.resolve(inputDir), path.resolve(outFile))
+        buildBweb(path.resolve(inputDir), path.resolve(outFile), inputHtml)
             .then(() => {
                 console.log(`[bwebc] Build abgeschlossen. (Mode: ${config.mode || 'default'})`);
             })

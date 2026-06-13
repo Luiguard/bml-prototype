@@ -93,6 +93,6 @@ Klassische Web-Werbung bremst das Laden aus, verbraucht CPU-Strom und spioniert 
 ## Lizenz & Attribution
 
 Bitte die `LICENSE` Datei beachten. **Jede kommerzielle Nutzung erfordert dieses Zitat im UI/Doku:**
-> `"Incorporates RAG-NVMe architecture designed by Benjamin Leimer."`**
+> `"Incorporates BWEB architecture designed by Benjamin Leimer."`**
 
 *For more information on the RAG-NVMe integration, visit the respective repository.*

@@ -310,8 +310,45 @@ class BLBParser{
                     const chunkCount=this.v.getUint32(this.o);this.o+=4;
                     const chunks=[];
                     for(let j=0;j<chunkCount;j++){
-            const targetNode = this.v.getUint32(this.o); this.o += 4;
-            const paramLen = this.v.getUint16(this.o); this.o += 2;
+                        if(this.o+13>this.v.byteLength)break;
+                        const flags=this.v.getUint8(this.o++);
+                        const isKey=(flags&1)===1;
+                        const ptsHigh=this.v.getUint32(this.o);this.o+=4;
+                        const ptsLow=this.v.getUint32(this.o);this.o+=4;
+                        const pts=Number((BigInt(ptsHigh)<<32n)|BigInt(ptsLow));
+                        const dur=this.v.getUint32(this.o);this.o+=4;
+                        const dataLen=this.v.getUint32(this.o);this.o+=4;
+                        if(this.o+dataLen>this.v.byteLength)break;
+                        const data=this.u8.slice(this.o,this.o+dataLen);
+                        this.o+=dataLen;
+                        chunks.push({
+                            type: isKey ? 'key' : 'delta',
+                            timestamp: pts,
+                            duration: dur,
+                            data: data
+                        });
+                    }
+                    audios[id] = {codec, sampleRate, channels, chunks};
+                }
+                return audios;
+            }
+        }
+
+        class BEXParser {
+            constructor(buf, offset=0) {
+                this.v = new DataView(buf);
+                this.o = offset;
+                this.d = new TextDecoder('utf-8');
+            }
+            parse() {
+                const count = this.v.getUint32(this.o); this.o += 4;
+                const rules = [];
+                for(let i=0; i<count; i++) {
+                    const triggerNode = this.v.getUint32(this.o); this.o += 4;
+                    const eventType = this.v.getUint8(this.o++);
+                    const actionType = this.v.getUint8(this.o++);
+                    const targetNode = this.v.getUint32(this.o); this.o += 4;
+                    const paramLen = this.v.getUint16(this.o); this.o += 2;
             
             if (this.o + paramLen > this.v.byteLength) break;
             const paramStr = this.d.decode(new Uint8Array(this.v.buffer, this.o, paramLen));
@@ -324,31 +361,53 @@ class BLBParser{
 }
 
         // BWEB Container Section Unpacker
-        function parseBWEB(buf){
-            const dv=new DataView(buf);
-            if(buf.byteLength<10)throw new Error('BWEB: Container zu klein');
-            const magic=String.fromCharCode(dv.getUint8(0),dv.getUint8(1),dv.getUint8(2),dv.getUint8(3));
-            if(magic!=='BWEB')throw new Error('Ungültiges BWEB Magic');
-            const version=dv.getUint8(4);
-            if(version!==1)throw new Error(`BWEB: Unbekannte Container-Version ${version}`);
+        async function parseBWEBAsync(buf) {
+            const dv = new DataView(buf);
+            if (buf.byteLength < 8) throw new Error('BWEB: Container zu klein');
+            const magic = dv.getUint32(0);
+            if (magic !== 0x42574542) throw new Error('Ungültiges BWEB Magic');
             
-            const flags = dv.getUint8(5);
-            const dirOffset = dv.getUint32(6);
+            const numSections = dv.getUint32(4);
+            let headerOffset = 8;
+            let dataOffset = 8 + numSections * 8;
             
-            if (dirOffset >= buf.byteLength || dirOffset === 0) throw new Error('BWEB: Ungültiges Central Directory Offset');
-            
-            let o = dirOffset;
-            const nSec = dv.getUint16(o); o += 2;
-            
-            const sections={};
-            for(let i=0;i<nSec;i++){
-                if(o+9 > buf.byteLength)break;
-                const type=dv.getUint8(o++);
-                const offset=dv.getUint32(o); o+=4;
-                const len=dv.getUint32(o); o+=4;
+            const sections = {};
+            for (let i = 0; i < numSections; i++) {
+                const type = dv.getUint8(headerOffset);
+                const len = dv.getUint32(headerOffset + 1);
+                const compressed = dv.getUint8(headerOffset + 5);
+                headerOffset += 8;
                 
-                if(!sections[type]) sections[type] = [];
-                sections[type].push(buf.slice(offset,offset+len));
+                let chunk = buf.slice(dataOffset, dataOffset + len);
+                dataOffset += len;
+                
+                if (compressed === 1) {
+                    const ds = new DecompressionStream('deflate');
+                    const writer = ds.writable.getWriter();
+                    writer.write(new Uint8Array(chunk));
+                    writer.close();
+                    
+                    const decompressedChunks = [];
+                    const reader = ds.readable.getReader();
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        decompressedChunks.push(value);
+                    }
+                    
+                    let totalLen = 0;
+                    for (const c of decompressedChunks) totalLen += c.length;
+                    const res = new Uint8Array(totalLen);
+                    let offset = 0;
+                    for (const c of decompressedChunks) {
+                        res.set(c, offset);
+                        offset += c.length;
+                    }
+                    chunk = res.buffer;
+                }
+                
+                // For now, assume one chunk per type based on packager
+                sections[type] = chunk;
             }
             return sections;
         }
@@ -543,7 +602,7 @@ class BLBParser{
 
         // Native Render Binary Pipeline
         async function renderBinary(buf){
-            const sections=parseBWEB(buf);
+            const sections = await parseBWEBAsync(buf);
             const bmlBuf=sections[1];
             const bdtBuf=sections[2];
             const blbBuf=sections[3];

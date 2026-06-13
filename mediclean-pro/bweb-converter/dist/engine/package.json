@@ -1,0 +1,13 @@
+{
+  "name": "bweb-engine",
+  "version": "1.0.0",
+  "description": "BWEB Rendering Engine & WASM VM",
+  "main": "core.js",
+  "type": "module",
+  "scripts": {
+    "build:wasm": "cd vm && wasm-pack build --target web"
+  },
+  "author": "Benjamin",
+  "license": "MIT",
+  "dependencies": {}
+}

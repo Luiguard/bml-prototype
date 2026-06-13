@@ -4,43 +4,43 @@
       "id": "bvs_000",
       "type": "video",
       "hash": "3bb938fb70049e3e45f533b37ccae995ae96516e04c2f35b0c1142e47b2a39c1",
-      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-converter/src/assets/demo.mp4"
+      "absolutePath": "/home/benjamin/projects/bml-prototype/bweb-converter/src/assets/demo.mp4"
     },
     "assets/hero.jpg": {
       "id": "bib_001",
       "type": "image",
       "hash": "fb05797c892baa355cb8cebe981782eb98362fef0145e272aef5e6b7b67f3756",
-      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-converter/src/assets/hero.jpg"
+      "absolutePath": "/home/benjamin/projects/bml-prototype/bweb-converter/src/assets/hero.jpg"
     },
     "assets/icon-bib.svg": {
       "id": "bib_002",
       "type": "image",
       "hash": "3e499b185b4f53b919fd5f2b33146c6d49c404ddc3212c5e438e97bb96bc1a42",
-      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-converter/src/assets/icon-bib.svg"
+      "absolutePath": "/home/benjamin/projects/bml-prototype/bweb-converter/src/assets/icon-bib.svg"
     },
     "assets/icon-blb.svg": {
       "id": "bib_003",
       "type": "image",
       "hash": "a2cc174996905257bae1a509ffbcab425cf390200331a43aa8710e20e3d0a67c",
-      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-converter/src/assets/icon-blb.svg"
+      "absolutePath": "/home/benjamin/projects/bml-prototype/bweb-converter/src/assets/icon-blb.svg"
     },
     "assets/icon-bml.svg": {
       "id": "bib_004",
       "type": "image",
       "hash": "c90f8f1982c2b908b093e13d9c665d74875d7afe42fa2b19c23291accddbc239",
-      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-converter/src/assets/icon-bml.svg"
+      "absolutePath": "/home/benjamin/projects/bml-prototype/bweb-converter/src/assets/icon-bml.svg"
     },
     "index.html": {
       "id": "vfs_000",
       "type": "html",
       "hash": "ff09f501ff9a1c8ed02237a395f7b7b96a3e5c194385b7c08074cac13200edf9",
-      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-converter/src/index.html"
+      "absolutePath": "/home/benjamin/projects/bml-prototype/bweb-converter/src/index.html"
     },
     "style.css": {
       "id": "vfs_001",
       "type": "css",
       "hash": "46c6eed18102943cd0286f5251dd20dbb6305ba985d29f9ca5c4568454c748d3",
-      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-converter/src/style.css"
+      "absolutePath": "/home/benjamin/projects/bml-prototype/bweb-converter/src/style.css"
     }
   }
 }

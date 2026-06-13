@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitarbeiter-Portal | MediClean Pro®</title>
+    <link rel="stylesheet" href="/css/style.v3.css">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Theme init
+        const savedTheme = localStorage.getItem('aura_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <style>
+        /* Premium Dashboard Styling */
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Glass Header */
+        .portal-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .portal-header img {
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .role-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .user-greeting {
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Layout */
+        .dashboard-layout {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 3rem;
+            flex: 1;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        @media(max-width: 992px) {
+            .dashboard-layout { 
+                grid-template-columns: 1fr; 
+                margin: 1rem auto;
+                padding: 0 1rem;
+            }
+        }
+
+        /* Sidebar Navigation */
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            position: sticky;
+            top: 100px;
+        }
+        
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            text-align: left;
+            padding: 1.2rem 1.5rem;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 1.05rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: rgba(30, 41, 59, 0.8);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Views */
+        .view-section { display: none; animation: fadeInView 0.4s ease forwards; }
+        .view-section.active { display: block; }
+        
+        @keyframes fadeInView {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hero Header inside Dashboard */
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff 0%, #a7f3d0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Premium Chat UI */
+        .glass-container {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .chat-header-bar {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            padding: 1.2rem 1.5rem;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-messages-area {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            scroll-behavior: smooth;
+        }
+
+        /* Message Bubbles */
+        .msg-bubble {
+            max-width: 80%;
+            padding: 1rem 1.2rem;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            position: relative;
+            animation: fadeIn 0.3s ease-out forwards;
+            white-space: pre-wrap;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .msg-ai {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Input Area */
+        .chat-input-wrapper {
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-form-inner {
+            display: flex;
+            gap: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .chat-form-inner:focus-within {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        .chat-input-field {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0.8rem 1rem;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .chat-input-field::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .send-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .send-btn:hover {
+            transform: scale(1.05);
+            background: #059669;
+        }
+
+        /* Typing Animation */
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 1rem 1.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            margin-bottom: 1rem;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Checklist Generator UI */
+        .checklist-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: rgba(30, 41, 59, 0.4);
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .checklist-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .checklist-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .checklist-result {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            white-space: pre-wrap;
+            line-height: 1.8;
+            color: #e2e8f0;
+            font-size: 1.05rem;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .loading-text {
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50%;
+            border-top-color: #10b981;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Decorative background element */
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, rgba(0,0,0,0) 70%);
+            top: -200px;
+            right: -200px;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .bg-glow-2 {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(0,0,0,0) 70%);
+            bottom: -100px;
+            left: -100px;
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+
+    <header class="portal-header">
+        <a href="/">
+            <img src="/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png" alt="MediClean Pro®">
+        </a>
+        <div class="user-controls">
+            <span class="role-badge">STAFF</span>
+            <div class="user-greeting">
+                <i data-lucide="user" style="width: 18px; height: 18px;"></i>
+                <span id="welcome-msg">Lade Profil...</span>
+            </div>
+            <button onclick="logout()" class="logout-btn">
+                <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                Abmelden
+            </button>
+        </div>
+    </header>
+
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <aside>
+            <div class="sidebar-menu">
+                <button class="nav-btn active" onclick="switchView('view-chat', this)">
+                    <i data-lucide="message-square" style="width: 20px; height: 20px;"></i>
+                    KI Fachassistenz
+                </button>
+                <button class="nav-btn" onclick="switchView('view-checklist', this)">
+                    <i data-lucide="clipboard-list" style="width: 20px; height: 20px;"></i>
+                    Checklisten-Generator
+                </button>
+                <button class="nav-btn" onclick="alert('In Arbeit...')">
+                    <i data-lucide="calendar-days" style="width: 20px; height: 20px;"></i>
+                    Dienstplan
+                </button>
+                <button class="nav-btn" onclick="alert('In Arbeit...')" style="color: #ef4444;">
+                    <i data-lucide="alert-triangle" style="width: 20px; height: 20px;"></i>
+                    Vorfall melden
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main>
+            <!-- AI Staff Chat View -->
+            <div id="view-chat" class="view-section active">
+                <h1 class="page-title">KI-Fachassistenz</h1>
+                <p class="page-subtitle">Stelle Fragen zu Reinigungschemie, ÖNORM-Richtlinien oder der Beseitigung hartnäckiger Flecken. Die KI hilft dir sofort weiter.</p>
+                
+                <div class="glass-container">
+                    <div class="chat-header-bar">
+                        <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i>
+                        Interner Reinigungs-Assistent
+                    </div>
+                    
+                    <div class="chat-messages-area" id="chat-box">
+                        <div class="msg-bubble msg-ai">Hallo! Ich bin dein Fachassistent. Brauchst du Infos zur Dosierung, Desinfektion oder Arbeitssicherheit?</div>
+                    </div>
+
+                    <div id="typing" style="display: none; padding: 0 1.5rem;">
+                        <div class="typing-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-wrapper">
+                        <form id="chat-form" class="chat-form-inner">
+                            <input type="text" id="chat-input" class="chat-input-field" placeholder="Stelle eine Fachfrage..." required autocomplete="off">
+                            <button type="submit" class="send-btn" aria-label="Senden">
+                                <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Checklist Generator View -->
+            <div id="view-checklist" class="view-section">
+                <h1 class="page-title">Checklisten-Generator</h1>
+                <p class="page-subtitle">Lass dir von der KI eine maßgeschneiderte Checkliste für einen bestimmten Raum oder Bereich erstellen.</p>
+                
+                <form id="checklist-form" class="checklist-form">
+                    <input type="text" id="room-input" class="chat-input-field" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;" placeholder="Z.B. 'Ordination Wartezimmer', 'Küche Gastro', 'Treppenhaus'..." required>
+                    <button type="submit" class="checklist-btn">
+                        <i data-lucide="wand-2" style="width: 18px; height: 18px;"></i>
+                        Generieren
+                    </button>
+                </form>
+
+                <div id="checklist-loading" style="display: none;">
+                    <div class="loading-text">
+                        <div class="spinner"></div>
+                        Erstelle professionelle Checkliste nach Hygienestandards...
+                    </div>
+                </div>
+                
+                <div id="checklist-result" class="checklist-result" style="display: none;"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Check Auth
+        const user = JSON.parse(localStorage.getItem('aura_current_user') || 'null');
+        const allowedRoles = ['admin', 'employee', 'cleaning_staff', 'team_lead', 'accounting'];
+        if (!user || !allowedRoles.includes(user.role)) {
+            window.location.href = '/login.html';
+        } else {
+            document.getElementById('welcome-msg').textContent = `${user.username}`;
+        }
+
+        function logout() {
+            localStorage.removeItem('aura_current_user');
+            window.location.href = '/index.html';
+        }
+
+        // View Switcher
+        function switchView(viewId, btn) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar-menu button').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Chatbot Logic
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatBox = document.getElementById('chat-box');
+        const typing = document.getElementById('typing');
+        let chatContext = null;
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+
+            addMessage(msg, 'user');
+            chatInput.value = '';
+            typing.style.display = 'block';
+            scrollToBottom();
+
+            try {
+                const res = await fetch('/api/ai_chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        type: 'staff', 
+                        message: msg,
+                        context: chatContext 
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    addMessage(data.response, 'ai');
+                    chatContext = data.context; 
+                } else {
+                    addMessage('Fehler bei der KI-Anfrage.', 'ai');
+                }
+            } catch (err) {
+                addMessage('Netzwerkfehler.', 'ai');
+            } finally {
+                typing.style.display = 'none';
+                scrollToBottom();
+            }
+        });
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `msg-bubble msg-${sender}`;
+            div.textContent = text;
+            chatBox.appendChild(div);
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatBox.scrollTo({
+                    top: chatBox.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 50);
+        }
+
+        // Checklist Logic
+        const clForm = document.getElementById('checklist-form');
+        const clResult = document.getElementById('checklist-result');
+        const clLoading = document.getElementById('checklist-loading');
+
+        clForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const room = document.getElementById('room-input').value.trim();
+            if (!room) return;
+
+            clResult.style.display = 'none';
+            clLoading.style.display = 'block';
+
+            try {
+                const res = await fetch('/api/ai_checklist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ room_type: room })
+                });
+                const data = await res.json();
+                
+                clLoading.style.display = 'none';
+                clResult.style.display = 'block';
+                if (data.success) {
+                    clResult.textContent = data.response;
+                } else {
+                    clResult.textContent = 'Fehler bei der Generierung.';
+                }
+            } catch (err) {
+                clLoading.style.display = 'none';
+                clResult.style.display = 'block';
+                clResult.textContent = 'Netzwerkfehler.';
+            }
+        });
+    </script>
+</body>
+</html>

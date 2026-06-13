@@ -139,7 +139,30 @@ class BlbCompiler {
                 }
             }
             
+            const flexDirMap = {'row':0,'row-reverse':1,'column':2,'column-reverse':3};
+            const flexWrapMap = {'nowrap':0,'wrap':1,'wrap-reverse':2};
+            const justifyMap = {'flex-start':0,'flex-end':1,'center':2,'space-between':3,'space-around':4,'space-evenly':5};
+            const alignMap = {'stretch':0,'flex-start':1,'flex-end':2,'center':3,'baseline':4};
+            const textAlignMap = {'left':0,'right':1,'center':2,'justify':3};
+
+            addEnum(50, l.flexDirection, flexDirMap);
+            addEnum(51, l.flexWrap, flexWrapMap);
+            addEnum(52, l.justifyContent, justifyMap);
+            addEnum(53, l.alignItems, alignMap);
+            addEnum(54, l.textAlign, textAlignMap);
+            addDim(55, l.gap);
+            
+            if (l.backgroundImage) {
+                const match = l.backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
+                if (match) {
+                    addString(56, match[1]);
+                } else if (l.backgroundImage.startsWith('linear-gradient') || l.backgroundImage.startsWith('radial-gradient')) {
+                    addString(56, l.backgroundImage);
+                }
+            }
+
             addString(21, l.fontFamily);
+            addDim(57, l.lineHeight);
             
             if (l.fontWeight) {
                 const fw = parseInt(l.fontWeight) || 400;

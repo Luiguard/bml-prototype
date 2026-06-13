@@ -7,14 +7,49 @@ class HtmlCssExtractor {
         this.logger = logger;
     }
 
-    async extract(htmlFilePath, outputJsonPath) {
+    async extract(htmlFilePath, inputDir, outputJsonPath) {
         console.log(`[Extractor] Starting headless extraction for ${htmlFilePath}`);
         const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
+        await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
+        await page.setJavaScriptEnabled(false);
         
+        await page.setRequestInterception(true);
+        page.on('request', request => {
+            const url = new URL(request.url());
+            if (url.protocol === 'file:' && url.pathname.startsWith('/')) {
+                // If it's a root-relative path (e.g. /css/style.css) that Puppeteer resolved to file:///css/...
+                // map it to the actual project inputDir.
+                const projDir = path.resolve(inputDir);
+                if (!url.pathname.startsWith(projDir)) {
+                    const localPath = path.join(projDir, url.pathname);
+                    try {
+                        if (fs.existsSync(localPath)) {
+                            console.log(`[Extractor] Intercepted and loaded: ${localPath}`);
+                            const body = fs.readFileSync(localPath);
+                            let contentType = 'text/plain';
+                            if (localPath.endsWith('.css')) contentType = 'text/css';
+                            else if (localPath.endsWith('.js')) contentType = 'application/javascript';
+                            else if (localPath.endsWith('.png')) contentType = 'image/png';
+                            else if (localPath.endsWith('.jpg') || localPath.endsWith('.jpeg')) contentType = 'image/jpeg';
+                            else if (localPath.endsWith('.svg')) contentType = 'image/svg+xml';
+                            
+                            request.respond({
+                                status: 200,
+                                contentType,
+                                body
+                            });
+                            return;
+                        }
+                    } catch(e) {}
+                }
+            }
+            request.continue();
+        });
+
         // We serve it directly from file for now, or via a simple local server if CORS is an issue.
         // For static AST extraction, file:// is fine.
-        await page.goto(`file://${path.resolve(htmlFilePath)}`, { waitUntil: 'networkidle0' });
+        await page.goto(`file://${path.resolve(htmlFilePath)}`, { waitUntil: 'networkidle0', timeout: 15000 });
         await page.evaluateHandle('document.fonts.ready');
 
         const extracted = await page.evaluate(() => {
@@ -52,10 +87,10 @@ class HtmlCssExtractor {
                     const rect = element.getBoundingClientRect();
                     const style = window.getComputedStyle(element);
                     layout = {
-                        left: rect.left,
-                        top: rect.top,
-                        width: rect.width,
-                        height: rect.height,
+                        left: style.left !== 'auto' ? style.left : undefined,
+                        top: style.top !== 'auto' ? style.top : undefined,
+                        width: style.width !== 'auto' ? style.width : undefined,
+                        height: style.height !== 'auto' ? style.height : undefined,
                         display: style.display,
                         position: style.position,
                         boxSizing: style.boxSizing,
@@ -69,6 +104,7 @@ class HtmlCssExtractor {
                         paddingLeft: style.paddingLeft,
                         borderColor: (style.borderTopStyle !== 'none' && parseFloat(style.borderTopWidth) > 0) ? style.borderTopColor : null,
                         backgroundColor: style.backgroundColor,
+                        backgroundImage: style.backgroundImage !== 'none' ? style.backgroundImage : undefined,
                         color: style.color,
                         fontSize: style.fontSize,
                         fontWeight: style.fontWeight,

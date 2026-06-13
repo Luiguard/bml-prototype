@@ -1,0 +1,41 @@
+{
+  "name": "bweb-engine",
+  "version": "1.0.0",
+  "description": "Binary Web Engine — Convert HTML/CSS/Images to ultra-fast binary BWEB format",
+  "author": "Benjamin Leimer",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Luiguard/bml-prototype.git"
+  },
+  "keywords": [
+    "binary-web",
+    "bweb",
+    "html-converter",
+    "binary-dom",
+    "web-performance",
+    "green-it",
+    "co2-reduction",
+    "bml",
+    "binary-markup"
+  ],
+  "bin": {
+    "bweb": "./cli.js"
+  },
+  "files": [
+    "cli.js",
+    "binary_formats.py",
+    "SPEC.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "acorn": "^8.16.0",
+    "express": "^5.2.1",
+    "finalhandler": "^2.1.1",
+    "puppeteer": "^25.1.0",
+    "serve-static": "^2.2.1"
+  }
+}

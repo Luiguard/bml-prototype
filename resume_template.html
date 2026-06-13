@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --primary: #2563eb;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+            --bg: #ffffff;
+            --accent: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+        }
+
+        .resume-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: var(--accent);
+            padding: 40px;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .main-content {
+            padding: 40px 60px;
+        }
+
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            background: #cbd5e1;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .job-title {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--primary);
+            display: inline-block;
+            margin-bottom: 20px;
+            padding-bottom: 5px;
+        }
+
+        .sidebar h2 {
+            border-bottom-color: #cbd5e1;
+            font-size: 1rem;
+        }
+
+        .contact-item {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .contact-label {
+            font-weight: 700;
+            display: block;
+            color: var(--text-light);
+        }
+
+        .experience-item {
+            margin-bottom: 25px;
+        }
+
+        .experience-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 5px;
+        }
+
+        .role {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .date {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .company {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        .skills-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .skills-list li {
+            background: #ffffff;
+            padding: 5px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-container">
+        <div class="sidebar">
+            <div class="profile-img"></div>
+            
+            <section>
+                <h2>Kontakt</h2>
+                <div class="contact-item">
+                    <span class="contact-label">Email</span>
+                    {{EMAIL}}
+                </div>
+                <div class="contact-item">
+                    <span class="contact-label">Telefon</span>
+                    {{PHONE}}
+                </div>
+                <div class="contact-item">
+                    <span class="contact-label">Standort</span>
+                    {{LOCATION}}
+                </div>
+            </section>
+
+            <section>
+                <h2>Skills</h2>
+                <ul class="skills-list">
+                    {{SKILLS_LIST}}
+                </ul>
+            </section>
+        </div>
+
+        <div class="main-content">
+            <header>
+                <h1>{{NAME}}</h1>
+                <div class="job-title">{{TITLE}}</div>
+            </header>
+
+            <section>
+                <h2>Über mich</h2>
+                <p class="description">{{SUMMARY}}</p>
+            </section>
+
+            <section>
+                <h2>Berufserfahrung</h2>
+                {{EXPERIENCE_ITEMS}}
+            </section>
+
+            <section>
+                <h2>Ausbildung</h2>
+                {{EDUCATION_ITEMS}}
+            </section>
+        </div>
+    </div>
+</body>
+</html>

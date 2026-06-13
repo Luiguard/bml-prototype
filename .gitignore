@@ -18,3 +18,4 @@ Thumbs.db
 
 # Systemd service files (copies live in /etc/systemd/system/)
 *.service
+chrome/

@@ -351,7 +351,7 @@ const server = app.listen(0, async () => {
         const totalBvsBuf = Buffer.concat(bvsBufs);
         
         // Write .bweb container
-        const tocMap = { [htmlFiles[0]]: { index: 0 } };
+        const tocMap = {}; htmlFiles.forEach((f, i) => tocMap["/" + f] = { index: i });
         const tocBytes = Buffer.from("VFS\x01" + JSON.stringify(tocMap));
         
         let numSections = 4; // TOC, BML, BDT, BLB

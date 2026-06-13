@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Player (JS-Polyfill)</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+        #renderTarget { width: 100%; min-height: 100vh; position: relative; }
+        .rendered-node { box-sizing: border-box; }
+        .polyfill-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #8a8f98;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="renderTarget">
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center;">
+            <div style="border: 3px solid rgba(255,255,255,0.1); border-left-color: #5e6ad2; border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin-bottom: 16px;"></div>
+            <p style="color: #8a8f98; font-size: 0.9rem;">Lade BWEB-Ressource via JS-Polyfill...</p>
+        </div>
+    </div>
+    <div class="polyfill-status">JS-Polyfill Active</div>
+    <style>
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <script>
+    (async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const fileParam = urlParams.get('file');
+        if (!fileParam || !/^[a-zA-Z0-9_\-\/.]+\.(bweb|bml|bdt|blb|bib)$/.test(fileParam) || fileParam.includes('..')) {
+            document.getElementById('renderTarget').innerHTML = '<div style="padding:2rem;text-align:center">Ungültige BWEB-Datei angegeben.</div>';
+            return;
+        }
+
+        const TAG_REV={0x01:'div',0x02:'span',0x03:'p',0x04:'a',0x05:'h1',0x06:'h2',0x07:'h3',0x08:'h4',0x09:'h5',0x0A:'h6',0x0B:'img',0x0C:'ul',0x0D:'ol',0x0E:'li',0x0F:'table',0x10:'tr',0x11:'td',0x12:'th',0x13:'thead',0x14:'tbody',0x15:'form',0x16:'input',0x17:'button',0x18:'textarea',0x19:'select',0x1A:'option',0x1B:'label',0x1C:'header',0x1D:'footer',0x1E:'nav',0x1F:'main',0x20:'section',0x21:'article',0x22:'aside',0x23:'strong',0x24:'em',0x25:'code',0x26:'pre',0x27:'br',0x28:'hr',0x29:'video',0x2A:'audio',0x2B:'canvas',0x2C:'svg',0x2D:'iframe',0x2E:'figcaption',0x2F:'figure',0x30:'blockquote',0x31:'small',0x32:'sub',0x33:'sup',0x34:'details',0x35:'summary',0x36:'dialog',0x37:'dl',0x38:'dt',0x39:'dd',0x3A:'mark',0x3B:'time',0x3C:'abbr',0x3D:'cite',0x3E:'b',0x3F:'i',0x40:'u',0xFD:'#text',0xFD:'#text',0xFE:'div',0xFF:'div'};
+const ATTR_REV={0x10:'class',0x11:'id',0x12:'href',0x13:'src',0x14:'style',0x15:'type',0x16:'name',0x17:'value',0x18:'placeholder',0x19:'alt',0x1A:'title',0x1B:'action',0x1C:'method',0x1D:'target',0x1E:'rel',0x1F:'role',0x20:'aria-label',0x21:'data-bind',0x22:'onclick',0x23:'onsubmit',0x24:'width',0x25:'height',0x26:'disabled',0x27:'checked',0x28:'selected',0x29:'required',0x2A:'autofocus',0x2B:'autocomplete',0x2C:'min',0x2D:'max',0x2E:'step',0x2F:'pattern',0x30:'for',0x31:'tabindex',0x32:'content',0x33:'charset',0x34:'http-equiv',0x35:'lang',0x36:'dir',0x37:'hidden'};
+const DISPLAY=['block','inline','flex','grid','none','inline-block','inline-flex','list-item','table','table-row','table-cell','inline-grid'];
+const POSITION=['static','relative','absolute','fixed','sticky'];
+const TEXT_ALIGN=['left','center','right','justify'];
+const FLEX_DIR=['row','column','row-reverse','column-reverse'];
+const JUSTIFY=['flex-start','flex-end','center','space-between','space-around','space-evenly'];
+const ALIGN_ITEMS=['flex-start','flex-end','center','stretch','baseline'];
+const OVERFLOW=['visible','hidden','scroll','auto'];
+const BLB_BLOCK_SIZE=60;
+
+const DANGEROUS_TAGS = new Set(['script','iframe','object','embed','applet','meta','link','base']);
+const DANGEROUS_ATTRS = new Set(['onclick','onsubmit','onload','onerror','onmouseover','onfocus','onblur','onchange','oninput','onkeydown','onkeyup','onkeypress','formaction','xlink:href','srcdoc','data']);
+const MAX_RECURSION_DEPTH = 256;
+
+class BMLParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.d=new TextDecoder('utf-8');this.o=offset}
+    parseNode(depth=0){
+        if(depth>MAX_RECURSION_DEPTH)return null;
+        if(this.o+6>this.v.byteLength)return null;
+        const tag=this.v.getUint8(this.o++);
+        const nAttr=this.v.getUint8(this.o++);
+        const nChild=this.v.getUint16(this.o);this.o+=2;
+        const tLen=this.v.getUint16(this.o);this.o+=2;
+        const tagName=TAG_REV[tag]||'div';
+        if(DANGEROUS_TAGS.has(tagName)){
+            for(let i=0;i<nAttr;i++){
+                if(this.o+3>this.v.byteLength)return null;
+                this.o++;
+                const aLen=this.v.getUint16(this.o);this.o+=2;
+                if(this.o+aLen>this.v.byteLength)return null;
+                this.o+=aLen;
+            }
+            if(tLen>0){if(this.o+tLen>this.v.byteLength)return null;this.o+=tLen;}
+            for(let i=0;i<nChild;i++){this.parseNode(depth+1);}
+            return null;
+        }
+        let el = {
+            tagName: tagName,
+            attrs: {},
+            children: [],
+            text: '',
+            isText: tagName === '#text'
+        };
+        for(let i=0;i<nAttr;i++){
+            if(this.o+3>this.v.byteLength)break;
+            const aId=this.v.getUint8(this.o++);
+            const aLen=this.v.getUint16(this.o);this.o+=2;
+            if(this.o+aLen>this.v.byteLength)break;
+            const aVal=this.d.decode(new Uint8Array(this.v.buffer,this.o,aLen));this.o+=aLen;
+            const aName=ATTR_REV[aId];
+            if(!aName||aName==='style'||DANGEROUS_ATTRS.has(aName))continue;
+            if((aName==='href'||aName==='src'||aName==='action')&&/^\s*javascript:/i.test(aVal))continue;
+            el.attrs[aName] = aVal;
+        }
+        if(tLen>0){
+            if(this.o+tLen>this.v.byteLength){return el;}
+            const txt=this.d.decode(new Uint8Array(this.v.buffer,this.o,tLen));this.o+=tLen;
+            el.text=txt;
+        }
+        for(let i=0;i<nChild;i++){const c=this.parseNode(depth+1);if(c)el.children.push(c)}
+        return el;
+    }
+}
+
+class BDTParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const nodes=[];
+        for(let i=0;i<count;i++){
+            const nid=this.v.getUint16(this.o);this.o+=2;
+            const pid=this.v.getUint16(this.o);this.o+=2;
+            const fc=this.v.getUint16(this.o);this.o+=2;
+            const ns=this.v.getUint16(this.o);this.o+=2;
+            const lc=this.v.getUint16(this.o);this.o+=2;
+            const ps=this.v.getUint16(this.o);this.o+=2;
+            const nt=this.v.getUint8(this.o++);
+            const tt=this.v.getUint8(this.o++);
+            const depth=this.v.getUint8(this.o++);
+            this.o++; // padding
+            nodes.push({id:nid,parent:pid,firstChild:fc,nextSibling:ns,lastChild:lc,previousSibling:ps,type:nt,tag:tt,depth});
+        }
+        return nodes;
+    }
+}
+
+class BLBParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const blocks=[];
+        for(let i=0;i<count;i++){
+            const nid=this.v.getUint16(this.o);this.o+=2;
+            const propCount=this.v.getUint8(this.o++);
+            
+            const b = { nid, props: {} };
+            
+            for(let p=0; p<propCount; p++){
+                const tag=this.v.getUint8(this.o++);
+                const type=this.v.getUint8(this.o++);
+                
+                let val = null;
+                if(type === 0) { // Dimension
+                    const u = this.v.getUint8(this.o++);
+                    const v = this.v.getUint16(this.o); this.o+=2;
+                    val = {u, v};
+                } else if(type === 1) { // Enum / Int16 (Wait! I wrote flex properties as type=1 but len=2! Let me read by type properly)
+                    // Let's rely on tag to know the size!
+                    // Tag 21, 27, 28 are uint16
+                    if(tag===21 || tag===27 || tag===28) {
+                        val = this.v.getUint16(this.o); this.o+=2;
+                    } else {
+                        val = this.v.getUint8(this.o++);
+                    }
+                } else if(type === 2) { // Color
+                    val = this.v.getUint32(this.o); this.o+=4;
+                }
+                b.props[tag] = val;
+            }
+            blocks.push(b);
+        }
+        return blocks;
+    }
+}
+
+const MAX_CANVAS_DIM = 8192;
+
+class BIBParser{
+    constructor(buf,offset=0){this.v=new DataView(buf);this.o=offset}
+    parse(){
+        const count=this.v.getUint32(this.o);this.o+=4;
+        const images={};
+        for(let i=0;i<count;i++){
+            const id=this.v.getUint32(this.o);this.o+=4;
+            const w=this.v.getUint16(this.o);this.o+=2;
+            const h=this.v.getUint16(this.o);this.o+=2;
+            const cs=this.v.getUint8(this.o++);
+            const comp=this.v.getUint8(this.o++);
+            this.o+=6; // padding
+            
+            const blockId=this.v.getUint16(this.o);this.o+=2;
+            const dataLen=this.v.getUint32(this.o);this.o+=4;
+            
+            if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BIB: Bilddimensionen ${w}x${h} überschreiten Limit ${MAX_CANVAS_DIM}`);
+            if(comp === 0 && dataLen!==w*h*4)throw new Error(`BIB: dataLen ${dataLen} != erwartete ${w*h*4} Bytes`);
+            if(this.o+dataLen>this.v.byteLength)throw new Error('BIB: Buffer-Overread');
+            
+            const pxData=new Uint8Array(this.v.buffer,this.o,dataLen);
+            this.o+=dataLen;
+            
+            images[id]={w,h,data:pxData,comp:comp};
+        }
+        return images;
+    }
+}
+
+class BVSParser {
+    constructor(buf, offset=0) {
+        this.v = new DataView(buf);
+        this.o = offset;
+        this.u8 = new Uint8Array(buf);
+    }
+    parse() {
+        const count = this.v.getUint32(this.o); this.o += 4;
+        const videos = {};
+        for(let i=0; i<count; i++) {
+            const id = this.v.getUint32(this.o); this.o += 4;
+            const w = this.v.getUint16(this.o); this.o += 2;
+            const h = this.v.getUint16(this.o); this.o += 2;
+            const codecLen = this.v.getUint8(this.o++);
+            if(this.o+codecLen>this.v.byteLength)throw new Error('BVS: Buffer-Overread');
+            const codecBytes = this.u8.slice(this.o, this.o + codecLen);
+            this.o += codecLen;
+            const codec = new TextDecoder('ascii').decode(codecBytes);
+            const chunkCount = this.v.getUint32(this.o); this.o += 4;
+            
+            if(w>MAX_CANVAS_DIM||h>MAX_CANVAS_DIM)throw new Error(`BVS: Videodimensionen ${w}x${h} überschreiten Limit`);
+            
+            const chunks = [];
+            for(let j=0; j<chunkCount; j++) {
+                const flags = this.v.getUint8(this.o++);
+                const isKey = (flags & 1) === 1;
+                const ptsHigh = this.v.getUint32(this.o); this.o += 4;
+                const ptsLow = this.v.getUint32(this.o); this.o += 4;
+                const pts = Number((BigInt(ptsHigh) << 32n) | BigInt(ptsLow));
+                const dur = this.v.getUint32(this.o); this.o += 4;
+                const dataLen = this.v.getUint32(this.o); this.o += 4;
+                if(this.o+dataLen>this.v.byteLength)throw new Error('BVS: Buffer-Overread');
+                const data = this.u8.slice(this.o, this.o + dataLen);
+                this.o += dataLen;
+                
+                chunks.push({
+                    type: isKey ? 'key' : 'delta',
+                    timestamp: pts,
+                    duration: dur,
+                    data: data
+                });
+            }
+            videos[id] = {w, h, codec, chunks};
+        }
+        return videos;
+    }
+}
+
+async function applyBVS(rootEl, videos) {
+    if (!('VideoDecoder' in window)) {
+        console.warn('WebCodecs API not supported.');
+        return;
+    }
+
+    const canvases = rootEl.querySelectorAll('canvas[data-bind-video]');
+    for(const canvas of canvases) {
+        const vidId = parseInt(canvas.getAttribute('data-bind-video'));
+        const vid = videos[vidId];
+        if(!vid) continue;
+        
+        canvas.width = vid.w;
+        canvas.height = vid.h;
+        const ctx = canvas.getContext('2d');
+        
+        const playbackLoop = async () => {
+            let startRealTime = performance.now();
+            let currentChunk = 0;
+            let pendingFrames = [];
+            let started = false;
+            
+            const decoder = new VideoDecoder({
+                output: (frame) => pendingFrames.push(frame),
+                error: (e) => console.error("VideoDecoder error:", e)
+            });
+            
+            decoder.configure({
+                codec: vid.codec,
+                codedWidth: vid.w,
+                codedHeight: vid.h,
+                hardwareAcceleration: 'prefer-hardware'
+            });
+
+            while(true) {
+                while(decoder.decodeQueueSize < 10 && currentChunk < vid.chunks.length) {
+                    decoder.decode(new EncodedVideoChunk(vid.chunks[currentChunk++]));
+                }
+                
+                if (pendingFrames.length > 0) {
+                    if (!started) {
+                        started = true;
+                        canvas.dispatchEvent(new CustomEvent('bvs-loop-restart', {detail: {time: startRealTime}}));
+                    }
+                    const frame = pendingFrames[0];
+                    const elapsedRealUs = (performance.now() - startRealTime) * 1000;
+                    
+                    if (frame.timestamp <= elapsedRealUs) {
+                        ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+                        frame.close();
+                        pendingFrames.shift();
+                    }
+                }
+                
+                if (currentChunk >= vid.chunks.length && pendingFrames.length === 0) {
+                    await decoder.flush();
+                    currentChunk = 0;
+                    startRealTime = performance.now(); // Loop video
+                    canvas.dispatchEvent(new CustomEvent('bvs-loop-restart', {detail: {time: startRealTime}}));
+                }
+                
+                await new Promise(r => requestAnimationFrame(r));
+            }
+        };
+        playbackLoop();
+    }
+}
+
+class BASParser {
+    constructor(buf, offset=0) {
+        this.v = new DataView(buf);
+        this.o = offset;
+        this.u8 = new Uint8Array(buf);
+    }
+    parse() {
+        const count = this.v.getUint32(this.o); this.o += 4;
+        const audios = {};
+        for(let i=0; i<count; i++) {
+            const id = this.v.getUint32(this.o); this.o += 4;
+            const codecLen = this.v.getUint8(this.o++);
+            const codecBytes = this.u8.slice(this.o, this.o + codecLen);
+            this.o += codecLen;
+            const codec = new TextDecoder('ascii').decode(codecBytes);
+            const sampleRate = this.v.getUint32(this.o); this.o += 4;
+            const channels = this.v.getUint8(this.o++);
+            const chunkCount = this.v.getUint32(this.o); this.o += 4;
+            
+            const chunks = [];
+            for(let j=0; j<chunkCount; j++) {
+                const flags = this.v.getUint8(this.o++);
+                const isKey = (flags & 1) === 1;
+                const ptsHigh = this.v.getUint32(this.o); this.o += 4;
+                const ptsLow = this.v.getUint32(this.o); this.o += 4;
+                const pts = Number((BigInt(ptsHigh) << 32n) | BigInt(ptsLow));
+                const dur = this.v.getUint32(this.o); this.o += 4;
+                const dataLen = this.v.getUint32(this.o); this.o += 4;
+                const data = this.u8.slice(this.o, this.o + dataLen);
+                this.o += dataLen;
+                
+                chunks.push({
+                    type: isKey ? 'key' : 'delta',
+                    timestamp: pts,
+                    duration: dur,
+                    data: data
+                });
+            }
+            audios[id] = {codec, sampleRate, channels, chunks};
+        }
+        return audios;
+    }
+}
+
+let globalAudioContext = null;
+
+async function applyBAS(rootEl, audios) {
+    if (!('AudioDecoder' in window)) {
+        console.warn('WebCodecs AudioDecoder API not supported.');
+        return;
+    }
+
+    if (!globalAudioContext) {
+        globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    const resumeAudio = () => {
+        if (globalAudioContext.state === 'suspended') {
+            globalAudioContext.resume();
+        }
+        document.removeEventListener('click', resumeAudio);
+        document.removeEventListener('keydown', resumeAudio);
+    };
+    document.addEventListener('click', resumeAudio);
+    document.addEventListener('keydown', resumeAudio);
+
+    const canvases = rootEl.querySelectorAll('canvas[data-bind-audio]');
+    for(const canvas of canvases) {
+        const audId = parseInt(canvas.getAttribute('data-bind-audio'));
+        const aud = audios[audId];
+        if(!aud) continue;
+        
+        let totalSamples = 0;
+        const decodedBuffers = [];
+        
+        const decoder = new AudioDecoder({
+            output: (audioData) => {
+                const planarData = [];
+                for(let c=0; c<audioData.numberOfChannels; c++) {
+                    const chData = new Float32Array(audioData.numberOfFrames);
+                    audioData.copyTo(chData, {planeIndex: c, format: 'f32-planar'});
+                    planarData.push(chData);
+                }
+                decodedBuffers.push({
+                    frames: audioData.numberOfFrames,
+                    data: planarData
+                });
+                totalSamples += audioData.numberOfFrames;
+                audioData.close();
+            },
+            error: (e) => console.error("AudioDecoder error:", e)
+        });
+        
+        decoder.configure({
+            codec: aud.codec,
+            sampleRate: aud.sampleRate,
+            numberOfChannels: aud.channels
+        });
+
+        for (const chunk of aud.chunks) {
+            decoder.decode(new EncodedAudioChunk(chunk));
+        }
+        
+        await decoder.flush();
+        if (decodedBuffers.length === 0) continue;
+        
+        const finalBuffer = globalAudioContext.createBuffer(
+            aud.channels,
+            totalSamples,
+            aud.sampleRate
+        );
+        
+        let offset = 0;
+        for (const db of decodedBuffers) {
+            for (let c=0; c<aud.channels; c++) {
+                finalBuffer.getChannelData(c).set(db.data[c], offset);
+            }
+            offset += db.frames;
+        }
+        
+        let sourceNode = null;
+        let loopDuration = totalSamples / aud.sampleRate;
+        let videoStartTime = performance.now();
+        
+        function playAudio(offsetSec) {
+             if (globalAudioContext.state === 'suspended') return;
+             if (sourceNode) {
+                 try { sourceNode.stop(); } catch(e){}
+             }
+             sourceNode = globalAudioContext.createBufferSource();
+             sourceNode.buffer = finalBuffer;
+             sourceNode.connect(globalAudioContext.destination);
+             sourceNode.start(0, offsetSec);
+        }
+        
+        canvas.addEventListener('bvs-loop-restart', (e) => {
+             videoStartTime = e.detail.time;
+             playAudio(0);
+        });
+        
+        globalAudioContext.addEventListener('statechange', () => {
+             if (globalAudioContext.state === 'running') {
+                  let elapsedSec = (performance.now() - videoStartTime) / 1000;
+                  elapsedSec = elapsedSec % loopDuration;
+                  playAudio(elapsedSec);
+             }
+        });
+    }
+}
+
+function cssVal(v){
+    if(v===0xFFFF)return'auto';
+    return v/10+'px';
+}
+// --- BWEB Canvas Layout Engine (BLB-2) ---
+class CanvasEngine {
+    constructor(rootVNode, bdtNodes, blbBlocks) {
+        this.root = rootVNode;
+        this.blbMap = {};
+        for(const b of blbBlocks) this.blbMap[b.nid] = b.props;
+        
+        let bdtIdx = 0;
+        const linkTree = (node) => {
+            if(!node) return;
+            node.id = bdtIdx++;
+            node.layout = { x:0, y:0, w:0, h:0, innerW:0, innerH:0, lines:[] };
+            for(const c of node.children) linkTree(c);
+        };
+        linkTree(this.root);
+        
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        window.addEventListener('resize', () => this.draw());
+    }
+
+    mount(container) {
+        container.innerHTML = '';
+        container.appendChild(this.canvas);
+        this.draw();
+    }
+    
+    getVal(val, parentSize) {
+        if(!val) return 0;
+        if(val.u === 0) return val.v / 10;
+        if(val.u === 1) return (val.v / 1000) * parentSize;
+        if(val.u === 2) return (val.v / 1000) * window.innerWidth;
+        if(val.u === 3) return (val.v / 1000) * window.innerHeight;
+        return 0;
+    }
+
+    // --- Phase 1: Measure ---
+    measureNode(node, parentW) {
+        if(!node) return;
+        const s = this.blbMap[node.id] || {};
+        
+        // Base Box Model
+        const pl = this.getVal(s[15], parentW), pr = this.getVal(s[13], parentW);
+        const pt = this.getVal(s[12], parentW), pb = this.getVal(s[14], parentW);
+        const mt = this.getVal(s[8], parentW), mb = this.getVal(s[10], parentW);
+        const ml = this.getVal(s[11], parentW), mr = this.getVal(s[9], parentW);
+        
+        node.layout.mt=mt; node.layout.mb=mb; node.layout.ml=ml; node.layout.mr=mr;
+        node.layout.pt=pt; node.layout.pb=pb; node.layout.pl=pl; node.layout.pr=pr;
+        node.layout.position = s[6] || 0; // 0=static, 2=absolute
+        
+        // Resolve explicit dimensions
+        let expW = s[1] && s[1].u !== 4 ? this.getVal(s[1], parentW) : null;
+        let expH = s[2] && s[2].u !== 4 ? this.getVal(s[2], 0) : null;
+        
+        let availInnerW = (expW !== null ? expW : parentW - ml - mr) - pl - pr;
+        if(availInnerW < 0) availInnerW = 0;
+        
+        if (node.isText) {
+            const text = node.text.trim();
+            if(!text) { node.layout.w = 0; node.layout.h = 0; return; }
+            
+            const fs = s[19] ? this.getVal(s[19], parentW) : 16;
+            this.ctx.font = `${s[21]||400} ${fs}px sans-serif`;
+            
+            // Text Wrap Engine
+            const words = text.split(/[ \t\n]+/);
+            let lines = [];
+            let currentLine = words[0];
+            let maxW = 0;
+            
+            for(let i=1; i<words.length; i++) {
+                const w = words[i];
+                const width = this.ctx.measureText(currentLine + " " + w).width;
+                if(width < availInnerW) {
+                    currentLine += " " + w;
+                } else {
+                    lines.push(currentLine);
+                    maxW = Math.max(maxW, this.ctx.measureText(currentLine).width);
+                    currentLine = w;
+                }
+            }
+            lines.push(currentLine);
+            maxW = Math.max(maxW, this.ctx.measureText(currentLine).width);
+            
+            node.layout.lines = lines;
+            node.layout.innerW = maxW;
+            const lh = s[20] && s[20].u !== 4 ? this.getVal(s[20], parentW) : (fs * 1.2);
+            node.layout.innerH = lines.length * lh;
+            node.layout.fs = fs;
+            node.layout.lh = lh;
+            
+            node.layout.w = expW !== null ? expW : node.layout.innerW + pl + pr;
+            node.layout.h = expH !== null ? expH : node.layout.innerH + pt + pb;
+            return;
+        }
+        
+        // Measure children
+        let maxChildW = 0;
+        let totalChildH = 0;
+        let isFlexRow = s[5]===2 && s[23]===0; // display:flex, flexDirection:row
+        let totalFlexRowW = 0;
+        let maxFlexRowH = 0;
+        
+        for(const c of node.children) {
+            this.measureNode(c, availInnerW);
+            if(c.layout.position === 2) continue; // skip absolute
+            
+            if(isFlexRow) {
+                totalFlexRowW += c.layout.w + c.layout.ml + c.layout.mr;
+                maxFlexRowH = Math.max(maxFlexRowH, c.layout.h + c.layout.mt + c.layout.mb);
+            } else {
+                maxChildW = Math.max(maxChildW, c.layout.w + c.layout.ml + c.layout.mr);
+                totalChildH += c.layout.h + c.layout.mt + c.layout.mb;
+            }
+        }
+        
+        if(isFlexRow) {
+            const gap = s[30] ? this.getVal(s[30], parentW) : 0;
+            const gaps = Math.max(0, node.children.length - 1) * gap;
+            node.layout.innerW = totalFlexRowW + gaps;
+            node.layout.innerH = maxFlexRowH;
+        } else {
+            node.layout.innerW = maxChildW;
+            node.layout.innerH = totalChildH;
+        }
+        
+        node.layout.w = expW !== null ? expW : node.layout.innerW + pl + pr;
+        node.layout.h = expH !== null ? expH : node.layout.innerH + pt + pb;
+    }
+
+    // --- Phase 2 & 3: Distribute & Position ---
+    layoutNode(node, x, y) {
+        if(!node) return;
+        node.layout.x = x;
+        node.layout.y = y;
+        
+        if(node.isText) return;
+        
+        const s = this.blbMap[node.id] || {};
+        let isFlexRow = s[5]===2 && s[23]===0;
+        
+        let cx = x + node.layout.pl;
+        let cy = y + node.layout.pt;
+        const gap = s[30] ? this.getVal(s[30], node.layout.w) : 0;
+        
+        if(isFlexRow) {
+            // Distribute free space
+            let freeSpace = node.layout.w - node.layout.pl - node.layout.pr - node.layout.innerW;
+            let totalGrow = 0;
+            for(const c of node.children) {
+                if(c.layout.position !== 2) {
+                    const cStyle = this.blbMap[c.id] || {};
+                    totalGrow += (cStyle[27] || 0);
+                }
+            }
+            
+            for(const c of node.children) {
+                if(c.layout.position === 2) {
+                    // Absolute
+                    const cStyle = this.blbMap[c.id] || {};
+                    this.layoutNode(c, cx + c.layout.ml, cy + c.layout.mt); // simplification
+                    continue;
+                }
+                
+                const cStyle = this.blbMap[c.id] || {};
+                let cW = c.layout.w;
+                if(freeSpace > 0 && totalGrow > 0) {
+                    const grow = cStyle[27] || 0;
+                    cW += (grow / totalGrow) * freeSpace;
+                    c.layout.w = cW; // expand
+                }
+                
+                // Cross axis alignment (align-items)
+                let aY = cy + c.layout.mt;
+                let cHeight = c.layout.h;
+                const ai = s[26] || 0; // 0=flex-start, 2=center, 3=stretch
+                if(ai === 2) {
+                    aY = cy + (node.layout.innerH - cHeight) / 2;
+                } else if(ai === 3 && (cStyle[2] && cStyle[2].u===4)) {
+                    cHeight = node.layout.innerH - c.layout.mt - c.layout.mb;
+                    c.layout.h = cHeight;
+                }
+                
+                this.layoutNode(c, cx + c.layout.ml, aY);
+                cx += cW + c.layout.ml + c.layout.mr + gap;
+            }
+        } else {
+            // Block Stacking (Column)
+            for(const c of node.children) {
+                if(c.layout.position === 2) {
+                    this.layoutNode(c, x + c.layout.ml, y + c.layout.mt);
+                    continue;
+                }
+                
+                // Cross axis stretch (block default)
+                const cStyle = this.blbMap[c.id] || {};
+                if((!cStyle[1] || cStyle[1].u===4) && c.layout.position !== 2 && !c.isText) {
+                    c.layout.w = node.layout.w - node.layout.pl - node.layout.pr - c.layout.ml - c.layout.mr;
+                }
+                
+                this.layoutNode(c, cx + c.layout.ml, cy + c.layout.mt);
+                cy += c.layout.h + c.layout.mt + c.layout.mb + gap;
+            }
+        }
+    }
+
+    // --- Phase 4: Paint ---
+    paintNode(node) {
+        if(!node) return;
+        const s = this.blbMap[node.id] || {};
+        
+        // Z-Index Sorting (simplification: post-order for abs)
+        
+        // Draw Box
+        if(!node.isText) {
+            if(s[17]) {
+                this.ctx.fillStyle = rgba(s[17]);
+                this.ctx.fillRect(node.layout.x, node.layout.y, node.layout.w, node.layout.h);
+            }
+            if(s[16] && s[25]) { // border (simplified uniform)
+                this.ctx.strokeStyle = rgba(s[16]);
+                this.ctx.lineWidth = s[25]/10;
+                this.ctx.strokeRect(node.layout.x, node.layout.y, node.layout.w, node.layout.h);
+            }
+        } else {
+            if(node.layout.lines && node.layout.lines.length > 0) {
+                this.ctx.fillStyle = s[18] ? rgba(s[18]) : '#000000';
+                this.ctx.font = `${s[21]||400} ${node.layout.fs}px sans-serif`;
+                this.ctx.textBaseline = "top";
+                let lY = node.layout.y;
+                for(const line of node.layout.lines) {
+                    this.ctx.fillText(line, node.layout.x, lY);
+                    lY += node.layout.lh;
+                }
+            }
+        }
+        
+        // Paint children
+        for(const c of node.children) this.paintNode(c);
+    }
+
+    draw() {
+        const dpr = window.devicePixelRatio || 1;
+        const w = this.canvas.parentElement.clientWidth || window.innerWidth;
+        const h = this.canvas.parentElement.clientHeight || window.innerHeight;
+        this.canvas.width = w * dpr;
+        this.canvas.height = h * dpr;
+        this.canvas.style.width = w + 'px';
+        this.canvas.style.height = h + 'px';
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.ctx.clearRect(0,0,w,h);
+        
+        // 1. Measure
+        this.measureNode(this.root, w);
+        // 2. Layout
+        this.layoutNode(this.root, 0, 0);
+        // 3. Paint
+        this.paintNode(this.root);
+    }
+}
+function applyBLB(rootEl, blocks) {}
+function rgba(v){
+    if(v===0)return'transparent';
+    const r=(v>>>24)&0xFF,g=(v>>>16)&0xFF,b=(v>>>8)&0xFF,a=v&0xFF;
+    return`rgba(${r},${g},${b},${(a/255).toFixed(2)})`;
+}
+
+async function applyBIB(rootEl,images){
+    const canvases = Array.from(rootEl.querySelectorAll('canvas')).filter(c => c.getAttribute('data-bind') || c.getAttribute('src'));
+    const promises = canvases.map(async cvs=>{
+        const rawId = cvs.getAttribute('data-bind') || cvs.getAttribute('src');
+        let id = rawId;
+        if(typeof rawId === 'string' && rawId.startsWith('bib://')) id = parseInt(rawId.split('://')[1], 10);
+        else id = parseInt(rawId, 10);
+        const img=images[id];
+        if(img){
+            cvs.width=img.w;
+            cvs.height=img.h;
+            const ctx=cvs.getContext('2d');
+            if (img.comp === 0) {
+                const imgData = new ImageData(new Uint8ClampedArray(img.data.buffer, img.data.byteOffset, img.w * img.h * 4), img.w, img.h);
+                ctx.putImageData(imgData, 0, 0);
+            } else {
+                const mime = img.comp === 1 ? 'image/png' : img.comp === 2 ? 'image/jpeg' : img.comp === 3 ? 'image/webp' : 'application/octet-stream';
+                const blob = new Blob([img.data], { type: mime });
+                const bitmap = await createImageBitmap(blob);
+                ctx.drawImage(bitmap, 0, 0);
+            }
+        }
+    });
+    await Promise.all(promises);
+}
+
+
+
+        let pagesMap = {};
+        window.domCache = {};
+        window.baseDOM = null;
+
+        async function loadBWEB(buf) {
+            const sections = parseBWEB(buf);
+            globalSections = sections;
+            
+            if (sections[9] && sections[9].length > 0) {
+                window.BWEB_THEMES = new BTBParser(sections[9][0]).parse();
+                if (Object.keys(window.BWEB_THEMES).length > 0) {
+                    window.CURRENT_THEME = Object.keys(window.BWEB_THEMES)[0];
+                    document.documentElement.setAttribute('data-theme', window.CURRENT_THEME);
+                    const vars = window.BWEB_THEMES[window.CURRENT_THEME] || {};
+                    for (const [k, v] of Object.entries(vars)) {
+                        document.documentElement.style.setProperty(k, v);
+                    }
+                }
+            }
+
+            if (sections[8] && sections[8].length > 0) {
+                sections[8].forEach(bpgBuf => {
+                    const page = parseBPG(bpgBuf);
+                    pagesMap[page.url] = page;
+                });
+            } else {
+                pagesMap['index.html'] = { url: 'index.html', sections: sections };
+            }
+
+            window.addEventListener('popstate', (e) => {
+                if (e.state && e.state.url) {
+                    navigate(e.state.url, false);
+                } else {
+                    navigate('index.html', false);
+                }
+            });
+
+            const initialUrl = window.location.pathname.split('/').pop() || 'index.html';
+            let currentUrl = initialUrl;
+            navigate(currentUrl, false);
+        }
+
+        function attachRouter(container) {
+            if (container.dataset.routerAttached) return;
+            container.dataset.routerAttached = "true";
+            container.addEventListener('click', (e) => {
+                const a = e.target.closest('a');
+                if (!a) return;
+                const href = a.getAttribute('href');
+                if (!href || href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('#') || href.startsWith('javascript:')) return;
+                e.preventDefault();
+                
+                let targetUrl = href.split('#')[0];
+                if (targetUrl === '') return;
+                
+                let currentUrl = container.dataset.currentUrl || 'index.html';
+
+                if (!targetUrl.startsWith('/')) {
+                    const baseParts = currentUrl.split('/');
+                    baseParts.pop();
+                    const hrefParts = targetUrl.split('/');
+                    for (const part of hrefParts) {
+                        if (part === '.') continue;
+                        if (part === '..') {
+                            if (baseParts.length > 0) baseParts.pop();
+                        } else {
+                            baseParts.push(part);
+                        }
+                    }
+                    targetUrl = baseParts.join('/');
+                } else {
+                    targetUrl = targetUrl.substring(1);
+                }
+                
+                const origUrl = href;
+                let fullTarget = targetUrl;
+                if (origUrl.includes('?') && !targetUrl.includes('?')) {
+                    fullTarget = targetUrl + '?' + origUrl.split('?').slice(1).join('?');
+                } else if (targetUrl.includes('?')) {
+                    fullTarget = targetUrl;
+                }
+                
+                if (fullTarget.endsWith('/')) fullTarget = fullTarget.substring(0, fullTarget.length - 1);
+                if (fullTarget === '') fullTarget = 'index.html';
+
+                navigate(fullTarget, true, origUrl);
+            });
+        }
+
+        async function navigate(fullTarget, pushState = true, origUrl = '') {
+            let bduMutations = null;
+            if (globalSections[0x0A]) {
+                const bduParser = new BDUParser(globalSections[0x0A][0]);
+                bduMutations = bduParser.getMutationsForUrl(fullTarget) || bduParser.getMutationsForUrl(origUrl);
+            }
+
+            if (bduMutations) {
+                if (!window.baseDOM) {
+                    await renderPage('index.html', false);
+                }
+                if (pushState) window.history.pushState({url: fullTarget}, "", fullTarget);
+                
+                const targetEl = document.getElementById('renderTarget');
+                if (window.domCache[fullTarget]) {
+                    targetEl.replaceChildren(window.domCache[fullTarget]);
+                } else {
+                    const newDom = window.baseDOM.cloneNode(true);
+                    applyBDU(newDom, bduMutations);
+                    window.domCache[fullTarget] = newDom;
+                    targetEl.replaceChildren(newDom);
+                }
+                targetEl.dataset.currentUrl = fullTarget;
+                attachRouter(targetEl.firstChild);
+            } else if (pagesMap[fullTarget.split('?')[0]]) {
+                await renderPage(fullTarget.split('?')[0], pushState);
+            } else if (pagesMap[fullTarget]) {
+                await renderPage(fullTarget, pushState);
+            } else {
+                console.error('Page not found in BWEB:', fullTarget);
+                alert('Seite nicht im BWEB Container gefunden: ' + fullTarget);
+            }
+        }
+
+        async function renderPage(url, pushState = true) {
+            const pageData = pagesMap[url];
+            if (!pageData) {
+                console.error("Page not found:", url);
+                return;
+            }
+            if (pushState) {
+                window.history.pushState({url}, "", url === 'index.html' ? window.location.pathname : url);
+            }
+            const sections = pageData.sections;
+            
+            let bmlBuf = sections[1];
+            let bdtBuf = sections[2];
+            let blbBuf = sections[3];
+            let bexBuf = sections[7];
+
+            let rootEl = null, blbBlocks = null, bdtNodes = null;
+
+            if (bmlBuf) {
+                const bmlView = new Uint8Array(bmlBuf);
+                let bmlStart = 0;
+                if (bmlView[0] === 0x42 && bmlView[1] === 0x4D && bmlView[2] === 0x4C) bmlStart = 4;
+                const parser = new BMLParser(bmlBuf, bmlStart);
+                rootEl = parser.parseNode();
+            }
+
+            if (bdtBuf) {
+                const bdtView = new Uint8Array(bdtBuf);
+                let bdtStart = 0;
+                if (bdtView[0] === 0x42 && bdtView[1] === 0x44 && bdtView[2] === 0x54) bdtStart = 4;
+                bdtNodes = new BDTParser(bdtBuf, bdtStart).parse();
+            }
+
+            if (blbBuf && rootEl) {
+                const blbView = new Uint8Array(blbBuf);
+                let blbStart = 0;
+                if (blbView[0] === 0x42 && blbView[1] === 0x4C && blbView[2] === 0x42) blbStart = 4;
+                blbBlocks = new BLBParser(blbBuf, blbStart).parse();
+                applyBLB(rootEl, blbBlocks);
+            }
+
+            if (bexBuf && rootEl) {
+                const bexView = new Uint8Array(bexBuf);
+                let bexStart = 0;
+                if (bexView[0] === 0x42 && bexView[1] === 0x45 && bexView[2] === 0x58) bexStart = 4;
+                const rules = new BEXParser(bexBuf, bexStart).parse();
+                applyBEX(rootEl, rules);
+            }
+
+            if (globalSections[4] && rootEl) {
+                const imgs = new BIBParser(globalSections[4][0] || globalSections[4]).parse();
+                applyBIB(rootEl, imgs);
+            }
+
+            if (rootEl) {
+                const vp = document.getElementById('renderTarget');
+                vp.replaceChildren(rootEl);
+                vp.dataset.currentUrl = url;
+                attachRouter(vp);
+                
+                if (url === 'index.html' && !window.baseDOM) {
+                    window.baseDOM = rootEl.cloneNode(true);
+                    window.domCache['index.html'] = window.baseDOM;
+                }
+            }
+        }
+
+        try {
+            const fetchUrl = `${window.location.protocol}//${window.location.host}/${fileParam}${fileParam.includes('?') ? '&' : '?'}raw=true`;
+            const response = await fetch(fetchUrl);
+            if (!response.ok) throw new Error(`HTTP Fehler ${response.status}`);
+            const buffer = await response.arrayBuffer();
+            await loadBWEB(buffer);
+        } catch(e) {
+            console.error("BWEB Polyfill Engine Error:", e);
+            const target=document.getElementById('renderTarget');
+            target.innerHTML='';
+            const errBox=document.createElement('div');
+            errBox.setAttribute('style','padding: 2rem; max-width: 600px; margin: 40px auto; background: #1e1b4b; border: 1px solid #312e81; border-radius: 8px; text-align: center;');
+            const h=document.createElement('h2');h.setAttribute('style','color: #ef4444; margin-top: 0;');h.textContent='BWEB Polyfill Ladefehler';errBox.appendChild(h);
+            const p1=document.createElement('p');p1.setAttribute('style','color: #cbd5e1; line-height: 1.6;');p1.textContent='Die JS-Polyfill-Engine konnte die Binärdatei nicht laden oder decodieren.';errBox.appendChild(p1);
+            const p2=document.createElement('p');p2.setAttribute('style','color: #94a3b8; font-size: 0.85rem;');p2.textContent='Details: '+(e instanceof Error?e.message:'Unbekannter Fehler');errBox.appendChild(p2);
+            target.appendChild(errBox);
+        }
+    })();
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

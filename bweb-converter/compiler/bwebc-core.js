@@ -9,9 +9,9 @@ const { AssetCompiler } = require('./asset-compiler');
 const { BdtCompiler } = require('./bdt-compiler');
 const { BpgPackager } = require('./bpg-packager');
 
-async function buildBweb(inputDir, outputFile) {
+async function buildBweb(inputDir, outputFile, inputHtml = null) {
     console.log(`[Core] Starting BWEB compilation (v1.0.0 normative)`);
-    console.log(`[Core] Input: ${inputDir} | Output: ${outputFile}`);
+    console.log(`[Core] Input: ${inputDir} | Output: ${outputFile} | Target: ${inputHtml || 'auto'}`);
 
     const logDir = path.dirname(outputFile);
     if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
@@ -28,12 +28,12 @@ async function buildBweb(inputDir, outputFile) {
         const extractor = new HtmlCssExtractor(logger);
         
         // Find the main HTML entry point (e.g. index.html or first available)
-        let mainHtmlRel = Object.keys(vfsManifest.files).find(f => f.endsWith('.html'));
+        let mainHtmlRel = inputHtml ? Object.keys(vfsManifest.files).find(f => f === inputHtml) : Object.keys(vfsManifest.files).find(f => f.endsWith('.html'));
         if (!mainHtmlRel) throw new Error("No HTML file found in input directory.");
         const mainHtmlPath = vfsManifest.files[mainHtmlRel].absolutePath;
         
         const tmpAstPath = path.join(logDir, '.bweb-ast.json');
-        const astNodes = await extractor.extract(mainHtmlPath, tmpAstPath);
+        const astNodes = await extractor.extract(mainHtmlPath, inputDir, tmpAstPath);
 
         // --- ID MAP EXTRACTION ---
         const idMap = {};

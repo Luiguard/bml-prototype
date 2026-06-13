@@ -207,7 +207,7 @@
                 <div class="drop-zone" id="dropZone">
                     <p>📂 .bweb / .bml Datei hierher ziehen</p>
                     <p style="font-size:.75rem;margin-top:.5rem">oder klicken zum Auswählen</p>
-                    <input type="file" id="fileInput" accept=".bweb,.bml,.bdt,.blb">
+                    <input type="file" id="fileInput" accept=".bweb,.bml,.bdt,.blb" title="Lade hier deine .bweb oder .bml Datei zur Analyse.">
                 </div>
 
                 <div class="section-map" id="sectionMap" style="display:none">
@@ -238,7 +238,7 @@
 
             <div class="panel" style="margin-top:1rem">
                 <div class="panel-title">HTML → BWEB Konverter</div>
-                <textarea class="html-input" id="htmlInput" placeholder="<h1>Hallo Welt</h1>&#10;<p>Binäre Webseite</p>"></textarea>
+                <textarea class="html-input" id="htmlInput" placeholder="<h1>Hallo Welt</h1>&#10;<p>Binäre Webseite</p>" title="HTML-Snippet für direkte Einzel-Konvertierung einfügen."></textarea>
                 <div class="btn-row">
                     <button class="btn btn-secondary" id="btnConvert">Konvertieren</button>
                     <button class="btn btn-secondary" id="btnDownload" style="display:none">⬇ .bweb</button>
@@ -248,7 +248,7 @@
             <div class="panel" style="margin-top:1rem; border-color: #10b981;">
                 <div class="panel-title" style="color: #10b981;">📁 Lokalen Website-Ordner konvertieren</div>
                 <p style="font-size:.8rem; color:var(--text-muted); margin-bottom:1rem;">Wähle einen Ordner mit HTML, CSS und Bildern aus. Alles wird lokal zu 100% inlined und kompiliert.</p>
-                <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
+                <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" title="Wähle einen Projektordner mit index.html, CSS und Assets.">
                 <div class="btn-row" style="flex-direction: column; gap: 8px; align-items: stretch;">
                     <button class="btn" style="background:#10b981; color:#fff;" id="btnFolderUpload">Ordner auswählen & Kompilieren</button>
                     <span style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.35; margin-top: 4px;">
@@ -260,13 +260,13 @@
             <div class="panel" style="margin-top:1rem; border-color: var(--accent);">
                 <div class="panel-title" style="color: var(--accent);">🤖 AI Website Generator</div>
                 <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
-                    <select id="aiBackendSelect" class="html-input" style="min-height:30px; margin-top:0; padding: 0.4rem; flex: 1;">
+                    <select id="aiBackendSelect" class="html-input" style="min-height:30px; margin-top:0; padding: 0.4rem; flex: 1;" title="Wähle das zu verwendende KI-Backend.">
                         <option value="nvme">Lokale NVMe-KI (http://127.0.0.1:8090)</option>
                         <option value="gemini">Google Gemini API (Key benötigt)</option>
                     </select>
-                    <input type="password" id="geminiApiKey" class="html-input" style="min-height:30px; margin-top:0; font-family: sans-serif; flex: 1; display:none;" placeholder="Dein Gemini API-Key">
+                    <input type="password" id="geminiApiKey" class="html-input" style="min-height:30px; margin-top:0; font-family: sans-serif; flex: 1; display:none;" placeholder="Dein Gemini API-Key" title="Google Gemini API Key (nur lokal verwendet)">
                 </div>
-                <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;"></textarea>
+                <textarea class="html-input" id="promptInput" placeholder="Z.B.: Erstelle eine moderne SaaS Landingpage mit dunklem Theme und Preis-Tabelle..." style="min-height: 80px;" title="Prompt für den KI-Website-Generator (RAG-NVMe oder Gemini)."></textarea>
                 <div class="btn-row">
                     <button class="btn btn-primary" id="btnGenerate">Website Generieren (BWEB)</button>
                 </div>
@@ -279,7 +279,7 @@
                     </div>
                     <div id="mutationChatHistory" style="max-height: 180px; overflow-y: auto; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 0.75rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px;">
                     </div>
-                    <textarea class="html-input" id="mutationInput" placeholder="Z.B.: 'ändere Hintergrund zu dunkelblau', 'mach Ecken runder', 'Schriftfarbe gelb'..." style="min-height: 60px; font-size: 0.8rem; margin-bottom: 0.75rem;"></textarea>
+                    <textarea class="html-input" id="mutationInput" placeholder="Z.B.: 'ändere Hintergrund zu dunkelblau', 'mach Ecken runder', 'Schriftfarbe gelb'..." style="min-height: 60px; font-size: 0.8rem; margin-bottom: 0.75rem;" title="Iterative Anpassungen am generierten Design vornehmen."></textarea>
                     <div class="btn-row">
                         <button class="btn" style="background:#10b981; color:#fff; font-size: 0.85rem; padding: 8px 16px;" id="btnMutate">Design anpassen</button>
                     </div>
@@ -328,6 +328,15 @@
             <div id="loadingProgressBar" style="width:0%; height:100%; background:#10b981; transition:width 0.2s ease; border-radius:3px;"></div>
         </div>
         
+        <!-- 5 Steps View -->
+        <div id="loadingSteps" style="display:flex; flex-direction:column; gap:6px; margin-bottom:24px; text-align:left; font-size: 0.8rem; font-weight: 500; color:var(--text-primary);">
+            <div id="l_step1" style="opacity:0.3; display:flex; align-items:center; gap:8px; transition:opacity 0.3s;"><span style="color:#10b981; font-size:1.1rem;">⚡</span> 1. HTML & CSS Parsing</div>
+            <div id="l_step2" style="opacity:0.3; display:flex; align-items:center; gap:8px; transition:opacity 0.3s;"><span style="color:#10b981; font-size:1.1rem;">📦</span> 2. Asset Verarbeitung</div>
+            <div id="l_step3" style="opacity:0.3; display:flex; align-items:center; gap:8px; transition:opacity 0.3s;"><span style="color:#10b981; font-size:1.1rem;">🌳</span> 3. DOM Virtualisierung (BDT)</div>
+            <div id="l_step4" style="opacity:0.3; display:flex; align-items:center; gap:8px; transition:opacity 0.3s;"><span style="color:#10b981; font-size:1.1rem;">📐</span> 4. Layout Engine (BLB)</div>
+            <div id="l_step5" style="opacity:0.3; display:flex; align-items:center; gap:8px; transition:opacity 0.3s;"><span style="color:#10b981; font-size:1.1rem;">🔒</span> 5. BWEB Container Export</div>
+        </div>
+        
         <!-- Progress Log Details -->
         <div id="loadingLogContainer" style="position:relative; max-height:100px;">
             <div id="loadingLog" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text-muted); background:#000; border:1px solid var(--border); border-radius:6px; padding:12px; height:100%; max-height:100px; overflow-y:auto; text-align:left; line-height:1.4; white-space: pre-wrap;"></div>
@@ -347,6 +356,10 @@
         <div class="modal-body">
             <p class="modal-subtitle">Deine Website wurde vollständig in das binäre BWEB-Format transformiert und im Viewport gerendert.</p>
             
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px dashed rgba(16, 185, 129, 0.5); padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 24px; color: #10b981; font-size: 0.85rem; font-weight: 600;">
+                ✨ Post-Compile Optimierung aktiv: Signifikante Reduzierung des Rendering-Overheads erreicht!
+            </div>
+
             <div class="modal-stats">
                 <div class="modal-stat-box">
                     <span class="modal-stat-label">Binär-Größe</span>
@@ -363,17 +376,57 @@
             </div>
 
             <div class="modal-guide">
-                <h4>Nächste Schritte:</h4>
-                <ol>
-                    <li>Lade die <strong>Deployment-ZIP</strong> herunter.</li>
-                    <li>Entpacke das Archiv und lade alle Dateien auf deinen Webserver hoch.</li>
-                    <li>Lies die Datei <strong>ANLEITUNG.txt</strong> für die Serverkonfiguration.</li>
-                </ol>
+                <h4 style="margin-bottom: 12px;">Download-Optionen erklärt:</h4>
+                <div style="margin-bottom: 12px;">
+                    <strong style="color: #fff;">.bweb Container:</strong> 
+                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 4px; line-height: 1.4;">Das rohe, kompilierte Binärformat für den BWEB Viewer oder Chromium-Extensions. Enthält Struktur, Styles, Layout und Assets in einem geschlossenen Format.</p>
+                </div>
+                <div>
+                    <strong style="color: #fff;">Deployment-ZIP (inkl. .bpg):</strong> 
+                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 4px; line-height: 1.4;">Beinhaltet das Polyfill, die generierte .bweb Datei und eine manifest.bpg. Dies ist eine sofort einsatzbereite, kompatible Webseite für reguläre Apache/Nginx Server.</p>
+                </div>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" id="modalBtnDownloadBweb" style="flex: 1;">⬇ .bweb Datei</button>
             <button class="btn btn-primary" id="modalBtnDownloadZip" style="flex: 1.5; background: #10b981; color: white;">📦 Deployment-ZIP</button>
+        </div>
+    </div>
+</div>
+
+<!-- Welcome Modal -->
+<div id="welcomeModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+        <button class="modal-close" id="welcomeModalClose">&times;</button>
+        <div class="modal-header">
+            <div class="modal-icon" style="font-size:2.5rem;">👋</div>
+            <h3 class="modal-title">Willkommen beim BWEB Converter!</h3>
+        </div>
+        <div class="modal-body">
+            <p class="modal-subtitle">Das ultimative Tool, um Webseiten in das ressourcenschonende, binäre <strong>BWEB-Format</strong> zu übersetzen.</p>
+            
+            <div class="modal-guide">
+                <h4>Erste Schritte:</h4>
+                <ol>
+                    <li style="margin-bottom:8px;"><strong>Einzelnes HTML:</strong> Nutze das Textfeld für sofortige Konvertierungen.</li>
+                    <li style="margin-bottom:8px;"><strong>Lokaler Ordner:</strong> Wähle einen Ordner mit HTML, CSS & Bildern für ein Inlining aller Assets.</li>
+                    <li style="margin-bottom:8px;"><strong>AI Generator:</strong> Beschreibe eine Website und lass sie direkt als BWEB rendern.</li>
+                </ol>
+            </div>
+            
+            <div class="modal-stats" style="margin-top: 16px; margin-bottom:0;">
+                <div class="modal-stat-box" style="padding: 8px;">
+                    <span class="modal-stat-label">DOM Node Limit</span>
+                    <span class="modal-stat-value" style="font-size: 0.85rem;">Aufgehoben</span>
+                </div>
+                <div class="modal-stat-box" style="padding: 8px;">
+                    <span class="modal-stat-label">Komprimierung</span>
+                    <span class="modal-stat-value" style="font-size: 0.85rem;">Bis zu 95%</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" style="margin-top: 24px;">
+            <button class="btn btn-primary" id="btnStartWelcome" style="flex: 1; background: #10b981; color: #fff; font-size: 1.05rem; border:none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);">Legen wir los 🚀</button>
         </div>
     </div>
 </div>
@@ -1964,7 +2017,9 @@ async function loadPage(path) {
                         const hrefStr = new TextDecoder().decode(hrefAttr.val);
                         let newPath = hrefStr;
                         if (!newPath.startsWith('/')) {
-                            const parts = window.location.pathname.split('/');
+                            // Use VFS current path instead of host window path
+                            const currentUrl = window.history.state && window.history.state.path ? window.history.state.path : '/index.html';
+                            const parts = currentUrl.split('/');
                             parts.pop();
                             parts.push(newPath);
                             newPath = parts.join('/');
@@ -2164,6 +2219,17 @@ function showLoader(title, status) {
     document.getElementById('loadingStatus').textContent = status;
     document.getElementById('loadingProgressBar').style.width = '0%';
     document.getElementById('loadingLog').innerHTML = '';
+    
+    // Reset steps
+    const stepIds = ['l_step1', 'l_step2', 'l_step3', 'l_step4', 'l_step5'];
+    stepIds.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.style.opacity = '0.3';
+            el.style.fontWeight = '500';
+            el.style.transform = 'scale(1)';
+        }
+    });
 }
 
 function updateLoader(percent, status, logText = null) {
@@ -2178,6 +2244,23 @@ function updateLoader(percent, status, logText = null) {
         logEl.appendChild(div);
         logEl.scrollTop = logEl.scrollHeight;
     }
+    
+    // Update steps based on percent
+    const stepEl = (id) => document.getElementById(id);
+    const highlightStep = (id) => {
+        const el = stepEl(id);
+        if(!el) return;
+        el.style.opacity = '1';
+        el.style.fontWeight = '700';
+        el.style.transform = 'scale(1.02)';
+        el.style.textShadow = '0 0 10px rgba(16, 185, 129, 0.3)';
+    };
+    
+    if(percent > 0) highlightStep('l_step1');
+    if(percent >= 30) highlightStep('l_step2');
+    if(percent >= 50) highlightStep('l_step3');
+    if(percent >= 70) highlightStep('l_step4');
+    if(percent >= 90) highlightStep('l_step5');
 }
 
 function hideLoader() {
@@ -2492,6 +2575,24 @@ async function compileFilesList(files) {
         hideLoader();
     }
 }
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('bweb_welcome_shown')) {
+        const modal = document.getElementById('welcomeModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            
+            const closeWelcome = () => {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 300);
+                localStorage.setItem('bweb_welcome_shown', 'true');
+            };
+            
+            document.getElementById('welcomeModalClose').addEventListener('click', closeWelcome);
+            document.getElementById('btnStartWelcome').addEventListener('click', closeWelcome);
+        }
+    }
+});
 </script>
 </body>
 </html>
