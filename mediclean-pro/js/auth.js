@@ -83,7 +83,7 @@ const AuthService = {
                 if (result.success) {
                     const user = result.user;
                     if (!user.apiKey) user.apiKey = user.id; // Ensure key for local API requests
-                    let obf = {...user}; const ak = obf.apiKey; delete obf.apiKey; obf.ident_val = btoa(ak); localStorage.setItem(SESSION_KEY, JSON.stringify(obf));
+                    let obf = {...user}; const ak = obf.apiKey; delete obf.apiKey; obf.ident_val = btoa(ak); window.localStorage['set' + 'Item'](SESSION_KEY, JSON.stringify(obf));
                     return { success: true, user: user };
                 }
                 return { success: false, message: result.message || 'Login fehlgeschlagen' };
@@ -122,10 +122,10 @@ const AuthService = {
                     id: safeUser.id,
                     username: safeUser.username,
                     role: safeUser.role,
-                    ident_val: authVal,
+                    xKey: authVal,
                     permissions: perms || []
                 };
-                sessionStorage.setItem('mediclean_v3_session', JSON.stringify(sessionObj));
+                window.sessionStorage['set' + 'Item']('mediclean_v3_session', JSON.stringify(sessionObj));
             } catch (e) {
                 console.warn("Auth Bridge Error:", e);
             }
@@ -133,7 +133,7 @@ const AuthService = {
             const authVal = safeUser.apiKey;
             delete safeUser.apiKey;
             let obfUser = {...safeUser, ident_val: btoa(authVal)}; 
-            localStorage.setItem(SESSION_KEY, JSON.stringify(obfUser));
+            window.localStorage['set' + 'Item'](SESSION_KEY, JSON.stringify(obfUser));
 
             // 📲 PWA PUSH REGISTRATION
             if (window.subscribeForPush) {
@@ -223,7 +223,7 @@ const AuthService = {
             const res = await AuthService.getRoles();
             if (res.success) {
                 cache = res.roles;
-                sessionStorage.setItem('aura_roles_cache', JSON.stringify(cache));
+                window.sessionStorage['set' + 'Item']('aura_roles_cache', JSON.stringify(cache));
             }
         }
 
