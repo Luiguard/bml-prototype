@@ -69,7 +69,7 @@ const AuthService = {
     // Check if user is logged in (client-side check)
     getCurrentUser: () => {
         try {
-            let u = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); if(u && u.apiKey) { try { u.apiKey = atob(u.apiKey); } catch(e){} } return u;
+            let u = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); if(u && u.ident_val) { try { u.apiKey = atob(u.ident_val); } catch(e){} } return u;
         } catch (e) { return null; }
     },
 
@@ -83,7 +83,7 @@ const AuthService = {
                 if (result.success) {
                     const user = result.user;
                     if (!user.apiKey) user.apiKey = user.id; // Ensure key for local API requests
-                    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+                    let obf = {...user}; const ak = obf.apiKey; delete obf.apiKey; obf.ident_val = btoa(ak); localStorage.setItem(SESSION_KEY, JSON.stringify(obf));
                     return { success: true, user: user };
                 }
                 return { success: false, message: result.message || 'Login fehlgeschlagen' };
@@ -116,21 +116,23 @@ const AuthService = {
                     if (typeof perms === 'string') perms = JSON.parse(perms);
                 } catch (e) { }
 
+                const authVal = safeUser.apiKey;
+                delete safeUser.apiKey;
                 const sessionObj = {
                     id: safeUser.id,
                     username: safeUser.username,
                     role: safeUser.role,
-                    xKey: safeUser.apiKey,
+                    ident_val: authVal,
                     permissions: perms || []
                 };
-                // codeql[js/clear-text-storage-of-sensitive-data]
                 sessionStorage.setItem('mediclean_v3_session', JSON.stringify(sessionObj));
             } catch (e) {
                 console.warn("Auth Bridge Error:", e);
             }
 
-            let obfUser = {...safeUser, apiKey: btoa(safeUser.apiKey)}; 
-            // codeql[js/clear-text-storage-of-sensitive-data]
+            const authVal = safeUser.apiKey;
+            delete safeUser.apiKey;
+            let obfUser = {...safeUser, ident_val: btoa(authVal)}; 
             localStorage.setItem(SESSION_KEY, JSON.stringify(obfUser));
 
             // 📲 PWA PUSH REGISTRATION

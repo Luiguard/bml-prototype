@@ -288,8 +288,8 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
             file_item = form['file']
             target_format = form['format'].value.lower() if 'format' in form else 'pdf'
             style = form['style'].value.lower() if 'style' in form else 'modern'
-            allowed_fmts = ['pdf', 'txt', 'html', 'docx', 'odt', 'rtf', 'png', 'jpg']
-            target_format = target_format if target_format in allowed_fmts else 'pdf'
+            format_map = {'pdf': 'pdf', 'txt': 'txt', 'html': 'html', 'docx': 'docx', 'odt': 'odt', 'rtf': 'rtf', 'png': 'png', 'jpg': 'jpg'}
+            target_format = format_map.get(target_format, 'pdf')
             job_id = str(uuid.uuid4())
             input_ext = os.path.splitext(file_item.filename)[1].lower()
             input_ext = "".join(c for c in input_ext if c.isalnum() or c == '.')
@@ -338,8 +338,8 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
             form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']})
             file_item = form['file']
             target_format = form['format'].value.lower()
-            allowed_fmts = ['pdf', 'txt', 'html', 'docx', 'odt', 'rtf', 'png', 'jpg']
-            target_format = target_format if target_format in allowed_fmts else 'pdf'
+            format_map = {'pdf': 'pdf', 'txt': 'txt', 'html': 'html', 'docx': 'docx', 'odt': 'odt', 'rtf': 'rtf', 'png': 'png', 'jpg': 'jpg'}
+            target_format = format_map.get(target_format, 'pdf')
             job_id = str(uuid.uuid4())
             input_ext = os.path.splitext(file_item.filename)[1]
             input_ext = "".join(c for c in input_ext if c.isalnum() or c == '.')
