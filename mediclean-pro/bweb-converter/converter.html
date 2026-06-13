@@ -1374,9 +1374,18 @@ async function clientSideConvert(htmlMap) {
                 iframe.style.pointerEvents = 'none';
                 document.body.appendChild(iframe);
 
-                const cleanHtml = htmlContent
-                    .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '')
-                    .replace(/\son[a-z]+\s*=\s*(['"])(.*?)\1/gi, '');
+                const parser = new DOMParser();
+                const parsedDoc = parser.parseFromString(htmlContent, 'text/html');
+                parsedDoc.querySelectorAll('script').forEach(el => el.remove());
+                const allElements = parsedDoc.querySelectorAll('*');
+                for (const el of allElements) {
+                    for (const attr of Array.from(el.attributes)) {
+                        if (attr.name.toLowerCase().startsWith('on')) {
+                            el.removeAttribute(attr.name);
+                        }
+                    }
+                }
+                const cleanHtml = parsedDoc.documentElement.outerHTML;
 
                 const blob = new Blob([cleanHtml], {type: 'text/html'});
                 iframe.src = URL.createObjectURL(blob);
