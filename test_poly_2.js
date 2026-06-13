@@ -9,8 +9,9 @@ global.TextDecoder = require('util').TextDecoder;
 global.TextEncoder = require('util').TextEncoder;
 
 const html = fs.readFileSync('converter.html', 'utf8');
-const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/g);
-let polyfillCode = scriptMatch[1].replace(/<script>|<\/script>/g, '');
+const fileDom = new JSDOM(html);
+const scripts = fileDom.window.document.querySelectorAll('script');
+let polyfillCode = scripts[1] ? scripts[1].textContent : '';
 
 // Evaluate polyfill
 eval(polyfillCode);

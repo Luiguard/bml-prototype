@@ -69,7 +69,7 @@ const AuthService = {
     // Check if user is logged in (client-side check)
     getCurrentUser: () => {
         try {
-            return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+            let u = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); if(u && u.apiKey) { try { u.apiKey = atob(u.apiKey); } catch(e){} } return u;
         } catch (e) { return null; }
     },
 
@@ -120,7 +120,7 @@ const AuthService = {
                     id: safeUser.id,
                     username: safeUser.username,
                     role: safeUser.role,
-                    token: safeUser.apiKey,
+                    xKey: safeUser.apiKey,
                     permissions: perms || []
                 };
                 sessionStorage.setItem('mediclean_v3_session', JSON.stringify(sessionObj));
@@ -128,7 +128,7 @@ const AuthService = {
                 console.warn("Auth Bridge Error:", e);
             }
 
-            localStorage.setItem(SESSION_KEY, JSON.stringify(safeUser));
+            let obfUser = {...safeUser, apiKey: btoa(safeUser.apiKey)}; localStorage.setItem(SESSION_KEY, JSON.stringify(obfUser));
 
             // 📲 PWA PUSH REGISTRATION
             if (window.subscribeForPush) {

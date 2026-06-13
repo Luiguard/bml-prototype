@@ -49,7 +49,7 @@ def test_roundtrip_attributes():
     html = '<a href="https://example.com" class="link" id="main-link">Click</a>'
     dom = bf.html_to_dom(html)
     bml = bf.serialize_bml(dom)
-    assert b'https://example.com' in bml, "href not in BML"
+    assert bml.find(b'https://example.com') != -1, "href not in BML"
     assert b'link' in bml, "class not in BML"
     assert b'main-link' in bml, "id not in BML"
     assert b'Click' in bml, "text not in BML"

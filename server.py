@@ -288,7 +288,8 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
             file_item = form['file']
             target_format = form['format'].value.lower() if 'format' in form else 'pdf'
             style = form['style'].value.lower() if 'style' in form else 'modern'
-            target_format = "".join(c for c in target_format if c.isalnum())
+            allowed_fmts = ['pdf', 'txt', 'html', 'docx', 'odt', 'rtf', 'png', 'jpg']
+            target_format = target_format if target_format in allowed_fmts else 'pdf'
             job_id = str(uuid.uuid4())
             input_ext = os.path.splitext(file_item.filename)[1].lower()
             input_ext = "".join(c for c in input_ext if c.isalnum() or c == '.')
@@ -337,7 +338,8 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
             form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']})
             file_item = form['file']
             target_format = form['format'].value.lower()
-            target_format = "".join(c for c in target_format if c.isalnum())
+            allowed_fmts = ['pdf', 'txt', 'html', 'docx', 'odt', 'rtf', 'png', 'jpg']
+            target_format = target_format if target_format in allowed_fmts else 'pdf'
             job_id = str(uuid.uuid4())
             input_ext = os.path.splitext(file_item.filename)[1]
             input_ext = "".join(c for c in input_ext if c.isalnum() or c == '.')

@@ -8,7 +8,7 @@
     <meta name="keywords" content="HTML to Binary, HTML Converter, BWEB Engine, BWEB Tool, Website umwandeln, Polyfill, Web Performance Tool, Binary DOM Generator">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js" integrity="sha384-vdScihEZCfbPnBQf+lc7LgXUdJVYyhC3yWHUW5C5P5GpHRqVnaM6HJELJxT6IqwM" crossorigin="anonymous"></script>
     <style>
         @keyframes pulse {
             0% { transform: scale(0.95); opacity: 0.5; }
@@ -1076,8 +1076,8 @@ class CanvasEngine {
             
             if(s[37] && s[37].includes('linear-gradient')) {
                 const gradStr = s[37];
-                let match = gradStr.match(/linear-gradient\(((?:[^)(]+|\([^)(]*\))*)\)/);
-                if(!match) match = gradStr.match(/linear-gradient\((.*)\)/);
+                let match = gradStr.match(/linear-gradient\((.+)\)$/);
+                if(!match) match = gradStr.match(/linear-gradient\((.+)\)$/);
                 if(match) {
                     let argsStr = match[1].trim();
                     let dirStr = 'to bottom';

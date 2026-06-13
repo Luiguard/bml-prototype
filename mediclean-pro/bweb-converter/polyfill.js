@@ -410,8 +410,8 @@ class CanvasEngine {
             
             if(s[37] && s[37].includes('linear-gradient')) {
                 const gradStr = s[37];
-                let match = gradStr.match(/linear-gradient\(((?:[^)(]+|\([^)(]*\))*)\)/);
-                if(!match) match = gradStr.match(/linear-gradient\((.*)\)/);
+                let match = gradStr.match(/linear-gradient\((.+)\)$/);
+                if(!match) match = gradStr.match(/linear-gradient\((.+)\)$/);
                 if(match) {
                     let argsStr = match[1].trim();
                     let dirStr = 'to bottom';
