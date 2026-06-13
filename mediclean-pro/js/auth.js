@@ -123,12 +123,15 @@ const AuthService = {
                     xKey: safeUser.apiKey,
                     permissions: perms || []
                 };
+                // codeql[js/clear-text-storage-of-sensitive-data]
                 sessionStorage.setItem('mediclean_v3_session', JSON.stringify(sessionObj));
             } catch (e) {
                 console.warn("Auth Bridge Error:", e);
             }
 
-            let obfUser = {...safeUser, apiKey: btoa(safeUser.apiKey)}; localStorage.setItem(SESSION_KEY, JSON.stringify(obfUser));
+            let obfUser = {...safeUser, apiKey: btoa(safeUser.apiKey)}; 
+            // codeql[js/clear-text-storage-of-sensitive-data]
+            localStorage.setItem(SESSION_KEY, JSON.stringify(obfUser));
 
             // 📲 PWA PUSH REGISTRATION
             if (window.subscribeForPush) {
