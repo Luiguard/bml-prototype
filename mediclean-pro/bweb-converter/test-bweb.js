@@ -1,8 +1,16 @@
 const puppeteer = require('puppeteer');
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const app = express();
 
-app.use('/subfolder', express.static('/home/benjamin/projects/testordner'));
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/subfolder', apiLimiter, express.static('/home/benjamin/projects/testordner'));
 
 const server = app.listen(8081, async () => {
     console.log("Server running on http://localhost:8081/subfolder/");

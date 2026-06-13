@@ -36,6 +36,16 @@ if (htmlFiles.length === 0) { console.error(`Error: No .html files found in ${in
 console.log(`[INFO] Found ${htmlFiles.length} HTML pages to process.`);
 
 const app = express();
+const rateLimit = require('express-rate-limit');
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(apiLimiter);
 app.use(express.static(inputDir));
 
 const server = app.listen(0, async () => {
