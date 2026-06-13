@@ -29,14 +29,13 @@ switch (command) {
     case 'build': {
         const inputDir = args[1];
         const outFile = args[2] || 'website.bweb';
-        const inputHtml = args[3] || null;
         if (!inputDir) {
             console.error('Fehler: Eingabeverzeichnis fehlt.');
             process.exit(1);
         }
         console.log(`[bwebc] Starte Build-Prozess für ${inputDir}...`);
         
-        buildBweb(path.resolve(inputDir), path.resolve(outFile), inputHtml)
+        buildBweb(path.resolve(inputDir), path.resolve(outFile))
             .then(() => {
                 console.log(`[bwebc] Build abgeschlossen. (Mode: ${config.mode || 'default'})`);
             })
@@ -50,7 +49,7 @@ switch (command) {
     case 'test': {
         console.log(`[bwebc] Starte Testsuite...`);
         try {
-            execSync(`node ${path.join(__dirname, 'tests/runner.js')}`, { stdio: 'inherit' });
+            require('child_process').spawnSync('node', [path.join(__dirname, 'tests/runner.js')], { stdio: 'inherit' });
         } catch(e) {
             console.error('[bwebc] Tests fehlgeschlagen.');
             process.exit(1);
@@ -60,7 +59,7 @@ switch (command) {
     case 'roundtrip': {
         console.log(`[bwebc] Starte Roundtrip Validator...`);
         try {
-            execSync(`node ${path.join(__dirname, 'tests/roundtrip.js')}`, { stdio: 'inherit' });
+            require('child_process').spawnSync('node', [path.join(__dirname, 'tests/roundtrip.js')], { stdio: 'inherit' });
         } catch(e) {
             console.error('[bwebc] Roundtrip Validator fehlgeschlagen (Drift erkannt!).');
             process.exit(1);
