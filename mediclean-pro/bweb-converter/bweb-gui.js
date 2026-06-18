@@ -9,6 +9,22 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 const port = 4000;
+const SAFE_WORKSPACE_ROOT = path.resolve(process.cwd());
+
+function resolvePathUnderRoot(rootDir, userPath) {
+    if (typeof userPath !== 'string' || userPath.trim() === '') {
+        throw new Error('Ungültiger Pfad übermittelt.');
+    }
+
+    const resolvedPath = path.resolve(rootDir, userPath);
+    const relativePath = path.relative(rootDir, resolvedPath);
+
+    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+        throw new Error('Pfad liegt außerhalb des erlaubten Arbeitsverzeichnisses.');
+    }
+
+    return resolvedPath;
+}
 
 // Rate limiting
 const limiter = rateLimit({
@@ -280,9 +296,20 @@ app.get('/api/convert', async (req, res) => {
         return res.end();
     }
 
+    let safeInputDir;
+    let safeOutputDir;
+    try {
+        safeInputDir = resolvePathUnderRoot(SAFE_WORKSPACE_ROOT, inputDir);
+        safeOutputDir = resolvePathUnderRoot(SAFE_WORKSPACE_ROOT, outputFile);
+    } catch (e) {
+        sendLog(e.toString(), 'error');
+        res.write(`data: {"type":"end"}\n\n`);
+        return res.end();
+    }
+
     sendLog(`[Init] Starte Kompilierung...`);
-    sendLog(`[Init] Quellordner: ${inputDir}`);
-    sendLog(`[Init] Zielordner: ${outputFile}`);
+    sendLog(`[Init] Quellordner: ${safeInputDir}`);
+    sendLog(`[Init] Zielordner: ${safeOutputDir}`);
 
     let localServer = null;
     let browser = null;
@@ -303,7 +330,7 @@ app.get('/api/convert', async (req, res) => {
             return results;
         }
 
-        const htmlFiles = getHtmlFiles(inputDir);
+        const htmlFiles = getHtmlFiles(safeInputDir);
         
         // Inject dynamic query parameter pages manually for compilation
         const dynamicRoutes = [
@@ -326,7 +353,7 @@ app.get('/api/convert', async (req, res) => {
         sendLog(`[VFS] ${htmlFiles.length} Routen/Seiten gefunden.`);
 
         const tempApp = express();
-        tempApp.use(express.static(inputDir));
+        tempApp.use(express.static(safeInputDir));
         
         await new Promise(r => {
             localServer = tempApp.listen(0, () => {
@@ -873,7 +900,7 @@ const port = localServer.address().port;
 </body>
 </html>`;
 
-        fs.writeFileSync(path.join(outputFile, 'index.html'), indexHtmlContent);
+        fs.writeFileSync(path.join(safeOutputDir, 'index.html'), indexHtmlContent);
         sendLog('[Polyfill] index.html und website.bpg im Zielordner erstellt.', 'success');
 
 
