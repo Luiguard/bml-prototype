@@ -1,16 +1,12 @@
 {
-  "name": "mediclean-pro-workspace",
+  "name": "bweb-engine",
   "version": "1.0.0",
-  "description": "Monorepo: Mediclean Pro Website + ConvertAny Tool",
-  "private": true,
-  "workspaces": [
-    "convertany",
-    "mediclean-pro"
-  ],
-  "scripts": {
-    "start": "python3 server.py",
-    "monitor": "python3 monitor.py",
-    "status": "systemctl status mediclean-server mediclean-tunnel mediclean-monitor"
+  "description": "Binary Web Engine — Convert HTML/CSS/Images to ultra-fast binary BWEB format",
+  "author": "Benjamin Leimer",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Luiguard/bml-prototype.git"
   },
   "author": "Benjamin",
   "license": "ISC",

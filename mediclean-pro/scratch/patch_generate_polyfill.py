@@ -60,7 +60,9 @@ new_script = """let pagesMap = {};
                 const a = e.target.closest('a');
                 if (!a) return;
                 const href = a.getAttribute('href');
-                if (!href || href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('#') || href.startsWith('javascript:')) return;
+                let u = href;
+                try { u = decodeURI(href).trim().toLowerCase(); } catch(e) { u = href.trim().toLowerCase(); }
+                if (u.startsWith('http') || u.startsWith('mailto:') || u.startsWith('tel:') || u.startsWith('#') || u.startsWith('javascript:') || u.startsWith('data:') || u.startsWith('vbscript:')) return;
                 e.preventDefault();
                 
                 let targetUrl = href.split('#')[0];

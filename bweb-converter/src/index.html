@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB - The Binary Web Standard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mesh-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <header class="hero">
+        <img src="assets/hero.jpg" class="hero-bg" alt="Hero Background">
+        <div class="container">
+            <h1>Willkommen im <span class="accent">Binären Web</span></h1>
+            <p class="subtitle">Eine radikale Neuerfindung der Webarchitektur. Schneller, sicherer und deterministischer.</p>
+            
+            <div class="alert-box">
+                <span class="pulse"></span>
+                <strong>Achtung:</strong> Diese Seite wird gerade von einer WebAssembly-VM aus einem binären BWEB-Paket gerendert – nicht vom klassischen DOM.
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="intro">
+            <h2>Was ist BWEB?</h2>
+            <p>BWEB (Binary Web) ist ein vollständig präkompiliertes Webformat. Anstatt dass dein Browser tausende Zeilen HTML, unvorhersehbares CSS und schwerfälliges JavaScript parsen, berechnen und layouten muss, liefert BWEB das fertige Ergebnis. Ein C-ähnlicher Pointer-Baum (BDT) und fertig berechnete Layout-Blöcke (BLB) sagen der Render-Engine (Canvas/WebGL) direkt, was wohin gezeichnet wird.</p>
+        </section>
+
+        <section class="pillars">
+            <h2>Die 5 Säulen der Architektur</h2>
+            
+            <div class="grid">
+                <div class="card" id="card-1">
+                    <img src="assets/icon-bml.svg" class="card-icon" alt="BML Icon">
+                    <h3>BML (Binary Markup)</h3>
+                    <p>Ersetzt HTML. XML-Knoten und Tags werden zu 1-Byte Opcodes reduziert. Kein Parsing-Overhead mehr.</p>
+                </div>
+                
+                <div class="card" id="card-2">
+                    <img src="assets/icon-bml.svg" class="card-icon" alt="BDT Icon">
+                    <h3>BDT (Binary DOM Tree)</h3>
+                    <p>Der Strukturbaum im Speicher. Eine extrem flache Array-Struktur, navigiert über 16-Bit Pointer. Eliminiert Node-Traversal-Latenzen.</p>
+                </div>
+
+                <div class="card" id="card-3">
+                    <img src="assets/icon-blb.svg" class="card-icon" alt="BLB Icon">
+                    <h3>BLB (Binary Layout)</h3>
+                    <p>Das Ende des CSS-Cascadings. Statische 60-Byte-Blöcke, die dem Renderer die finalen Box-Metriken ohne Engine-Berechnung diktieren.</p>
+                </div>
+
+                <div class="card" id="card-4">
+                    <img src="assets/icon-bib.svg" class="card-icon" alt="BIB Icon">
+                    <h3>BIB (Binary Images)</h3>
+                    <p>Rohe Pixelpipelines. Original komprimierte Medien (PNG/JPG), die asynchron direkt über die GPU-Decodierer auf das Canvas gefeuert werden.</p>
+                </div>
+
+                <div class="card" id="card-5">
+                    <img src="assets/icon-bib.svg" class="card-icon" alt="BVS Icon">
+                    <h3>BVS (Binary Video)</h3>
+                    <p>Zero-Latency Video Playback. Kein MP4-Overhead. Reine Multiplex-Frames direkt an die WebCodecs API.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="interactive">
+            <h2>Live Interaktivität</h2>
+            
+            <div class="interactive-box">
+                <button id="btn-counter" class="btn">Klick mich (Canvas Re-Render)</button>
+                <div id="counter-text" class="counter-display">0 Klicks</div>
+            </div>
+
+            <div class="interactive-box">
+                <div class="tab-nav">
+                    <button id="btn-tab-1" class="tab-btn" style="border-color: var(--accent-2); color: #fff;">Ansicht A</button>
+                    <button id="btn-tab-2" class="tab-btn">Ansicht B</button>
+                </div>
+                <div class="tab-content-wrapper" style="position: relative; min-height: 150px;">
+                    <div id="tab-content-1" class="tab-content" style="position: absolute; top: 0; left: 0; width: 100%;">
+                        <h3>Erste Ansicht</h3>
+                        <p>Hier ist der Inhalt der ersten Ansicht. Klicke oben, um in Millisekunden den State zu wechseln.</p>
+                    </div>
+                    <div id="tab-content-2" class="tab-content" style="position: absolute; top: 0; left: 0; width: 100%; visibility: hidden;">
+                        <h3>Zweite Ansicht</h3>
+                        <p>Das ist die zweite Ansicht! Der DOM wurde nicht angerührt, nur ein BLB Display-Byte wurde mutiert.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="benchmarks">
+            <h2>Benchmark: DOM vs. BWEB</h2>
+            <div class="bench-card">
+                <div class="bench-row">
+                    <div class="bench-label">Klassisches DOM (Parsen, Stylen, Layouten, Paint)</div>
+                    <div class="bench-bar-container">
+                        <div class="bench-bar dom-bar" style="width: 100%;">~ 850ms (LCP)</div>
+                    </div>
+                </div>
+                <div class="bench-row">
+                    <div class="bench-label">BWEB Engine (WASM Pointer-Read + Canvas Paint)</div>
+                    <div class="bench-bar-container">
+                        <div class="bench-bar bweb-bar" style="width: 15%;">~ 120ms (LCP)</div>
+                    </div>
+                </div>
+            </div>
+            <p class="bench-note">Die BWEB-Struktur entlastet den Main-Thread komplett. Interaktionen, Reflows und Repaints erfolgen innerhalb der WASM-Sandbox, abgekoppelt von browserinternen Layout-Thrashing-Problemen.</p>
+        </section>
+
+        <section class="video-section">
+            <h2>BVS Video Streaming Demo</h2>
+            <p>Ein flüssiges Video, decodiert und gezeichnet direkt auf das deterministische BWEB Canvas (kein DOM Video Element sichtbar!).</p>
+            <div class="video-container">
+                <video src="assets/demo.mp4" autoplay loop muted class="demo-video"></video>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container text-center">
+            <p>BWEB Standard v1.0 &middot; Normative Release</p>
+        </div>
+    </footer>
+</body>
+</html>

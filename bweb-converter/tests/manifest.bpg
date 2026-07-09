@@ -1,0 +1,9 @@
+{
+  "version": "1780225905086",
+  "hash": "f7557ae815a450db5fcafa7f688a11b17048117e89f7d7ce3c5b84ed6beec3bd",
+  "signature": "MEUCIDq+L567oX92mXksjiXmyOEwU3D8ntm9qX9zIlR9FQwPAiEA3RcYrGYbgXy28Uar5hE94a8aLLVwd3pwNCKB3I3Sn4E=",
+  "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEHMluh4mXYmDoJgM0gMBFTwJqjhKSm5Y6P1OtpUlXhEBNy+vW3284Lq1/J+qX97Nh2kN+sI/JssctpB2zS52zcg==",
+  "feature_flags": {
+    "new_layout": true
+  }
+}

@@ -36,6 +36,13 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(DOCS_DIR, exist_ok=True)
 
+def safe_join(directory, *pathnames):
+    """Safely join zero or more untrusted path components to a base directory."""
+    final_path = os.path.normpath(os.path.join(directory, *pathnames))
+    if not final_path.startswith(os.path.normpath(directory)):
+        raise ValueError("Path traversal detected")
+    return final_path
+
 # --- Auto-Cleanup Thread ---
 def cleanup_old_files():
     """Deletes files older than CLEANUP_AGE_SECONDS from uploads and outputs."""
@@ -107,7 +114,7 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
                 
                 files = []
                 for f in os.listdir(user_doc_dir):
-                    f_path = os.path.join(user_doc_dir, f)
+                    f_path = safe_join(user_doc_dir, f)
                     if os.path.isfile(f_path):
                         stat = os.stat(f_path)
                         files.append({
@@ -297,7 +304,7 @@ class MultiProjectHandler(http.server.SimpleHTTPRequestHandler):
                     user_doc_dir = os.path.join(DOCS_DIR, user['id'])
                     os.makedirs(user_doc_dir, exist_ok=True)
                     
-                    file_path = os.path.join(user_doc_dir, filename)
+                    file_path = safe_join(user_doc_dir, filename)
                     with open(file_path, 'wb') as f:
                         f.write(file_item)
                         
@@ -1286,9 +1293,10 @@ Lebenslauf-Text:
             
             job_id = str(uuid.uuid4())
             input_ext = os.path.splitext(file_item.filename)[1]
-            input_path = os.path.join(UPLOAD_DIR, job_id + input_ext)
+            input_ext = "".join(c for c in input_ext if c.isalnum() or c == '.')
+            input_path = safe_join(UPLOAD_DIR, job_id + input_ext)
             with open(input_path, 'wb') as f: f.write(file_item.file.read())
-            output_path = os.path.join(OUTPUT_DIR, f"{job_id}.{target_format}")
+            output_path = safe_join(OUTPUT_DIR, f"{job_id}.{target_format}")
 
             if input_ext.lower() in ['.docx', '.doc', '.odt', '.pdf', '.rtf', '.txt']:
                 subprocess.run(["libreoffice", "--headless", "--convert-to", target_format, "--outdir", OUTPUT_DIR, input_path])

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #000; color: #fff;
+            width: 380px; padding: 20px;
+            overflow-x: hidden;
+        }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; }
+        .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.03em; }
+        .logo span { color: #5e6ad2; }
+        .badge { background: rgba(94, 106, 210, 0.1); border: 1px solid rgba(94, 106, 210, 0.3); color: #8b96f5; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; }
+        
+        .tab-nav { display: flex; gap: 8px; margin-bottom: 16px; }
+        .tab-btn { flex: 1; padding: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); color: #8a8f98; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: all 0.2s; }
+        .tab-btn.active { background: #fff; color: #000; border-color: #fff; font-weight: 600; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; color: #fff; letter-spacing: -0.01em; }
+        p { color: #8a8f98; font-size: 0.82rem; line-height: 1.5; margin-bottom: 12px; }
+        
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+        .card-title { font-weight: 600; font-size: 0.85rem; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .card-desc { font-size: 0.78rem; color: #8a8f98; line-height: 1.4; }
+        
+        .btn-action { display: block; width: 100%; padding: 10px; background: #5e6ad2; color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none; box-shadow: 0 4px 12px rgba(94,106,210,0.3); }
+        .btn-action:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .stat-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: #8a8f98; }
+        .stat-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #10b981; }
+        
+        .feature-icon { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.15); color: #10b981; border-radius: 4px; font-size: 0.65rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">BWEB<span>.</span> Inspector</div>
+        <div class="badge">V1.0</div>
+    </div>
+    
+    <div class="tab-nav">
+        <button class="tab-btn active" id="tabBtnInspector">Inspector</button>
+        <button class="tab-btn" id="tabBtnCookies">Cookies</button>
+        <button class="tab-btn" id="tabBtnAds">Ads</button>
+    </div>
+    
+    <!-- Tab: Inspector -->
+    <div class="tab-content active" id="tabInspector">
+        <p>Analysiere die aktuelle Tab-Seite auf BWEB-Aktivität und lade sie in den lokalen Konverter.</p>
+        <div class="card">
+            <div class="card-title">🔍 BWEB Status</div>
+            <div id="inspectorStats" style="margin-top: 10px;">
+                <div class="stat-row">
+                    <span class="stat-label">BWEB Active</span>
+                    <span class="stat-val" id="statBwebActive" style="color: #ef4444;">Nein</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Seitengröße</span>
+                    <span class="stat-val" id="statPageSize">-</span>
+                </div>
+            </div>
+        </div>
+        <button class="btn-action" id="btnInspectCurrent">aktuelle Seite konvertieren</button>
+    </div>
+    
+    <!-- Tab: Cookies -->
+    <div class="tab-content" id="tabCookies">
+        <h3>Warum BWEB keine Cookies nutzt</h3>
+        <p>BWEB (Binary Web) bricht mit dem traditionellen Cookie-System des Webs, um standardmäßig absolute Privatsphäre und Zero-Cookie-Banner-Konformität (DSGVO out-of-the-box) zu gewährleisten.</p>
+        
+        <div class="card">
+            <div class="card-title"><span class="feature-icon">1</span> Stateless Binary Container</div>
+            <div class="card-desc">BWEB ist ein kompilierter, rein statischer Binär-Container. Das Format selbst ist vollkommen zustandsfrei. Es benötigt keinen Session-Cookie-Zustand auf Client-Seite für das Laden oder GPU-Rendern.</div>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="feature-icon">2</span> Zero Tracking Overheads</div>
+            <div class="card-desc">Da BWEB das CPU-Parsing von Text-HTML und Inline-Skripten blockiert, können Tracker keine heimlichen Tracking-Pixel oder Third-Party Cookies platzieren. Cookie-Consent-Banner sind obsolet!</div>
+        </div>
+    </div>
+    
+    <!-- Tab: Ads -->
+    <div class="tab-content" id="tabAds">
+        <h3>Die Zukunft der Werbung in BWEB</h3>
+        <p>Werbung im modernen Web ist träge, datenhungrig und unsicher. In BWEB wird Werbung revolutioniert, um die Privatsphäre zu wahren und Seitenladezeiten von unter 1 ms zu sichern.</p>
+        
+        <div class="card">
+            <div class="card-title"><span class="feature-icon">A</span> BIB Ad-Slices (Binäre Werbe-Slices)</div>
+            <div class="card-desc">Anstatt tonnenweise schweres Javascript auszuführen, das Nutzer ausspioniert, sind Ads in BWEB **statische binäre BIB-Slices (Binary Image Blocks)**. Sie werden direkt von der GPU gezeichnet – absolut sicher und stromsparend.</div>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="feature-icon">B</span> Zero-Knowledge Krypto-Verifikation</div>
+            <div class="card-desc">Werbeeinblendungen werden kryptografisch signiert und lokal ohne Nutzer-Profiling verifiziert. Das schützt vollständig vor Malware (Malvertising) und schont den Akku Ihres Mobilgeräts.</div>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

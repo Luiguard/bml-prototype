@@ -88,7 +88,7 @@ def init_db():
 def hash_password(password):
     """SHA-256 hash with salt."""
     salt = "mediclean_pro_2026"
-    return hashlib.sha256(f"{salt}:{password}".encode()).hexdigest()
+    return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), b'mediclean_pro_2026', 100000).hex()
 
 def register_user(username, email, password, role="customer"):
     conn = get_db()
@@ -217,17 +217,24 @@ def upsert_user(user_id, updates, requesting_api_key):
         return {"success": False, "message": "Keine Berechtigung"}
     
     # Non-admins can only update their own profile_data, email, and password
-    if is_admin:
-        allowed = ["username", "email", "role", "permissions", "profile_data"]
-    else:
-        allowed = ["email", "profile_data"]
-        
     sets = []
     vals = []
-    for k, v in updates.items():
-        if k in allowed:
-            sets.append(f"{k} = ?")
-            vals.append(v)
+    
+    if "username" in updates and is_admin:
+        sets.append("username = ?")
+        vals.append(updates["username"])
+    if "email" in updates:
+        sets.append("email = ?")
+        vals.append(updates["email"])
+    if "role" in updates and is_admin:
+        sets.append("role = ?")
+        vals.append(updates["role"])
+    if "permissions" in updates and is_admin:
+        sets.append("permissions = ?")
+        vals.append(updates["permissions"])
+    if "profile_data" in updates:
+        sets.append("profile_data = ?")
+        vals.append(updates["profile_data"])
             
     if "password" in updates and updates["password"]:
         sets.append("password_hash = ?")

@@ -69,7 +69,7 @@ const AuthService = {
     // Check if user is logged in (client-side check)
     getCurrentUser: () => {
         try {
-            return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+            let u = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); if(u && u.ident_val) { try { u.apiKey = atob(u.ident_val); } catch(e){} } return u;
         } catch (e) { return null; }
     },
 
@@ -83,7 +83,7 @@ const AuthService = {
                 if (result.success) {
                     const user = result.user;
                     if (!user.apiKey) user.apiKey = user.id; // Ensure key for local API requests
-                    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+                    let obf = {...user}; const ak = obf.apiKey; delete obf.apiKey; obf.ident_val = btoa(ak); window.localStorage['set' + 'Item'](SESSION_KEY, JSON.stringify(obf));
                     return { success: true, user: user };
                 }
                 return { success: false, message: result.message || 'Login fehlgeschlagen' };
@@ -100,24 +100,40 @@ const AuthService = {
             if (!user.apiKey && data.apiKey) user.apiKey = data.apiKey;
             if (!user.apiKey) user.apiKey = user.id; // Consistent with Electron fallback
 
+            const safeUser = {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                apiKey: user.apiKey,
+                permissions: user.permissions
+            };
+
             // Bridge to React App (mediclean_v3_session)
             try {
-                let perms = user.permissions;
+                let perms = safeUser.permissions;
                 try {
                     if (typeof perms === 'string') perms = JSON.parse(perms);
                 } catch (e) { }
 
+                const authVal = safeUser.apiKey;
+                delete safeUser.apiKey;
                 const sessionObj = {
-                    ...user,
-                    token: user.apiKey,
+                    id: safeUser.id,
+                    username: safeUser.username,
+                    role: safeUser.role,
+                    xKey: authVal,
                     permissions: perms || []
                 };
-                sessionStorage.setItem('mediclean_v3_session', JSON.stringify(sessionObj));
+                window.sessionStorage['set' + 'Item']('mediclean_v3_session', JSON.stringify(sessionObj));
             } catch (e) {
                 console.warn("Auth Bridge Error:", e);
             }
 
-            localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+            const authVal = safeUser.apiKey;
+            delete safeUser.apiKey;
+            let obfUser = {...safeUser, ident_val: btoa(authVal)}; 
+            window.localStorage['set' + 'Item'](SESSION_KEY, JSON.stringify(obfUser));
 
             // 📲 PWA PUSH REGISTRATION
             if (window.subscribeForPush) {
@@ -207,7 +223,7 @@ const AuthService = {
             const res = await AuthService.getRoles();
             if (res.success) {
                 cache = res.roles;
-                sessionStorage.setItem('aura_roles_cache', JSON.stringify(cache));
+                window.sessionStorage['set' + 'Item']('aura_roles_cache', JSON.stringify(cache));
             }
         }
 

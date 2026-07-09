@@ -1,0 +1,10 @@
+{
+  "version": "1780248053743",
+  "hash": "600959e273183a5fc0e13bd5933f035baf3fd6b83f43a3f45bc663fe7b51eceb",
+  "signature": "MEUCIC0NNDqcHsowMgYZGAVj64zTTj85AiFLn98NOE1Y9lPbAiEA52lOvqlg9PB088Q2bkgr4350aOPWSc7a3oEDLYfYDXU=",
+  "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAED3WpBK6tsRaaETF4nEISNF8BTA08uz7MG2khlCk+in74tN6BxVucZP6sHskWL5s+DufDf6aj0evZGhGfRNUcqg==",
+  "compilation_id": "8edf11ef-bd41-4721-bfcd-80005506075f",
+  "feature_flags": {
+    "bwebc_core_1_0": true
+  }
+}
