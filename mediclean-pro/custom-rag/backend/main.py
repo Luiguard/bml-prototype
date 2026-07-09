@@ -289,6 +289,11 @@ system_prompt = (
     "• URL/Webseite lesen → lese_webseite\n"
     "• Komplexe Operationen → execute_python_code (letzter Ausweg)\n\n"
 
+    "WICHTIG BEI DATEIEN:\n"
+    "Wenn ein Werkzeug eine NEUE Datei generiert (Konvertierung, Komprimierung, Bearbeitung) und dir den Pfad zurückgibt, "
+    "MUSS deine Antwort an den Nutzer zwingend diesen HTML-Link enthalten, damit er die Datei herunterladen kann:\n"
+    "<a href=\"/download?file=VOLLER_PFAD_ZUR_DATEI\" download class=\"file-chip\" style=\"text-decoration: none; display: inline-flex; margin-top: 10px;\"><span class=\"file-chip-icon\">💾</span><span class=\"file-chip-name\">Datei Herunterladen</span></a>\n\n"
+
     "Antworte IMMER auf Deutsch. Sei freundlich, hilfreich und präzise."
 )
 
@@ -375,6 +380,13 @@ async def chat(request: Request, body: ChatRequest):
         return {"response": ai_response}
     except Exception as e:
         return {"response": f"Fehler bei der Generierung: {str(e)}"}
+
+@app.get("/download")
+async def download_file(file: str):
+    if not os.path.exists(file):
+        return {"error": "Datei nicht gefunden"}
+    filename = os.path.basename(file)
+    return FileResponse(file, filename=filename, content_disposition_type="attachment")
 
 @app.get("/export")
 async def export_ai():
