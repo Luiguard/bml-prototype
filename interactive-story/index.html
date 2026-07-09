@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Das Echo von Zealandia | Interaktive Geschichte</title>
+    <meta name="description" content="Eine interaktive Erzählung über den versunkenen Kontinent Zealandia, die Moai von Rapa Nui und eine verlorene aviare Intelligenz.">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0b10;
+            --bg-card: rgba(16, 18, 28, 0.75);
+            --text: #d8d4c8;
+            --text-muted: #7a7668;
+            --gold: #c9a84c;
+            --gold-dim: rgba(201, 168, 76, 0.15);
+            --gold-glow: rgba(201, 168, 76, 0.08);
+            --ocean: #1a3a5c;
+            --ocean-light: #2a5a8c;
+            --lava: #8b2500;
+            --border: rgba(201, 168, 76, 0.12);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Lora', serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1.5rem 4rem;
+            line-height: 1.85;
+            background-image:
+                radial-gradient(ellipse at 20% 0%, var(--gold-glow), transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(26, 58, 92, 0.08), transparent 60%);
+            background-attachment: fixed;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeDown 1s ease-out;
+            max-width: 720px;
+        }
+        .kicker {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.4rem;
+        }
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 0.75rem;
+            text-shadow: 0 2px 20px rgba(201, 168, 76, 0.1);
+        }
+        .tagline {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            font-style: italic;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+        .disclaimer-bar {
+            margin-top: 1.25rem;
+            padding: 0.6rem 1.2rem;
+            background: rgba(201, 168, 76, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+        }
+        .container { max-width: 740px; width: 100%; }
+        .story-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: clamp(1.5rem, 4vw, 3rem);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .story-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0.4;
+        }
+        .chapter-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+            opacity: 0.7;
+        }
+        #story-content {
+            font-size: 1.15rem;
+            min-height: 180px;
+            opacity: 0;
+            animation: fadeIn 0.9s ease-out 0.1s forwards;
+        }
+        #story-content p { margin-bottom: 1.4rem; }
+        #story-content em { color: var(--gold); font-style: italic; }
+        #story-content strong { color: #e0ddd0; font-weight: 600; }
+        #story-content .riddle {
+            display: block;
+            margin: 1.5rem 0;
+            padding: 1.2rem 1.5rem;
+            background: rgba(201, 168, 76, 0.05);
+            border-left: 2px solid var(--gold);
+            font-style: italic;
+            color: var(--gold);
+            font-size: 1.05rem;
+        }
+        #story-content .detail {
+            display: block;
+            margin: 1rem 0;
+            padding: 0.8rem 1.2rem;
+            background: rgba(26, 58, 92, 0.15);
+            border-left: 2px solid var(--ocean-light);
+            font-size: 0.95rem;
+            color: #9ab;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+        }
+        #story-content .whisper {
+            display: block;
+            text-align: center;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 2rem;
+        }
+        .choices button {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            border-radius: 3px;
+            font-family: 'Lora', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+        .choices button::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 0;
+            background: var(--gold-dim);
+            transition: width 0.3s ease;
+        }
+        .choices button:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        .choices button:hover::before { width: 100%; }
+        .choices button span.hint {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            font-style: italic;
+        }
+        .meta-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255,255,255,0.04);
+            padding-top: 1rem;
+            margin-top: 2rem;
+        }
+        #inventory-display {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            padding: 0.6rem 1rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 3px;
+            display: none;
+        }
+        #inventory-display.visible { display: block; }
+        #inventory-display span {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            margin: 0.15rem;
+            background: var(--gold-dim);
+            border-radius: 2px;
+            color: var(--gold);
+            font-size: 0.68rem;
+            letter-spacing: 0.5px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 600px) {
+            body { padding: 1.5rem 1rem 3rem; }
+            .story-card { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="kicker">Künstlerische Freiheit · Prozedurale Narration · Fiktion</div>
+        <h1>Das Echo von Zealandia</h1>
+        <p class="tagline">Ein interaktives Erlebnis über einen versunkenen Kontinent, eine verlorene Intelligenz und die Echos, die sie in Stein hinterlassen hat.</p>
+        <div class="disclaimer-bar">
+            ⚠ Dieses Erlebnis ist ein Werk künstlerischer Freiheit. Es basiert auf dem hypothetischen
+            <em>Zealandia-Rapa-Nui-Echo-Modell (ZREM)</em> und verbindet reale geologische und archäologische
+            Fakten mit spekulativer Fiktion.
+        </div>
+    </header>
+    <main class="container">
+        <section class="story-card">
+            <div id="chapter-label" class="chapter-label"></div>
+            <div id="story-content">Die Tinte fließt noch…</div>
+            <div id="choices-container" class="choices"></div>
+            <div class="meta-bar">
+                <span id="depth-display">Tiefe: 0</span>
+                <span id="seed-display"></span>
+            </div>
+        </section>
+        <div id="inventory-display"></div>
+    </main>
+    <script>
+    (function() {
+        let seed = localStorage.getItem('zrem_seed_v3');
+        if (!seed) {
+            seed = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+            localStorage.setItem('zrem_seed_v3', seed);
+        }
+        document.getElementById('seed-display').textContent = 'Echo: ' + seed.slice(0,8).toUpperCase();
+        function hash(s) {
+            let h = 0xdeadbeef;
+            for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 2654435761);
+            return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return (h ^= h >>> 16) >>> 0; };
+        }
+        const rng = hash(seed);
+        const inventory = new Set();
+        let depth = 0;
+        const pick = arr => arr[rng() % arr.length];
+
+        const yourName = pick(['Kaia','Tane','Moana','Rongo','Hotu']);
+        const birdName = pick(['Te Manu Nui','Ariki Kura','Ko Te Matariki','Manu Ariki']);
+        const batName = pick(['Pekapeka Nui','Te Kahu Pō','Manaia','Ruru Atua']);
+
+        const S = {
+
+// ═══════════════════════════════════════
+// PROLOG – SPEZIESWAHL
+// ═══════════════════════════════════════
+
+start: {
+    chapter: 'Prolog · Zealandia',
+    text: `<p>Ein Kontinent stirbt. Langsam, über Jahrmillionen, sinkt Zealandia unter den Pazifik. Aber bevor er verschwindet, bringt er zwei Wesen hervor, die die Welt verändern werden.</p>
+<p>Das eine lebt im Licht. Es steht aufrecht auf den Klippen, den Blick starr aufs Land gerichtet. Es kommuniziert in Rufen, die wie eine Sprache klingen. Die Menschen werden es in Stein verewigen.</p>
+<p>Das andere lebt in der Dunkelheit. Es hängt kopfüber in den Lavahöhlen, mit einem Gesicht, das <em>fast menschlich</em> aussieht. Es trinkt Blut und frisst Früchte. Die Menschen werden es in ihre Albträume aufnehmen.</p>
+<p>Beide sind intelligent. Beide werden in die gleiche Richtung fliehen – nordöstlich, über den Pazifik. Aber das eine wird auf halbem Weg stecken bleiben, gefangen auf einer einsamen Insel. Das andere wird weiterfliegen, bis es einen ganzen Kontinent erreicht. Gleicher Ursprung. Gleiche Flucht. Verschiedene Echos.</p>
+<span class="whisper">Wähle dein Echo.</span>`,
+    choices: [
+        { text: 'Das Wesen im Licht. Der Wächter.', target: 'bird_start', hint: 'Rapa Nui · Moai · Rongorongo · Vogelmann-Kult' },
+        { text: 'Das Wesen in der Dunkelheit. Der Schatten.', target: 'bat_start', hint: 'Südamerika · Viracocha · Camazotz · Vampirmythos' }
+    ]
+},
+
+bird_start: {
+    chapter: 'Prolog · Der Wächter',
+    text: `<p>Du wachst auf. Oder – du wirst geboren. Es ist schwer zu sagen, welches von beiden. Es ist dunkel und warm. Unter dir vibriert etwas Gewaltiges. Es fühlt sich an wie der Herzschlag eines schlafenden Tieres.</p>
+<p>Dann bricht die Schale.</p>
+<p>Licht. Grelles, goldenes Licht. Der Geruch von Salz und feuchter Erde. Und Rufe – tiefe, rhythmische Rufe, die von überall gleichzeitig kommen. Drei Stimmen im Gleichtakt. Dann Stille. Dann eine einzelne, tiefere Stimme, die antwortet.</p>
+<p>Du bist <em>${birdName}</em>. Du bist der Letzte deiner Brut. Und du bist auf einem Kontinent geschlüpft, der stirbt.</p>
+<span class="whisper">Das Wasser steigt. Es steigt schon seit Millionen Jahren.</span>`,
+    choices: [
+        { text: 'Öffne die Augen. Sieh dich um.', target: 'z_awaken' },
+        { text: 'Lausche den Rufen. Was bedeuten sie?', target: 'z_calls' }
+    ]
+},
+
+// ═══════════════════════════════════════
+// AKT I – ZEALANDIA
+// ═══════════════════════════════════════
+
+z_awaken: {
+    chapter: 'Kapitel I · Zealandia',
+    text: `<p>Deine Augen gewöhnen sich ans Licht. Bernsteinfarben, sagen sie später. Schärfer als die eines Adlers.</p>
+<p>Du siehst: Grün. Endloses Grün. Farnbäume so hoch wie Türme. Moose, die an Vulkangestein leuchten. Und zwischen den Stämmen – <em>dein Volk</em>. Dutzende Gestalten, aufrecht wie Monolithe, den Blick auf das Landesinnere gerichtet.</p>
+<p>Hinter dir liegt der Ozean. Er riecht nach Salz und nach etwas Älterem. Nach Tiefe. Dein Rücken ist dem Meer zugewandt. So stehen alle. Immer. Denn vom Meer kommt keine Gefahr.</p>
+<p>Die Gefahr kommt von <em>innen</em>. Von den Rivalen am gegenüberliegenden Hang. Einer von ihnen – groß, mit narbigem Schnabel – starrt dich gerade an.</p>`,
+    choices: [
+        { text: 'Starre zurück. Weiche nicht.', target: 'z_standoff', onSelect: () => inventory.add('🔥 Dominanz') },
+        { text: 'Senke den Blick. Du bist noch jung.', target: 'z_colony_life' }
+    ]
+},
+
+z_calls: {
+    chapter: 'Kapitel I · Die Rufe',
+    text: `<p>Die Rufe haben eine Ordnung. Das spürst du, noch bevor du es verstehst.</p>
+<p>Drei kurze, tiefe Stöße: <em>Wir sind hier. Wir sind viele.</em> Dann eine Pause, lang genug für einen Atemzug. Dann eine einzelne, tiefere Stimme von der Klippe: <em>Ich wache. Seid still.</em></p>
+<p>Und alle verstummen. Sofort. Mitten im Ruf. Wie abgeschnitten.</p>
+<p>Der Wächter auf der Klippe – der Sentinel – hat gesprochen. Nein, nicht gesprochen. Er hat <em>geschwiegen</em>. Und sein Schweigen ist lauter als jeder Ruf.</p>
+<span class="riddle">Du merkst dir das Muster. Drei rufen. Einer schweigt. Die Stille ist der Befehl.</span>
+<p>Eines Tages werden fremde Wesen dieses Muster in Holz ritzen. Aber davon weißt du noch nichts.</p>`,
+    choices: [
+        { text: 'Klettre zur Klippe. Sieh, was der Wächter sieht.', target: 'z_awaken', onSelect: () => inventory.add('🔊 Rufmuster') },
+        { text: 'Folge den anderen ins Tal. Suche Nahrung.', target: 'z_colony_life' }
+    ]
+},
+
+z_standoff: {
+    chapter: 'Kapitel I · Das Territorium',
+    text: `<p>Der Narbenvogel weicht nicht. Du auch nicht. Minuten vergehen. Eure Augen sind wie Bolzen ineinander verhakt.</p>
+<p>Links von dir stehen drei Weibchen deiner Kolonie, die Küken hinter sich gedrängt. Rechts der Abgrund zur Bucht, wo das Wasser einen halben Meter höher steht als letztes Jahr. Oder war es mehr?</p>
+<p>Der Narbenvogel stößt einen tiefen, vibrierenden Ruf aus. Einmal. Zweimal. Er reklamiert <em>dein</em> Jagdgebiet.</p>
+<p>Du antwortest. Nicht mit einem Ruf – sondern mit dem, was dein Volk seit Jahrmillionen tut: Du <em>schweigst</em>. Du stehst einfach da. Unbeweglich. Ein lebender Monolith auf der Klippe.</p>
+<p>Nach einer Ewigkeit dreht der Narbenvogel ab. Dein Territorium steht.</p>
+<span class="whisper">Aber unter deinen Füßen sinkt die Erde weiter. Zentimeter für Zentimeter.</span>`,
+    choices: [
+        { text: 'Untersuche das steigende Wasser.', target: 'z_sinking' },
+        { text: 'Kehre zur Kolonie zurück.', target: 'z_colony_life' }
+    ]
+},
+
+z_colony_life: {
+    chapter: 'Kapitel I · Die Kolonie',
+    text: `<p>Das Tal riecht nach Feuchtigkeit und Farnsporen. Unter den Palmen liegt dein Nest – eine flache Mulde aus Moos und Vulkansand. Drei Eier. Cremeweiß mit braunen Sprenkeln.</p>
+<p>Dein Partner sitzt auf dem Nest und hebt den Kopf, als du kommst. Ein leiser Kontaktlaut. <em>Ich bin noch hier.</em></p>
+<p>Um euch herum das Leben der Kolonie: Junge Vögel, die am Boden nach Käfern scharren. Alte Weibchen, die im Schatten der Farne dösen. Und am Rand, auf den erhöhten Felsen, die Wächter. Immer die Wächter. Immer mit dem Rücken zum Meer.</p>
+<p>Ein guter Tag. Einer von vielen. Aber als die Sonne untergeht, fällt dir etwas auf: Der Strand, an dem du als Küken gespielt hast – er ist verschwunden. Unter Wasser.</p>`,
+    choices: [
+        { text: 'Wie viel Land haben wir verloren?', target: 'z_sinking' },
+        { text: 'Es ist nur ein Strand. Vergiss es.', target: 'z_sinking_slow' }
+    ]
+},
+
+z_sinking_slow: {
+    chapter: 'Kapitel II · Generationen',
+    text: `<p>Du vergisst es. Alle vergessen es. Ein Strand ist nur ein Strand.</p>
+<p>Aber deine Kinder vergessen etwas anderes: den Hügel hinter dem Nest. Er ragt nicht mehr über die Flut. Und <em>deren</em> Kinder vergessen die Lagune, in der ihre Großeltern Fische fingen – denn die Lagune ist jetzt offenes Meer.</p>
+<p>So funktioniert das Vergessen. Jede Generation kennt nur ihre eigene Küstenlinie. Niemand bemerkt, dass der Kontinent schrumpft, weil niemand alt genug wird, um den Unterschied zu sehen.</p>
+<span class="riddle">Dreißig Millionen Jahre lang verliert jede Generation ein bisschen Land – und vergisst, dass es jemals existiert hat. Wie viel kann man verlieren, ohne es zu wissen?</span>
+<p>Alles, wie sich herausstellt. Einen ganzen Kontinent.</p>`,
+    choices: [
+        { text: 'Eines Morgens wachst du auf – und das Meer ist überall.', target: 'z_sinking' }
+    ]
+},
+
+z_sinking: {
+    chapter: 'Kapitel II · Das Ertrinken von Zealandia',
+    text: `<p>Es passiert nicht über Nacht. Es passiert über Jahrtausende, die sich zu Jahrmillionen häufen.</p>
+<p>Aber irgendwann – du spürst es in den Knochen, in den Sehnen, in einem Instinkt, der keinen Namen hat – ist die letzte Klippe deines Heimatlandes nur noch eine sandige Erhebung im Wasser. Morgen wird sie weg sein.</p>
+<p>Der Sentinel auf dem höchsten Punkt stößt einen Ruf aus, den du nie zuvor gehört hast. Kein Warnruf. Kein Territorialruf. Etwas anderes. Etwas Altes.</p>
+<p>Die Ältesten deiner Kolonie heben die Köpfe. Einige von ihnen breiten ihre verkümmerten Flügel aus – Flügel, die seit Generationen nicht mehr zum Fliegen taugen, aber die noch genug Kraft haben für einen letzten, verzweifelten Versuch.</p>
+<span class="whisper">Zealandia sinkt. Die Frage ist nicht ob, sondern wohin.</span>`,
+    choices: [
+        { text: 'Fliege. Irgendwohin. Nur weg.', target: 'z_direction' },
+        { text: 'Bleibe. Warte auf das Ende.', target: 'z_drown' }
+    ]
+},
+
+z_drown: {
+    chapter: 'Kapitel II · Die Gebliebenen',
+    text: `<p>Manche bleiben. Die Alten. Die Schwachen. Die, deren Flügel zu kurz geworden sind.</p>
+<p>Das Wasser steigt über ihre Krallen. Über ihre Knie. Sie stehen immer noch aufrecht, den Blick aufs Land gerichtet – auf ein Land, das es nicht mehr gibt. Bis auch ihr Kopf unter Wasser verschwindet.</p>
+<p>Millionen Jahre später werden Sonargeräte den Meeresboden abtasten und die Umrisse eines versunkenen Kontinents entdecken. Zealandia. Groß wie Indien. Begraben unter dem Pazifik.</p>
+<p>Aber dich gibt es dann nicht mehr. Nicht hier.</p>
+<span class="whisper">Die, die blieben, hinterließen nichts. Nicht einmal Knochen.</span>`,
+    choices: [
+        { text: 'Geh zurück. Fliege diesmal.', target: 'z_direction' }
+    ]
+},
+
+// ═══════════════════════════════════════
+// AKT II – DIE MIGRATION
+// ═══════════════════════════════════════
+
+z_direction: {
+    chapter: 'Kapitel III · Die Himmelsrichtungen',
+    text: `<p>Wind peitscht dir ins Gesicht. Du bist in der Luft – kaum, gerade so, mit flatternden Stümpfen, die einmal mächtige Schwingen waren. Unter dir: Wasser. Überall Wasser.</p>
+<p>Du musst dich entscheiden. Jetzt.</p>
+<p>Im <strong>Süden</strong> hörst du den Wind heulen. Kalt. Wütend. Selbst aus dieser Entfernung spürst du die Eisnadeln in der Luft.</p>
+<p>Im <strong>Westen</strong> riechst du etwas Warmes. Land? Aber auch etwas anderes – einen scharfen, fremden Geruch. Raubtiere.</p>
+<p>Im <strong>Nordosten</strong> ist etwas, das du nicht erklären kannst. Ein Vibrieren. Tief unter der Hörschwelle. Es zieht an deinen Eingeweiden wie ein Magnet.</p>`,
+    choices: [
+        { text: 'Fliege nach Süden, in den Wind.', target: 'z_south_death' },
+        { text: 'Fliege nach Westen, zum warmen Land.', target: 'z_west_death' },
+        { text: 'Folge dem Vibrieren nach Nordosten.', target: 'z_infrasound' }
+    ]
+},
+
+z_south_death: {
+    chapter: 'Kapitel III · Die Roaring Forties',
+    text: `<p>Der Wind trifft dich wie eine Wand. Hundert Kilometer pro Stunde, vielleicht mehr. Er heult ununterbrochen, weil kein Kontinent ihn bremst – nichts als offenes Meer, rundherum um den ganzen Planeten.</p>
+<p>Die Temperatur fällt. Deine Muskeln verkrampfen. Eiskristalle bilden sich auf deinen Federn.</p>
+<p>Du versuchst umzukehren, aber der Wind ist stärker. Er drückt dich nach unten, ins graue, schäumende Wasser. Es ist so kalt, dass dein Herz fast stehen bleibt, als du die Oberfläche berührst.</p>
+<span class="whisper">Der Süden ist verschlossen. Das wussten deine Gene. Du nicht.</span>`,
+    choices: [
+        { text: 'Kämpfe dich zurück. Wähle eine andere Richtung.', target: 'z_direction' }
+    ]
+},
+
+z_west_death: {
+    chapter: 'Kapitel III · Das Falsche Paradies',
+    text: `<p>Du erreichst eine Küste. Warm. Trocken. Roter Sand. Riesige Bäume mit seltsamen Blättern. Es riecht nach Leben – aber nach dem <em>falschen</em> Leben.</p>
+<p>Du landest. Erschöpft. Hungrig. Du findest Käfer im Sand, kleine Echsen. Du frisst.</p>
+<p>Dann siehst du den Schatten. Schnell, lautlos, tödlich. Etwas Schlankes mit gelben Augen schießt aus dem Gestrüpp – ein Raubtier, wie du es nie zuvor gesehen hast. Du hast keine Angst, weil du Angst nie gelernt hast. Auf Zealandia gab es nichts, wovor man sich fürchten musste.</p>
+<p>Das ist dein letzter Gedanke.</p>
+<span class="riddle">Eine Million Jahre Evolution auf einer raubtierfreien Insel haben dich furchtlos gemacht. Furchtlos und wehrlos. Hier, auf dem australischen Festland, ist das dasselbe.</span>`,
+    choices: [
+        { text: 'Geh zurück. Wähle eine andere Richtung.', target: 'z_direction' }
+    ]
+},
+
+z_infrasound: {
+    chapter: 'Kapitel III · Die Stimme unter dem Meer',
+    text: `<p>Du fliegst nordöstlich. Nicht weil du es <em>entscheidest</em> – sondern weil etwas in dir zieht. Ein Brummen, tiefer als jeder Laut, den deine Ohren hören können. Es vibriert in deinem Brustkorb, in deinen Hohlknochen, in den winzigen Magnetitkristallen hinter deinen Augen.</p>
+<p>Infraschall. Die Stimme der Erde selbst.</p>
+<p>Hunderte Kilometer unter dir brodelt Magma durch die ozeanische Kruste. Vulkane, die im Begriff sind, Inseln zu gebären. Jeder von ihnen sendet einen tiefen, unhörbaren Ton in die Atmosphäre.</p>
+<p>Du folgst diesem Ton wie einer Spur im Dunkeln.</p>`,
+    choices: [
+        { text: 'Fliege weiter. Folge dem Brummen.', target: 'z_biolum', onSelect: () => inventory.add('🔈 Infraschall-Sinn') },
+        { text: 'Du wirst müde. Gibt es Land?', target: 'z_first_island' }
+    ]
+},
+
+z_biolum: {
+    chapter: 'Kapitel III · Sterne im Meer',
+    text: `<p>Die Nacht bricht herein. Kein Mond. Der Ozean unter dir ist schwarz wie Teer.</p>
+<p>Dann siehst du es.</p>
+<p>Ein Leuchten. Schwach zuerst, dann stärker. Blauweiße Flecken auf der Wasseroberfläche, wie ein umgekehrter Sternenhimmel. Plankton – Milliarden winziger Organismen, die aufleuchten, wo Nährstoffe aus der Tiefe aufsteigen. Und Nährstoffe steigen dort auf, wo <em>Vulkane</em> den Meeresboden aufbrechen.</p>
+<p>Die leuchtenden Flecken bilden eine Linie. Keine gerade Linie – eher eine Kette aus Lichtinseln, die sich nordöstlich über den Ozean zieht.</p>
+<p>Du folgst den Sternen im Meer.</p>
+<span class="whisper">Am Himmel die Sterne, die den Weg zeigen. Im Meer die Sterne, die sagen: Hier wird Land geboren.</span>`,
+    choices: [
+        { text: 'Folge den Lichtpunkten.', target: 'z_whales', onSelect: () => inventory.add('✨ Leuchtpfade') }
+    ]
+},
+
+z_whales: {
+    chapter: 'Kapitel III · Die Wandernden Kathedralen',
+    text: `<p>Am dritten Tag – oder ist es der vierte? – hörst du etwas Neues. Nicht das Brummen der Vulkane. Etwas Lebendiges. Einen Gesang, so komplex und so traurig, dass du fast vergisst zu fliegen.</p>
+<p>Unter dir durchbrechen dunkle Rücken die Oberfläche. Buckelwale. Zwanzig, vielleicht dreißig. Eine wandernde Kathedrale aus Fleisch und Klang, die sich nordöstlich durch den Ozean schiebt.</p>
+<p>Wo sie fressen, treiben Fischschwärme an die Oberfläche. Silberne Wolken im blauen Wasser. Du stürzt dich hinab und frisst – zum ersten Mal seit Tagen.</p>
+<p>Dann hebst du dich wieder in die Luft und folgst den Walen. Sie ziehen nordöstlich. Genau dorthin, wo das Brummen am stärksten ist.</p>`,
+    choices: [
+        { text: 'Bleibe bei den Walen.', target: 'z_first_island', onSelect: () => inventory.add('🐋 Wal-Kompass') },
+        { text: 'Fliege schneller, voraus.', target: 'z_first_island' }
+    ]
+},
+
+z_first_island: {
+    chapter: 'Kapitel IV · Der Erste Trittstein',
+    text: `<p>Am Horizont. Ein dunkler Punkt.</p>
+<p>Dein Herz schlägt schneller. Deine Flügel finden eine Kraft, die du nicht mehr für möglich gehalten hast. Näher. Näher.</p>
+<p><em>Land.</em></p>
+<p>Eine winzige Insel. Frisch aus dem Meer geborener Vulkan. Schwarzes Gestein, dampfend, noch warm. Keine Bäume. Keine Farne. Nur nackter Basalt und der Geruch von Schwefel. Aber es ist <em>fest</em>. Es ist <em>real</em>.</p>
+<p>Du landest. Deine Krallen greifen in die raue Oberfläche. Du fällst fast um vor Erschöpfung. Aber du lebst.</p>
+<p>Andere landen neben dir. Ein Dutzend. Vielleicht mehr. Überlebende deiner Kolonie, die dem gleichen Brummen gefolgt sind.</p>`,
+    choices: [
+        { text: 'Raste. Baue ein Nest.', target: 'z_island_life' },
+        { text: 'Erkunde die Insel.', target: 'z_island_explore' }
+    ]
+},
+
+z_island_explore: {
+    chapter: 'Kapitel IV · Vergängliches Land',
+    text: `<p>Die Insel ist klein. Du umrundest sie in einer Stunde. Auf der Nordseite blubbert heißes Wasser aus Ritzen im Gestein. Im Zentrum ein flacher Krater mit Regenwasser – trinkbar, wenn auch nach Mineral schmeckend.</p>
+<p>An der Ostküste findest du etwas Seltsames: Muscheln. Eingeklemmt in Gestein, zwei Meter über der Wasserlinie. Aber diese Muscheln sehen alt aus – viel älter als die Insel.</p>
+<span class="riddle">Muscheln über dem Meer, auf einer Insel, die erst vor kurzem aufgetaucht ist. Wie kamen sie dorthin? Die Antwort: Die Insel ist nicht aufgetaucht – der Meeresboden wurde <em>angehoben</em>. Was einmal Tiefseeboden war, ist jetzt dein Trittstein.</span>
+<p>Diese Insel wird nicht ewig halten. In hunderttausend Jahren wird die Erosion sie wieder hinunterschleifen. Aber jetzt, in diesem Moment, ist sie dein Zuhause.</p>`,
+    choices: [
+        { text: 'Bleibe. Wenigstens für eine Weile.', target: 'z_island_life' }
+    ]
+},
+
+z_island_life: {
+    chapter: 'Kapitel IV · Die Louisville-Straße',
+    text: `<p>Generationen vergehen auf der Insel. Deine Kinder werden hier geboren. Und deren Kinder. Algen und Flechten besiedeln den Basalt. Insekten erscheinen – niemand weiß woher. Das Leben findet einen Weg.</p>
+<p>Aber die Insel schrumpft. Wellen nagen an den Rändern. Der Vulkan ist erloschen. Ohne neues Magma gewinnt das Meer.</p>
+<p>Dann – drei Generationen nachdem dein Ur-Ur-Enkel das Nest übernahm – taucht am nordöstlichen Horizont ein neuer dunkler Punkt auf. Eine neue Insel. Frisch, dampfend, voller Versprechen.</p>
+<span class="detail">Du stehst auf dem Louisville Ridge – einer 4.300 km langen Unterwasserkette aus über 70 Vulkanen. Sie ist ein tektonisches Förderband: Am einen Ende wird Land geboren, am anderen stirbt es. Und du wanderst mit.</span>
+<p>Die Jungen fliegen zuerst. Dann die Alten. Ein Sprung von Stein zu Stein, über Jahrmillionen.</p>`,
+    choices: [
+        { text: 'Weiter. Immer weiter nordöstlich.', target: 'z_long_road', onSelect: () => inventory.add('🌋 Louisville-Straße') }
+    ]
+},
+
+z_long_road: {
+    chapter: 'Kapitel IV · Dreißig Millionen Jahre',
+    text: `<p>Die Zeit vergeht anders, wenn man sie nicht zählt.</p>
+<p>Insel um Insel. Vulkan um Vulkan. Manche existieren lang genug, dass Palmen auf ihnen wachsen. Andere sind nur nackte Felsen, die nach wenigen Jahrtausenden wieder versinken. Aber immer, <em>immer</em> taucht die nächste auf. Nordöstlich. Wie eine Reihe Laternen im Dunkeln.</p>
+<p>Dein Volk verändert sich auf dieser Reise. Die Flügel – schon auf Zealandia schwächer geworden – erholen sich kurz, wenn Inseln weit auseinander liegen. Dann, auf größeren Inseln, schrumpfen sie wieder. Ein ewiges Hin und Her zwischen Fliegen und Laufen.</p>
+<p>Aber eines bleibt gleich: Das Muster der Rufe. Drei im Gleichtakt. Einer schweigt und wacht. Wie ein Herzschlag, der sich nie ändert.</p>
+<span class="whisper">Dreißig Millionen Jahre. Im Vergleich: Die gesamte Menschheitsgeschichte dauert 0,02 Sekunden auf dieser Uhr.</span>`,
+    choices: [
+        { text: 'Und dann ist die Straße plötzlich zu Ende.', target: 'z_rapanui' }
+    ]
+},
+
+// ═══════════════════════════════════════
+// AKT III – RAPA NUI
+// ═══════════════════════════════════════
+
+z_rapanui: {
+    chapter: 'Kapitel V · Die Letzte Insel',
+    text: `<p>Die Insel, die aus dem Meer wächst, ist anders als alle zuvor. Größer. Drei Vulkane formen ein Dreieck aus schwarzem Basalt und rotem Tuffstein. Kraterseen glitzern im Inneren. Farne sprießen zwischen den Lavaströmen.</p>
+<p>Und – niemand ist hier. Kein Raubtier. Kein Rivale. Keine Konkurrenz.</p>
+<p>Dein Volk lässt sich nieder. Die Kolonie wächst. Zum ersten Mal seit Äonen muss niemand weiterziehen. Es gibt genug Nahrung, genug Wasser, genug Platz.</p>
+<p>Du kletterst auf die höchste Klippe und schaust nach Osten. Und dein Herz wird schwer.</p>
+<p><em>Nichts.</em> Kein Vulkan. Kein Seamount. Keine Spur von Land. Nur leerer Ozean, so weit das Auge reicht. 3.700 Kilometer bis Chile.</p>`,
+    choices: [
+        { text: 'Die Straße ist zu Ende. Mache diesen Ort zur Heimat.', target: 'z_settle' },
+        { text: 'Schicke Kundschafter nach Osten.', target: 'z_scouts_die' }
+    ]
+},
+
+z_scouts_die: {
+    chapter: 'Kapitel V · Die Kundschafter',
+    text: `<p>Drei Jungvögel brechen auf. Die Stärksten, die Mutigsten. Du siehst ihnen nach, wie sie kleiner werden, kleiner, bis sie im blauen Nichts verschwinden.</p>
+<p>Sie kommen nicht zurück.</p>
+<p>Du schickst drei weitere. Auch sie verschwinden.</p>
+<p>Nach dem dritten Versuch hört dein Volk auf, nach Osten zu schauen. Der Horizont ist eine Wand geworden. Unsichtbar, aber absolut.</p>
+<span class="whisper">Die Falle hat zugeschnappt. Wunderschön. Endgültig.</span>`,
+    choices: [
+        { text: 'Akzeptiere es. Lebe hier.', target: 'z_settle' }
+    ]
+},
+
+z_settle: {
+    chapter: 'Kapitel VI · Die Verwandlung',
+    text: `<p>Generationen. Hunderte. Tausende. Auf Rapa Nui gibt es keine Feinde, also gibt es keinen Grund zu fliegen. Und der Körper vergisst, was er nicht braucht.</p>
+<p>Deine Flügel werden zu Stummeln. Deine Beine werden dick und kräftig. Dein Körper verdoppelt, verdreifacht sein Gewicht. Du wirst zu etwas Neuem – etwas, das die Welt noch nie gesehen hat. Ein Riese. Flugunfähig. Aber <em>intelligent</em>.</p>
+<p>Ohne Fressfeinde investiert die Evolution ihre ganze Energie in dein Gehirn. Du erkennst jedes Mitglied deiner Kolonie individuell. Du merkst dir, wer dir bei der letzten Brutpflege geholfen hat. Du planst. Du trickst.</p>
+<p>Und du <em>wachst</em>. Auf der höchsten Klippe, den Rücken zum Meer, den Blick auf die Täler gerichtet. Reglos. Stundenlang.</p>`,
+    choices: [
+        { text: 'Die Wacht halten. Es ist deine Bestimmung.', target: 'z_sentinel', onSelect: () => inventory.add('🗿 Wächter-Instinkt') },
+        { text: 'Im Tal Nahrung suchen. Die anderen können wachen.', target: 'z_sentinel' }
+    ]
+},
+
+z_sentinel: {
+    chapter: 'Kapitel VI · Der Sentinel',
+    text: `<p>Du stehst auf dem Kraterrand des Rano Kau. Hinter dir der Wind, der vom Meer kommt. Vor dir die grünen Täler, die Palmwälder, die glitzernden Seen. Dein gesamtes Universum.</p>
+<p>Am gegenüberliegenden Hang steht ein Rivale. Eine andere Kolonie. Er starrt dich an. Du starrst zurück. Keiner bewegt sich. Keiner ruft. Die Stille zwischen euch ist ein Vertrag: <em>Bleib auf deiner Seite.</em></p>
+<p>So vergehen die Jahrtausende. Wächter auf den Klippen. Küken im Zentrum. Rufe, die durch die Täler hallen. Ein perfektes Gleichgewicht.</p>
+<p>Bis eines Morgens etwas Fremdes am Horizont auftaucht. Etwas, das du nie zuvor gesehen hast.</p>
+<p>Hölzerne Objekte. Mit <em>Tieren</em> darauf. Nein – nicht Tiere. Etwas anderes.</p>`,
+    choices: [
+        { text: 'Bleibe auf deinem Posten. Beobachte.', target: 'h_firstcontact' },
+        { text: 'Stoße den Warnruf aus.', target: 'h_firstcontact_alarm' }
+    ]
+},
+
+// ═══════════════════════════════════════
+// AKT IV – DER KONTAKT
+// ═══════════════════════════════════════
+
+h_firstcontact: {
+    chapter: 'Kapitel VII · Der Tag, an dem alles endet',
+    text: `<p>Du schweigst. Die Kolonie schweigt. Hundert bernsteinfarbene Augen fixieren die hölzernen Objekte, die auf den Strand zulaufen.</p>
+<p>Zweibeiner klettern heraus. Groß, aber schmaler als du. Mit seltsamer Haut, die in verschiedenen Farben schimmert. Sie tragen Dinge – Pflanzen, Bündel, Werkzeuge.</p>
+<p>Einer von ihnen schaut hoch. Er sieht dich. Auf der Klippe. Reglos. Den Blick auf ihn gerichtet.</p>
+<p>Er zuckt nicht zusammen. Er greift nicht zur Waffe. Stattdessen tut er etwas Unerwartetes: Er <em>verbeugt sich</em>.</p>
+<span class="riddle">Er hält dich für einen Gott. Einen Wächtergeist. Denn in seiner Kultur sind Tiere, die keine Angst zeigen und von oben herabblicken, Manifestationen von Mana – spiritueller Kraft.</span>
+<p>Du weißt nicht, was eine Verbeugung ist. Aber du spürst: Dieser Zweibeiner hat Respekt. Vorerst.</p>`,
+    choices: [
+        { text: 'Bleibe ruhig. Beobachte, was sie tun.', target: 'h_coexist' },
+        { text: 'Stoße einen tiefen Ruf aus. Zeige, wer hier herrscht.', target: 'h_worship', onSelect: () => inventory.add('👑 Erster Kontakt') }
+    ]
+},
+
+h_firstcontact_alarm: {
+    chapter: 'Kapitel VII · Der Warnruf',
+    text: `<p>Der Ruf bricht aus dir hervor – tief, guttural, vibrierend. Er hallt von den Kraterwänden wider und füllt das gesamte Tal.</p>
+<p>Drei deiner Kolonie antworten sofort. Dann Stille. Dann du, allein. Die Sequenz. <em>Wir sind viele. Wir wachen. Seid gewarnt.</em></p>
+<p>Die Zweibeiner am Strand erstarren. Einer von ihnen – der Anführer, offensichtlich – legt den Kopf schief. Lauscht. Ein Ausdruck breitet sich auf seinem Gesicht aus, den du nicht lesen kannst.</p>
+<p>Er dreht sich zu seinen Leuten und sagt etwas in einer Sprache, die du nicht verstehst. Aber sein Tonfall ist klar: <em>Ehrfurcht</em>.</p>
+<p>Dann beginnt er, deinen Ruf nachzuahmen. Unbeholfen. Falsch betont. Aber die Absicht ist unverkennbar.</p>
+<span class="whisper">Er versucht, mit dir zu sprechen.</span>`,
+    choices: [
+        { text: 'Antworte nicht. Schweige. Das ist mächtiger.', target: 'h_worship', onSelect: () => inventory.add('👑 Erster Kontakt') },
+        { text: 'Wiederhole den Ruf. Langsamer. Lauter.', target: 'h_coexist', onSelect: () => inventory.add('🔊 Rufmuster') }
+    ]
+},
+
+h_coexist: {
+    chapter: 'Kapitel VIII · Die Goldene Zeit',
+    text: `<p>Wochen vergehen. Monate. Die Zweibeiner – <em>Polynesier</em>, obwohl du das Wort nicht kennst – siedeln sich im Tal an. Sie bauen Hütten. Sie pflanzen seltsame Gewächse. Sie fangen Fische.</p>
+<p>Und sie beobachten dich. Ständig. Einer von ihnen – ein älterer Mann mit tätowierten Armen – sitzt jeden Morgen am Fuß deiner Klippe und lauscht. Stundenlang.</p>
+<p>Er bringt ein flaches Stück Holz mit. Und einen spitzen Stein. Und er beginnt, <em>Zeichen</em> hineinzuritzen. Kleine Figuren, die sich in abwechselnden Reihen über die Oberfläche ziehen.</p>
+<span class="riddle">Er schreibt nicht seine eigene Sprache auf. Er schreibt <em>deine</em>. Er transkribiert deine Rufe – die Rhythmen, die Wiederholungen, die Pausen – in visuelle Muster. Es ist keine Schrift. Es ist eine Partitur.</span>`,
+    choices: [
+        { text: 'Beobachte, wie er schreibt. Was entsteht dort?', target: 'h_rongorongo', onSelect: () => inventory.add('📜 Rongorongo') },
+        { text: 'Ignoriere ihn. Halte Wacht.', target: 'h_moai' }
+    ]
+},
+
+h_worship: {
+    chapter: 'Kapitel VIII · Der Steingott',
+    text: `<p>Sie verehren dich. Wirklich, aufrichtig, bedingungslos.</p>
+<p>Die Zweibeiner bringen Opfergaben an den Fuß deiner Klippe. Fische. Süßkartoffeln. Seltsame gelbe Früchte, die du noch nie gesehen hast.</p>
+<p>Und dann beginnen sie zu bauen. Nicht Hütten – etwas anderes. Am Hang des Vulkans Rano Raraku, wo der Tuffstein weich ist, schlagen sie mit Steinmeißeln auf den Fels ein. Tag für Tag. Woche für Woche.</p>
+<p>Nach Monaten erkennst du, was sie formen.</p>
+<p><em>Dich.</em></p>
+<p>Oder etwas, das aussehen soll wie du. Übersteigerte Kinnpartie – dein Unterschnabel. Flacher, breiter Nasenrücken – dein Schnabelfirst. Starrer, aufrechter Körper. Und der Blick – <em>der Blick</em> – starr ins Landesinnere gerichtet.</p>`,
+    choices: [
+        { text: 'Sieh zu, wie sie die Statue aufstellen.', target: 'h_moai', onSelect: () => inventory.add('🗿 Moai-Echo') }
+    ]
+},
+
+h_rongorongo: {
+    chapter: 'Kapitel VIII · Die Schrift der Vögel',
+    text: `<p>Du beobachtest den Schreiber. Tag für Tag. Und langsam verstehst du sein System.</p>
+<p>Er ritzt deine Morgenrufe in die oberste Zeile. Von links nach rechts. Dann dreht er die Tafel um und ritzt die Abendrufe in die nächste Zeile – von rechts nach links. Hin und zurück, wie ein Ochse, der ein Feld pflügt.</p>
+<p>Er nennt es <em>Rongorongo</em>. Du weißt nicht, was das Wort bedeutet. Aber du weißt, was die Zeichen bedeuten: <em>Wir sind viele. Wir sammeln. Wir bringen dem großen Land.</em></p>
+<p>Zum ersten Mal in der Geschichte des Lebens auf diesem Planeten transkribiert ein Mensch die Kommunikation einer non-humanen Spezies in eine dauerhafte Form.</p>
+<span class="whisper">Jahrtausende später wird kein Mensch diese Tafeln mehr lesen können. Denn sie waren nie für menschliche Ohren gedacht.</span>`,
+    choices: [
+        { text: 'Die Zweibeiner bauen jetzt auch Statuen…', target: 'h_moai' }
+    ]
+},
+
+h_moai: {
+    chapter: 'Kapitel IX · Die Steinernen Echos',
+    text: `<p>Sie stehen jetzt überall. An der Küste. Auf Plattformen aus geschichteten Steinen. Riesig, manche sechs Meter hoch, manche zehn. Alle mit dem Rücken zum Meer. Alle mit dem Blick ins Landesinnere.</p>
+<p><em>Wie du.</em></p>
+<p>Und dann – der Moment, der alles verändert. Ein Priester trägt zwei Objekte zu einer frisch errichteten Statue: Ein Stück weiße Koralle. Eine Scheibe schwarzen Obsidians.</p>
+<p>Er setzt sie in die leeren Augenhöhlen ein.</p>
+<p>Die Statue <em>sieht</em>. Ihr Blick – dein Blick – fixiert das Tal. Glänzend. Scharf. Unbeirrt.</p>
+<p>Die Menschen jubeln. Die Statue lebt. Der Wächter ist verewigt.</p>
+<span class="riddle">Du verstehst nicht, was sie tun. Aber du spürst etwas: Sie versuchen, dich einzufangen. Nicht deinen Körper – deinen <em>Blick</em>. Für immer.</span>`,
+    choices: [
+        { text: 'Es sind sieben Statuen, die nach Westen schauen…', target: 'h_akivi', onSelect: () => inventory.add('👁 Korallenaugen') },
+        { text: 'Wende dich ab. Im Tal geschieht etwas Bedrohliches.', target: 'h_rats' }
+    ]
+},
+
+h_akivi: {
+    chapter: 'Kapitel IX · Die Sieben nach Westen',
+    text: `<p>Fast alle Statuen schauen ins Landesinnere. Wie du. Wie dein Volk. Aber sieben – genau sieben – stehen im Herzen der Insel und blicken nach <em>Westen</em>. Über das Meer. Dorthin, wo Zealandia lag.</p>
+<p>Du weißt nicht, warum die Zweibeiner genau diese Richtung gewählt haben. Aber du spürst das Ziehen. Den alten Instinkt. Die Louisville-Straße, die Leuchtpfade, die Walgesänge – alles kam aus dem Westen.</p>
+<p>Die sieben Statuen schauen zurück. Zur Quelle. Zum versunkenen Ursprung.</p>
+<p>Es ist, als hätten die Menschen den Heimkehr-Instinkt in deinen Augen gelesen.</p>
+<span class="whisper">Sie nennen die Plattform Ahu Akivi. Die sieben Späher, die nach der verlorenen Heimat suchen.</span>`,
+    choices: [
+        { text: 'Aber im Tal wächst eine Bedrohung.', target: 'h_rats', onSelect: () => inventory.add('🧭 Ahu Akivi') }
+    ]
+},
+
+// ═══════════════════════════════════════
+// AKT V – DER UNTERGANG
+// ═══════════════════════════════════════
+
+h_rats: {
+    chapter: 'Kapitel X · Die Unsichtbaren Zerstörer',
+    text: `<p>Es beginnt leise. So leise, dass du es fast übersiehst.</p>
+<p>Die Palmensämlinge – die zarten, jungen Triebe, die den Wald erneuern – verschwinden. Einer nach dem anderen. Über Nacht. Als fräße die Erde selbst sie auf.</p>
+<p>Dann siehst du sie. Nachts, im Mondlicht. Kleine, pelzige Schatten, die zwischen den Wurzeln huschen. <em>Ratten.</em> Tausende. Hunderttausende. Sie kamen mit den Kanus der Zweibeiner, versteckt zwischen Vorräten und Pflanzen.</p>
+<p>Sie fressen die Palmensamen. Alle. Jede einzelne Nuss, die auf den Boden fällt. Kein Baum wächst nach. Der Wald, unter dem dein Volk seit Jahrtausenden nistet, stirbt – lautlos, von unten.</p>`,
+    choices: [
+        { text: 'Versuche, die Ratten zu jagen.', target: 'h_rat_fight' },
+        { text: 'Flüchte in den Krater, wo es noch feucht ist.', target: 'h_krater', onSelect: () => inventory.add('🐀 Rattenplage') }
+    ]
+},
+
+h_rat_fight: {
+    chapter: 'Kapitel X · Vergeblicher Kampf',
+    text: `<p>Du fängst eine. Zerbrichst sie mit dem Schnabel. Frisst sie. Aber es kommen zehn nach.</p>
+<p>Dein Volk ist nicht dafür gebaut, kleine, schnelle Nager zu jagen. Du bist groß. Langsam. Deine Stärke liegt im Stehen, im Wachen, im Starren. Nicht in der Jagd.</p>
+<p>Und die Ratten fressen weiter. Monat für Monat. Jahr für Jahr. Die Palmen sterben und fallen nicht mehr nach. Die kahlen Hänge liegen nackt unter dem Wind. Kein Schatten mehr. Kein Nestschutz.</p>
+<p>Dein Volk drängt sich auf immer kleinerem Raum zusammen. Die Reviere schrumpfen. Die Kämpfe mit den Rivalen werden härter. Und im Zentrum der Insel, in den geschützten Kratern, pflanzen die Zweibeiner etwas Neues.</p>
+<p>Etwas, das <em>süß</em> riecht.</p>`,
+    choices: [
+        { text: 'Folge dem Geruch.', target: 'h_krater' }
+    ]
+},
+
+h_krater: {
+    chapter: 'Kapitel XI · Die Falle aus Zucker',
+    text: `<p>Der Rano Kau Krater. Feucht. Windgeschützt. Ein Mini-Regenwald in einer Schüssel aus Vulkangestein. Der letzte grüne Fleck auf einer zunehmend kahlen Insel.</p>
+<p>Die Zweibeiner haben hier ihre <em>Bananenstauden</em> gepflanzt. Reihe um Reihe. Hohe, grüne Pflanzen mit schweren, gelben Fruchtbüscheln, die in der feuchten Luft hängen.</p>
+<p>Du stehst am Rand des Kraters und schaust hinunter. Der Geruch trifft dich wie ein Schlag. Süß. Stärkereich. Nahrhaft. Dein Körper schreit nach Kalorien – die Farne und Insekten reichen längst nicht mehr.</p>
+<span class="riddle">Da unten liegen Nahrung und Nistplätze. Aber da unten liegen auch die Plantagen der Zweibeiner. Was denkst du, passiert, wenn du hinuntergehst?</span>`,
+    choices: [
+        { text: 'Geh hinunter. Friss die Bananen. Du hast keine Wahl.', target: 'h_banana_eat' },
+        { text: 'Bleibe oben. Verhungere langsam.', target: 'h_starve' }
+    ]
+},
+
+h_starve: {
+    chapter: 'Kapitel XI · Der Stolz des Wächters',
+    text: `<p>Du bleibst auf deinem Posten. Oben, auf der Klippe. Den Rücken zum Meer. Den Blick auf die Täler, die jetzt kahl und braun sind.</p>
+<p>Der Hunger ist ein langsames Feuer. Es brennt von innen. Deine Federn werden stumpf. Deine Augen – einmal so scharf, dass du einen Rivalen auf drei Kilometer Entfernung erkennen konntest – trüben sich.</p>
+<p>Aber du wachst. Bis zum letzten Moment. Weil es das Einzige ist, was du kannst.</p>
+<p>Und dann, eines Morgens, erwacht ein anderer Instinkt. Älter als der Hunger. Älter als das Territorium. Älter als die Insel selbst.</p>
+<span class="whisper">Heimkehr. Heimkehr. Heimkehr.</span>`,
+    choices: [
+        { text: 'Folge dem Ruf.', target: 'h_ocean_death' }
+    ]
+},
+
+h_banana_eat: {
+    chapter: 'Kapitel XII · Vom Gott zum Dieb',
+    text: `<p>Du gehst hinunter. Die Banane schmeckt – es gibt kein anderes Wort – nach Überleben. Süß und weich und voller Energie. Du frisst eine. Zwei. Drei. Dein Magen, seit Wochen halb leer, rebelliert kurz, dann akzeptiert er.</p>
+<p>Am nächsten Morgen kommst du wieder. Und am übernächsten. Bald kommt die ganze Kolonie.</p>
+<p>Die Zweibeiner bemerken es sofort. Die zerstörten Stauden, die ausgefressenen Früchte, die Spuren im weichen Kraterboden.</p>
+<p>Zuerst schreien sie. Dann werfen sie Steine. Dann kommen die Speere.</p>
+<p>Du, der du gestern noch ein Gott warst – ein steinernes Abbild deiner selbst steht keine fünfhundert Meter entfernt auf einer Plattform – bist jetzt ein <em>Schädling</em>.</p>
+<span class="whisper">Es gibt keinen längeren Fall als den vom Altar in die Gosse.</span>`,
+    choices: [
+        { text: 'Fliehe. Aber wohin?', target: 'h_hunted' },
+        { text: 'Kämpfe. Du bist größer als sie.', target: 'h_fight_back' }
+    ]
+},
+
+h_fight_back: {
+    chapter: 'Kapitel XII · Schnabel gegen Speer',
+    text: `<p>Du bist groß. Fast einen Meter hoch. Dein Schnabel kann Knochen brechen. Deine Krallen reißen tiefe Furchen in den Boden.</p>
+<p>Aber die Zweibeiner sind schlauer. Sie kommen nicht allein. Sie kommen in Gruppen. Mit langen Speeren und Netzen aus Pflanzenfasern. Sie treiben dich in Ecken, gegen Felswände, in Sackgassen.</p>
+<p>Du kämpfst. Du verwundest zwei von ihnen. Aber es kommen immer mehr.</p>
+<p>Der letzte Schlag kommt von hinten. Du hast es nie kommen sehen – denn dein ganzes Leben lang hast du nach <em>vorne</em> gestarrt. Ins Landesinnere. Nie nach hinten. Nie zum Meer.</p>`,
+    choices: [
+        { text: 'Falle.', target: 'h_extinction' }
+    ]
+},
+
+h_hunted: {
+    chapter: 'Kapitel XII · Die Jagd',
+    text: `<p>Es gibt kein Entkommen auf einer Insel, die 163 Quadratkilometer misst. Jeder Krater, jede Höhle, jeder Felsvorsprung – sie kennen sie alle. Und sie jagen systematisch.</p>
+<p>Dein Volk schrumpft. Jeden Tag weniger Rufe aus den Tälern. Jeden Morgen weniger Wächter auf den Klippen. Die großen Augen, die einst das gesamte Landesinnere überblickten, erlöschen einer nach dem anderen.</p>
+<p>Die Zweibeiner verwenden deine Knochen. Dünn, hohl, leicht – perfekt für Nadeln und Angelhaken. Dein Fleisch ernährt ihre Kinder. Deine Federn schmücken ihre Priester.</p>
+<span class="detail">Im sauren Vulkanboden von Rapa Nui zersetzt sich jeder Knochen innerhalb weniger Jahrhunderte. In tausend Jahren wird kein Archäologe jemals wissen, dass du existiert hast.</span>`,
+    choices: [
+        { text: 'Irgendwann bist du der Letzte.', target: 'h_last_one' }
+    ]
+},
+
+h_last_one: {
+    chapter: 'Kapitel XIII · Der Letzte Wächter',
+    text: `<p>Du stehst auf der Klippe. Allein.</p>
+<p>Kein Ruf antwortet deinem Ruf. Keine Kolonie hinter dir. Keine Küken im Zentrum. Keine Rivalen auf dem gegenüberliegenden Hang.</p>
+<p>Nur du. Und der Wind. Und das Meer hinter dir, das du nie angesehen hast.</p>
+<p>Die Zweibeiner stehen unten am Hang und schauen herauf. Manche halten Speere. Andere – die Älteren – haben Tränen auf den Wangen. Sie wissen, was sie getan haben. Sie wissen, was sie verlieren.</p>
+<p>In dir erwacht etwas. Ein alter Impuls. Tief, unwiderstehlich, codiert in dreißig Millionen Jahren Evolution.</p>
+<span class="riddle">Heimkehr. Dorthin, wo alles begann. Dorthin, wo Zealandia einmal lag.</span>`,
+    choices: [
+        { text: 'Drehe dich zum Meer. Zum ersten Mal in deinem Leben.', target: 'h_ocean_death', onSelect: () => inventory.add('💀 Der Letzte') },
+        { text: 'Bleibe stehen. Stirb als Wächter.', target: 'h_extinction' }
+    ]
+},
+
+h_ocean_death: {
+    chapter: 'Kapitel XIII · Heimkehr',
+    text: `<p>Zum ersten Mal in deinem Leben drehst du dich um. Du siehst das Meer. Wirklich siehst. Nicht als Wand, nicht als Grenze – sondern als <em>Weg</em>.</p>
+<p>Deine Beine – dick, kräftig, gebaut für festen Boden – tragen dich die Klippe hinunter. Über die Felsen. Durch die Brandung. Ins Wasser.</p>
+<p>Es ist kalt. Salziger als alles, was du je geschmeckt hast. Die Wellen schlagen über deinen Rücken. Aber du gehst weiter. Schwimmst. Paddelst mit Stummelflügeln, die seit Hunderttausenden von Jahren nicht mehr fliegen.</p>
+<p>Du schwimmst nach Westen. Dorthin, wo die sieben Statuen hinschauen. Dorthin, wo die Louisville-Straße einmal war. Dorthin, wo Zealandia liegt – zweihundert Meter unter der Oberfläche.</p>
+<p>Das Wasser wird tiefer. Dunkler. Kälter. Deine Kräfte lassen nach.</p>
+<span class="whisper">Aber der Instinkt sagt: Weiter. Weiter. Fast da.</span>
+<p>Du bist nicht fast da. Du wirst nie ankommen. Zealandia ist seit dreißig Millionen Jahren versunken.</p>
+<p>Die Wellen schließen sich über dir.</p>`,
+    choices: [
+        { text: 'Stille.', target: 'h_aftermath' }
+    ]
+},
+
+h_extinction: {
+    chapter: 'Kapitel XIII · Stille',
+    text: `<p>Du fällst. Oder du stehst und der Speer trifft. Oder die Erschöpfung holt dich ein. Es spielt keine Rolle mehr wie.</p>
+<p>Was zählt: Die Klippen sind leer.</p>
+<p>Zum ersten Mal seit einer Million Jahren steht kein Wächter auf den Felsen von Rapa Nui. Kein bernsteinfarbenes Auge scannt die Täler. Kein Ruf hallt von den Kraterwänden.</p>
+<p>Nur Wind. Nur Gras. Nur die steinernen Kopien, die stumm ins Landesinnere starren – als warteten sie darauf, dass du zurückkommst.</p>`,
+    choices: [
+        { text: 'Was geschieht danach?', target: 'h_aftermath' }
+    ]
+},
+
+// ═══════════════════════════════════════
+// AKT VI – DAS ECHO
+// ═══════════════════════════════════════
+
+h_aftermath: {
+    chapter: 'Kapitel XIV · Der Phantomschmerz',
+    text: `<p>Du bist jetzt ${yourName}. Ein Mensch. Enkel der Siedler. Du stehst im Steinbruch des Rano Raraku und schaust auf die halbfertigen Statuen, die aus dem Fels ragen wie versteinerte Schreie.</p>
+<p>Dein Volk hat aufgehört, sie zu bauen. Niemand sagt warum. Aber du weißt es. Alle wissen es.</p>
+<p>Die Vögel sind weg. Die echten Wächter. Die Wesen, deren Blick ihr in Stein verewigt habt. Sie sind verschwunden, und mit ihnen der Sinn der Statuen.</p>
+<p>Auf der ganzen Insel liegen Moai umgestürzt. Manche hat der Wind gefällt. Manche – und das ist schlimmer – wurden von euch selbst umgeworfen. Die Korallenaugen herausgerissen. Denn ein Blick, der nichts mehr beschützt, ist eine Lüge.</p>`,
+    choices: [
+        { text: 'Es muss einen neuen Weg geben.', target: 'h_birdman_dawn' },
+        { text: 'Starre in die leeren Augenhöhlen.', target: 'h_empty_eyes' }
+    ]
+},
+
+h_empty_eyes: {
+    chapter: 'Kapitel XIV · Die Blinden Riesen',
+    text: `<p>Du kletterst zu einem umgestürzten Moai am Strand. Er liegt auf der Seite, halb im Sand begraben. Sein Gesicht – dieses seltsame, nicht-menschliche Gesicht mit dem überdimensionierten Kinn und dem flachen Nasenrücken – starrt ins Leere.</p>
+<p>Die Augenhöhlen sind leer. Schwarze Löcher, in denen einmal Koralle und Obsidian leuchteten.</p>
+<p>Du legst deine Hand in die Höhle. Sie ist kalt. Rau. Und plötzlich verstehst du etwas, das deine Großeltern nie in Worte gefasst haben: Diese Statuen sind keine Menschen. Sie waren <em>nie</em> Menschen.</p>
+<p>Sie sind Echos. Steinerne Abdrücke eines Wesens, das hier stand, genau hier, bevor ihr kamt. Eines Wesens, dessen Blick so mächtig war, dass eure Vorfahren ihn für die Ewigkeit festhalten wollten.</p>
+<span class="whisper">Aber die Ewigkeit war kürzer als erwartet.</span>`,
+    choices: [
+        { text: 'Vielleicht kann der Mensch selbst zum Wächter werden.', target: 'h_birdman_dawn' }
+    ]
+},
+
+h_birdman_dawn: {
+    chapter: 'Kapitel XV · Tangata Manu',
+    text: `<p>Am Kraterrand von Orongo – genau dort, wo die Wächter einst standen – versammelt sich dein Volk. Die Clans. Die Krieger. Die Priester.</p>
+<p>Unten, an den Klippen, tobt die Brandung. Dreihundert Meter Steilwand. Dann schäumende See, durchzogen von Strömungen und Haien. Und dahinter, einen Kilometer vor der Küste: die Felseninsel <em>Motu Nui</em>.</p>
+<p>Dort nisten Rußseeschwalben. Kleine, schwarze Vögel – die letzten Verwandten der Wächter, die einzigen, die noch hier brüten.</p>
+<p>Die Aufgabe: Klettere die Klippe hinunter. Schwimme zur Insel. Finde das erste Ei der Saison. Bringe es unversehrt zurück.</p>
+<p>Viele werden sterben. An den Felsen. In der Strömung. Durch die Haie.</p>
+<span class="riddle">Aber wer das Ei zurückbringt, wird für ein Jahr zum Vogelmann – zum Tangata Manu. Zum lebenden Echo des toten Wächters.</span>`,
+    choices: [
+        { text: 'Spring. Du musst der Vogelmann werden.', target: 'h_leap', onSelect: () => inventory.add('🦅 Tangata Manu') },
+        { text: 'Bleibe oben. Schau den anderen zu.', target: 'h_witness' }
+    ]
+},
+
+h_leap: {
+    chapter: 'Kapitel XV · Der Sprung',
+    text: `<p>Der Fels unter deinen Füßen ist glatt vom Regen. Dreihundert Meter Nichts unter dir. Die See brüllt.</p>
+<p>Du springst.</p>
+<p>Der Fall dauert drei Sekunden. In diesen drei Sekunden verstehst du, warum die Vögel nie nach unten geschaut haben. Warum sie immer nur nach vorne starrten, ins Landesinnere. Weil der Abgrund hinter ihnen <em>real</em> war. Und was man nicht ansieht, kann einen nicht erschrecken.</p>
+<p>Das Wasser trifft dich wie eine Steinwand. Kalt. Salzig. Schwarz. Du tauchst unter. Kommst hoch. Schwimmst.</p>
+<p>Motu Nui wird langsam größer. Stein für Stein. Welle für Welle. Deine Arme brennen. Deine Lungen brennen. Ein Schatten gleitet unter dir durch – ein Hai, drei Meter lang. Er dreht ab. Noch.</p>
+<p>Du erreichst den Felsen. Kletterst. Blutest. Oben, in einer Mulde aus Moos, liegt ein einzelnes Ei. Cremeweiß mit braunen Sprenkeln.</p>
+<span class="whisper">Genau wie die Eier, in denen einst die Wächter schlüpften.</span>`,
+    choices: [
+        { text: 'Nimm das Ei. Schwimme zurück.', target: 'h_return' }
+    ]
+},
+
+h_witness: {
+    chapter: 'Kapitel XV · Die Zuschauer',
+    text: `<p>Du schaust zu. Von oben. Wie die Krieger springen. Wie manche auf den Felsen aufschlagen. Wie die See sie verschlingt. Wie einer – ein junger Mann mit wilden Augen – den Felsen erreicht, das Ei findet und es über dem Kopf in die Luft streckt.</p>
+<p>Der Jubel der Menge ist ohrenbetäubend. Aber als Stille einkehrt, hörst du etwas anderes. Leiser. Älter.</p>
+<p>Ein Rhythmus. Im Wind. In der Brandung. In deinem eigenen Herzschlag.</p>
+<p>Drei Schläge. Pause. Stille.</p>
+<span class="whisper">Drei rufen. Einer schweigt und wacht.</span>`,
+    choices: [
+        { text: 'Du hörst das Echo.', target: 'h_return' }
+    ]
+},
+
+h_return: {
+    chapter: 'Epilog · Das Echo',
+    text: `<p>Der Vogelmann steht auf der Klippe. Dort, wo einst die Wächter standen. Der Mensch ist zum Vogel geworden – oder versucht es zumindest.</p>
+<p>In der einen Hand hält er das Ei. Symbol der alten Macht. Der aviaren Dominanz, die über Millionen von Jahren diese Insel beherrschte.</p>
+<p>In der anderen Hand hält er – nichts. Denn das, wofür er steht, existiert nicht mehr. Die Wächter sind fort. Die Rufe verstummt. Die Kolonie ausgelöscht.</p>
+<p>Was bleibt, sind Echos:</p>
+<p>Steinerne Riesen mit leeren Augen, die ins Landesinnere starren. Eine Schrift, die niemand lesen kann, weil sie nie für menschliche Ohren geschrieben wurde. Und ein Ritual, in dem Männer von Klippen springen, um das Ei eines Vogels zu stehlen – weil der echte Vogel tot ist und jemand seine Rolle übernehmen muss.</p>
+${inventory.size > 0 ? `<span class="detail">Deine gesammelten Echos: ${[...inventory].join(' · ')}</span>` : ''}
+<span class="whisper">Die Kultur von Rapa Nui ist kein menschliches Konstrukt. Sie ist das in Stein, Holz und Blut gegossene Echo einer Jahrmillionen alten, verlorenen Intelligenz.</span>
+<span class="whisper">Das Echo von Zealandia.</span>`,
+    choices: [
+        { text: 'Die Stille akzeptieren.', target: 'true_end' },
+        { text: 'Noch einmal von vorne. Als anderes Wesen.', target: 'restart' }
+    ]
+},
+
+true_end: {
+    chapter: 'Stille',
+    text: `<p>Der Wind pfeift über die kahlen Klippen. Die Moai schweigen. Die Vögel sind fort.</p>
+<p>Aber manchmal, wenn der Wind nachlässt und die Wellen leiser werden, ist da ein Rhythmus. Ein Muster. Drei Schläge. Stille. Älter als jede menschliche Sprache.</p>
+<p><em>Wir sind viele. Wir sammeln. Wir bringen dem großen Land.</em></p>
+<p>Niemand hört es mehr. Aber es ist da. Im Stein. Im Holz. Im Salz des Ozeans.</p>
+${inventory.size > 0 ? `<span class="detail">${inventory.size} Echo-Fragment${inventory.size > 1 ? 'e' : ''} gesammelt: ${[...inventory].join(' · ')}</span>` : ''}
+<span class="whisper">~ Ende ~</span>`,
+    choices: [
+        { text: 'Von vorne beginnen', target: 'restart' }
+    ]
+},
+
+restart: {
+    chapter: 'Neubeginn',
+    text: `<p>Zealandia atmet noch einmal. Ein letztes Mal. Der Kontinent erhebt sich aus der Erinnerung – und mit ihm seine Kinder.</p><p>Diesmal weißt du, was kommt. Aber vielleicht wählst du einen anderen Weg.</p>`,
+    choices: [
+        { text: 'Der Wächter im Licht.', target: 'bird_start' },
+        { text: 'Der Schatten in der Nacht.', target: 'bat_start' }
+    ]
+},
+
+// ═══════════════════════════════════════════════════════════════
+// ████████ ZWEITE HANDLUNGSLINIE: DIE FLEDERMAUS ████████
+// ═══════════════════════════════════════════════════════════════
+
+bat_start: {
+    chapter: 'Prolog · Der Schatten',
+    text: `<p>Du wachst nicht auf. Du <em>lässt los</em>.</p>
+<p>Deine Krallen lösen sich von der Decke der Lavahöhle. Für einen Herzschlag fällst du – dann fangen deine Flügel die Luft, und du schwebst lautlos durch die Dunkelheit.</p>
+<p>Du bist <em>${batName}</em>. Du bist eine Fledermaus – aber nicht die Art, die du kennst. Dein Körper ist so groß wie der eines Kindes. Deine Flügelspannweite reicht von Wand zu Wand. Und dein Gesicht… dein Gesicht ist das einer alten Frau oder eines uralten Mannes. Faltig. Nachdenklich. <em>Fast menschlich.</em></p>
+<p>In der Höhle hängen Hunderte deiner Art. Kopfüber. Schlafend. Ihre Gesichter – diese verstörend menschlichen Gesichter – sehen im Dämmerlicht aus wie eine Versammlung toter Ahnen.</p>
+<span class="whisper">Draußen sinkt der Kontinent. Aber hier drinnen ist es warm. Noch.</span>`,
+    choices: [
+        { text: 'Fliege zum Höhlenausgang. Sieh nach draußen.', target: 'bat_cave_exit' },
+        { text: 'Suche Nahrung in der Dunkelheit.', target: 'bat_feeding' }
+    ]
+},
+
+bat_cave_exit: {
+    chapter: 'Kapitel I · Das Gesicht im Mond',
+    text: `<p>Der Höhlenausgang ist ein Riss in der Vulkanwand. Draußen liegt die Nacht – klar, monderhellt, voller Sterne.</p>
+<p>Du breitest die Flügel aus. Drei Meter Spannweite. Die Membran zwischen deinen langen Fingerknochen ist dünn wie Pergament, aber stark genug, um dich stundenlang in der Luft zu halten.</p>
+<p>Unter dir die Küste von Zealandia. Das Wasser ist höher als gestern. Die Mangroven am Strand stehen bis zur Hälfte im Salzwasser.</p>
+<p>Ein Geräusch. Nein – ein <em>Echo</em>. Du stößt einen Ultraschallruf aus, und die Welt antwortet in Formen: Die Klippe unter dir. Die Bäume links. Ein großer Vogel auf der Felskante, der reglos ins Landesinnere starrt.</p>
+<span class="riddle">Der Vogel steht im Licht und wacht. Du fliegst in der Dunkelheit und jagst. Zwei Wege, das Verschwinden eines Kontinents zu überleben.</span>`,
+    choices: [
+        { text: 'Jage. Dein Magen knurrt.', target: 'bat_feeding' },
+        { text: 'Fliege höher. Erkunde das sinkende Land.', target: 'bat_sinking' }
+    ]
+},
+
+bat_feeding: {
+    chapter: 'Kapitel I · Blut und Frucht',
+    text: `<p>Dein Volk hat zwei Hungerarten. Zwei Gelüste, die sich abwechseln wie Ebbe und Flut.</p>
+<p>Heute Nacht ist es der <em>erste Hunger</em>: Früchte. Du findest einen Pandanus-Baum, dessen reife Kolben im Mondlicht orange leuchten. Du landest, klammst dich an den Stamm und reißt Stücke heraus. Süß. Faserig. Gut.</p>
+<p>Aber morgen wird der <em>zweite Hunger</em> kommen. Der, der sich nicht mit Zucker stillen lässt.</p>
+<p>Du landest auf dem Rücken eines schlafenden Seehundes. Deine Zähne – rasierklingenscharf, so dünn, dass das Opfer den Biss nicht spürt – ritzen die Haut auf. Dein Speichel enthält ein Antikoagulans. Das Blut fließt, und du trinkst. Nicht viel. Gerade genug.</p>
+<span class="detail">Der Seehund erwacht nicht. Dein Speichel betäubt und verhindert die Gerinnung – genau wie bei der heutigen Vampirfledermaus Desmodus rotundus. Nur dass du zehnmal größer bist.</span>`,
+    choices: [
+        { text: 'Zurück zur Höhle. Etwas stimmt nicht mit dem Land.', target: 'bat_sinking', onSelect: () => inventory.add('🩸 Dualer Hunger') }
+    ]
+},
+
+bat_sinking: {
+    chapter: 'Kapitel II · Die Flucht nach Nordosten',
+    text: `<p>Die Höhle wird feucht. Salzwasser sickert durch die Ritzen. Der Boden, auf dem deine Jungen liegen, steht unter Wasser.</p>
+<p>Das Land stirbt. Das weißt du jetzt. Die Küste frisst sich Nacht für Nacht tiefer ins Landesinnere.</p>
+<p>Die großen Vögel auf den Klippen brechen nordöstlich auf. Sie folgen den Vulkanen. Trittstein für Trittstein. Du spürst dasselbe Ziehen – nordöstlich, entlang der Louisville-Kette, dorthin, wo die Erde bebt und neue Inseln gebiert.</p>
+<p>Aber du bist kein Tagvogel. Du bist schneller, ausdauernder, nachtaktiv. Deine Echoortung funktioniert auch über dem offenen Wasser. Wo die Vögel auf jeder winzigen Insel rasten müssen, kannst du weiterfliegen.</p>`,
+    choices: [
+        { text: 'Fliege über das offene Meer.', target: 'bat_rapanui_arrival' }
+    ]
+},
+
+bat_rapanui_arrival: {
+    chapter: 'Kapitel II · Das Ende der Kraft',
+    text: `<p>Du fliegst. Nächtelang. Tagsüber hängst du dich an treibendes Holz oder an den Bauch toter Wale.</p>
+<p>Aber auch deine Kraft hat Grenzen. Du bist zwei Meter groß. Du brauchst immense Mengen an Kalorien. Und mitten im Ozean gibt es keine Früchte. Nur das Blut erschöpffter Seevögel, das nicht ewig reicht.</p>
+<p>Dann, nach Wochen, ein Echo im Dunkeln. Eine Steilküste. Ein einsamer Felsen im Nichts: <em>Rapa Nui</em>.</p>
+<p>Du landest völlig entkräftet. Die Insel ist kahl, aber sie hat etwas, das dich rettet: Ein riesiges System aus vulkanischen Lavahöhlen – Ana Te Pahu. Tief. Dunkel. Warm.</p>
+<p>Du verkriechst dich in der Finsternis. Die großen Vögel stehen oben auf den Klippen im Licht. Du hängst unten im Dunkeln. Und dann wartet ihr. Jahrhunderttausende.</p>`,
+    choices: [
+        { text: 'Die Zeit vergeht. Bis Zweibeiner kommen.', target: 'bat_polynesians' }
+    ]
+},
+
+bat_polynesians: {
+    chapter: 'Kapitel III · Die Navigatoren',
+    text: `<p>Holzkanus mit Auslegern brechen durch die Brandung. Menschen. Polynesier.</p>
+<p>Sie besiedeln Rapa Nui. Sie sehen die riesigen Vögel auf den Klippen und beginnen, sie aus Stein nachzubauen: Die Moai, Wächter des Tages.</p>
+<p>Aber sie entdecken auch dich. In den tiefen Lavahöhlen. Zwei Meter groß. Ein Gesicht wie ein runzeliger Ältester. Und sie bemerken etwas: Wenn du nachts jagst, navigierst du blind über das Meer, ohne dich jemals zu verirren.</p>
+<p>Für das größte Seefahrervolk der Erde bist du kein Monster. Du bist die Manifestation der Navigation. Ein Geist der Sterne und Strömungen. Ein Gott der dunklen Ozeane.</p>`,
+    choices: [
+        { text: 'Sie bauen Schiffe, die noch größer sind.', target: 'bat_voyage_east' }
+    ]
+},
+
+bat_voyage_east: {
+    chapter: 'Kapitel IV · Reise nach Osten',
+    text: `<p>Die Polynesier geben sich nicht mit Rapa Nui zufrieden. Sie wissen, dass im Osten noch mehr sein muss.</p>
+<p>Sie bauen gewaltige, hochseetaugliche Doppelrumpfkanus (Waka Hourua). Und sie nehmen dich mit. Nicht als Gefangenen. Als <em>heiligen Begleiter</em>.</p>
+<p>Da du mit zwei Metern Körpergröße unmöglich in die schmalen Schiffsrümpfe passt, errichten sie auf der breiten Plattform zwischen den Rümpfen einen eigenen Schrein für dich. Ein dichtes Dach aus geflochtenen Pandanusblättern schützt dich tagsüber vor der unbarmherzigen Sonne. Du hängst im Dunkeln, während die Männer rudern und beten.</p>
+<p>Nachts verlässt du den Schrein und fliegst über die Segel. Dein Ultraschall scannt die Wellen, du jagst fliegende Fische und kehrst im Morgengrauen zurück. Für die Seefahrer ist deine Orientierung das Zeichen, dass sie auf dem richtigen Weg sind.</p>
+<p>Ihr überquert 3.700 Kilometer offenen Pazifik. Ein Bündnis zwischen Mensch und Tier.</p>`,
+    choices: [
+        { text: 'Land in Sicht.', target: 'bat_landfall', onSelect: () => inventory.add('🛶 Heiliger Begleiter') }
+    ]
+},
+
+bat_landfall: {
+    chapter: 'Kapitel IV · Die Anden',
+    text: `<p>Die Kanus erreichen die Küste Südamerikas. Die Polynesier treffen auf die Einheimischen. Sie tauschen Wissen, nehmen Süßkartoffeln mit und rüsten sich für die Heimreise.</p>
+<p>Aber du kehrst nicht zurück.</p>
+<p>Hinter der steilen, nebelverhangenen Küste erheben sich Berge – höher als alles, was du jemals gesehen hast. Die Anden. Schneebedeckte Gipfel und gewaltige Kalksteinhöhlen.</p>
+<p>Du spürst den Rhythmus der Subduktionszone. Hier ist Platz. Hier gibt es Regenwälder voller Früchte und Lamas, deren Blut reich und warm ist. Du verlässt die Schiffe und fliegst ins Landesinnere. Die Polynesier segeln ohne dich gen Westen ab.</p>
+<span class="whisper">Dein Volk beginnt, die Anden zu besiedeln. Das nächste Kapitel deines Echos beginnt.</span>`,
+    choices: [
+        { text: 'Erkunde die Höhlen.', target: 'bat_andes_life' },
+        { text: 'Der Hunger ist enorm. Jage sofort.', target: 'bat_firstblood' }
+    ]
+},
+
+bat_andes_life: {
+    chapter: 'Kapitel IV · Die Höhlen der Anden',
+    text: `<p>Die Höhlen sind perfekt. Warm, trocken im Inneren, mit Eingängen, die hoch genug in den Felswänden liegen, dass kein Raubtier hereinkommt.</p>
+<p>Dein Schwarm wächst. Die Weibchen gebären Junge – ein Junges pro Jahr, wie bei allen großen Fledermäusen. Langsam, aber stetig.</p>
+<p>Nachts schwärmst du aus. Die Wälder sind voller Früchte – Guaven, Papayas, wilde Avocados. Und wenn der zweite Hunger kommt, gibt es Lamas, Tapire, schlafende Vögel.</p>
+<p>Dein Volk breitet sich aus. Nordwärts, entlang der Andenkette. In jeder Bergkette neue Höhlen, neue Jagdgründe.</p>
+<p>Und überall, wo ihr jagt, beobachten euch die Zweibeiner.</p>`,
+    choices: [
+        { text: 'Was sehen die Zweibeiner, wenn sie dich anschauen?', target: 'bat_firstblood' }
+    ]
+},
+
+bat_firstblood: {
+    chapter: 'Kapitel V · Das Erste Blut der Neuen Welt',
+    text: `<p>Im Wald leben Tiere, die du nicht kennst. Große, pelzige Wesen. Lamas. Alpakas. Sie schlafen eng aneinandergedrängt in Herden.</p>
+<p>Du landest auf dem Rücken eines schlafenden Lamas. Deine Zähne ritzen eine winzige Wunde. Dein Speichel fließt hinein. Betäubend. Gerinnungshemmend. Du trinkst. Das Blut hier schmeckt anders. Wärmer. Reichhaltiger. <em>Süßer.</em></p>
+<p>Aber du bemerkst etwas: Hinter den Bäumen, im Schatten der Mondnacht, beobachten dich <em>Augen</em>. Menschliche Augen.</p>
+<p>Ein junger Mann. Starr vor Entsetzen. Er sieht dein Gesicht – dein faltiges, nacktes, fast menschliches Gesicht – über dem Hals seines Tieres. Blut an deinen Lippen. Flügel wie ein Totenumhang.</p>
+<span class="riddle">Er wird morgen seinem Dorf erzählen, was er gesehen hat. Was, glaubst du, wird er sagen? Was wird daraus?</span>`,
+    choices: [
+        { text: 'Er sagt: Ich habe einen Dämon gesehen.', target: 'bat_demon' },
+        { text: 'Er sagt: Ich habe einen Gott gesehen.', target: 'bat_god', onSelect: () => inventory.add('🦇 Erster Blick') }
+    ]
+},
+
+bat_demon: {
+    chapter: 'Kapitel VI · Camazotz',
+    text: `<p>Die Angst pflanzt sich fort wie ein Waldbrand.</p>
+<p>In den Dörfern des Dschungels – Guatemala, Honduras, das Tiefland von Yucatán – erzählen sich die Maya von einem Wesen in den Cenoten. Den Kalkstein-Dolinen, die wie Eingänge zur Unterwelt aussehen.</p>
+<p>Sie nennen es <em>Camazotz</em>. Die Todesfledermaus. Im Popol Vuh – ihrem heiligen Buch – herrscht es über das <em>Haus der Fledermäuse</em> in Xibalba, der Unterwelt. Es enthauptet den Helden Hunahpú mit einem einzigen Biss.</p>
+<p>Du hängst kopfüber in einer Cenote. Unter dir heiliges Wasser, schwarz und still. Die Maya-Priester kommen in der Dämmerung und starren in die Tiefe. Sie sehen dein Gesicht. Dieses Gesicht, das aus der Dunkelheit zu ihnen aufschaut wie das eines toten Verwandten.</p>
+<span class="whisper">Aus deinem Hunger wurde ihre Angst. Aus ihrer Angst wurde ein Gott.</span>`,
+    choices: [
+        { text: 'Die Blutrituale der Maya…', target: 'bat_maya_blood', onSelect: () => inventory.add('💀 Camazotz') },
+        { text: 'Im Süden passiert etwas anderes…', target: 'bat_moche' }
+    ]
+},
+
+bat_god: {
+    chapter: 'Kapitel VI · Viracocha',
+    text: `<p>Der Älteste des Dorfes tritt vor. Er sieht dein Gesicht – dieses verstörend menschliche Gesicht – und er sieht darin die Züge seiner Ahnen. Der Toten. Der Geister, die zwischen den Welten wandern.</p>
+<p>Du breitest die Flügel aus. Im Mondlicht sieht es aus, als trügest du einen Umhang. Bleich. Überirdisch. Deine Augen – groß, dunkel, reflektierend – glühen.</p>
+<p>Der Älteste fällt auf die Knie und spricht ein Wort: <em>Viracocha</em>.</p>
+<span class="detail">Viracocha – „Schaum des Meeres". Der Schöpfergott der Inka. Beschrieben als ein blasses, großes Wesen, das aus dem Westen über das Meer kam. Ein Wesen, das nicht menschlich war – aber menschlich <em>aussah</em>.</span>
+<p>Die Geschichte wächst. Von Dorf zu Dorf. Von Generation zu Generation. Ein Wesen kam aus dem Westen, über den Ozean. Es hatte ein Gesicht wie ein Mensch. Es konnte fliegen. Es erschien in der Nacht. Es trank Blut.</p>`,
+    choices: [
+        { text: 'Die Tempel, die sie dir bauen…', target: 'bat_moche', onSelect: () => inventory.add('⛅ Viracocha') }
+    ]
+},
+
+bat_moche: {
+    chapter: 'Kapitel VII · Die Blutbecher',
+    text: `<p>An der Küste Perus, im Tal des Moche-Flusses, entsteht eine Zivilisation, die das Blut ins Zentrum ihres Glaubens stellt.</p>
+<p>Die Moche bauen Pyramiden aus Lehmziegeln. In den Kammern werden Jahrtausende später Archäologen etwas Verstörendes finden: <em>Zeremonialbecher</em>, gefüllt mit menschlichem Blut. Wandmalereien, die Priester zeigen, die aus Schalen trinken. Und überall das Bild einer Kreatur mit Flügeln und einem menschlichen Gesicht.</p>
+<p>Du hängst in einer Höhle über dem Tempel. Nachts fliegst du hinaus und jagst. Die Priester beobachten dich. Sie sehen, wie du am Hals eines Lamas trinkst. Und sie beginnen, dich zu <em>imitieren</em>.</p>
+<p>Zuerst Tierblut. Dann – langsam, über Generationen – <em>Menschenblut</em>.</p>
+<span class="detail">In der Huaca de la Luna wurden Überreste von Zeremonialblut in Keramikgefäßen chemisch nachgewiesen. Die Moche-Kultur (100–700 n.Chr.) praktizierte rituelles Bluttrinken als religiösen Akt.</span>`,
+    choices: [
+        { text: 'Der Kult wandert nach Norden…', target: 'bat_maya_blood', onSelect: () => inventory.add('🏺 Moche-Blutbecher') },
+        { text: 'Die Azteken radikalisieren alles.', target: 'bat_aztec' }
+    ]
+},
+
+bat_maya_blood: {
+    chapter: 'Kapitel VII · Das Heilige Blut',
+    text: `<p>Die Maya-Könige ritzen sich die Zunge mit Stachelrochen-Stacheln auf. Sie durchbohren ihre Ohrläppchen, ihre Lippen, ihre Genitalien. Das Blut tropft auf Rindenpapier, das verbrannt wird.</p>
+<p>Es ist keine Selbstverstümmelung. Es ist <em>Kommunikation</em>. Sie glauben, dass der Rauch des verbrannten Blutes eine Visionsschlange heraufbeschwört – eine Brücke zwischen der menschlichen Welt und Xibalba, der Unterwelt.</p>
+<p>Und in Xibalba herrscht Camazotz. <em>Du.</em></p>
+<p>Du verstehst das nicht. Du bist eine Fledermaus. Du trinkst Blut, weil du Eisen und Protein brauchst. Aber die Menschen sehen etwas anderes: Ein Wesen, das Blut <em>verlangt</em>. Ein Wesen, das nur durch Blut besänftigt werden kann.</p>
+<span class="whisper">So wird aus Biologie Religion. Aus Hunger wird Ritual. Aus einer Fledermaus wird ein Gott.</span>`,
+    choices: [
+        { text: 'Die Azteken steigern den Blutkult ins Unfassbare.', target: 'bat_aztec', onSelect: () => inventory.add('🗡 Blutopfer') }
+    ]
+},
+
+bat_aztec: {
+    chapter: 'Kapitel VIII · Der Sonnenstein',
+    text: `<p>Das Aztekenreich übernimmt die Blutkulte – und steigert sie ins Unerträgliche.</p>
+<p>Auf der Spitze des Templo Mayor in Tenochtitlan liegen Opferaltäre. Priester in schwarzen Umhängen – die Haare verklebt mit getrocknetem Blut – reißen schlagenden Herzen aus der Brust lebender Gefangener. Das Blut fließt die Stufen hinab wie ein roter Wasserfall.</p>
+<p>Warum? Weil die Sonne Blut braucht, um aufzugehen. Weil die Götter Blut trinken, wie <em>du</em> Blut trinkst. Weil die Welt ohne Blut stirbt.</p>
+<p>Du hängst in einer Höhle unter dem Tempel. Der Geruch dringt durch den Stein. Süß. Metallisch. Überwältigend.</p>
+<p>In den Jahrhunderten seit deiner Ankunft haben die Menschen aus deinem Hunger eine ganze Kosmologie gebaut. Pyramiden aus Blut, errichtet auf der Erinnerung an ein Wesen aus Zealandia.</p>
+<span class="riddle">Hast du das gewollt? Nein. Hast du das verursacht? Die Frage ist komplizierter, als du glaubst.</span>`,
+    choices: [
+        { text: 'Dann kommen die Spanier.', target: 'bat_spanish' }
+    ]
+},
+
+bat_spanish: {
+    chapter: 'Kapitel IX · Die Chronisten',
+    text: `<p>1519. Holzschiffe mit weißen Segeln. Bärtige Männer in Metallrüstungen steigen an Land. Die Conquista.</p>
+<p>Sie zerstören die Tempel. Verbrennen die Codices. Verbieten die Blutrituale. Aber sie können die Geschichten nicht auslöschen.</p>
+<p>Die Chronisten schreiben auf, was sie sehen. Und in den tropischen Nächten von Mittelamerika erleben sie zum ersten Mal Vampirfledermäuse. Kleine, gewöhnliche Fledermäuse, die das Blut von Pferden trinken. Die Wunden heilen nicht. Die Pferde werden schwächer.</p>
+<p>Aber die Einheimischen erzählen von etwas <em>Größerem</em>. Von einem Wesen in den Höhlen. Mit einem Gesicht wie ein Mensch. Mit Flügeln wie ein Umhang. Von Camazotz. Von Viracocha. Von dem, der aus dem Meer kam.</p>
+<span class="whisper">Die Spanier lachen. Zuerst.</span>`,
+    choices: [
+        { text: 'Was schreiben sie nach Europa?', target: 'bat_letters', onSelect: () => inventory.add('✉ Conquista-Berichte') }
+    ]
+},
+
+bat_letters: {
+    chapter: 'Kapitel IX · Briefe aus der Neuen Welt',
+    text: `<p>Die Berichte erreichen Spanien. Portugal. Italien. Chronisten wie Gonzalo Fernández de Oviedo und José de Acosta beschreiben Kreaturen, die in der Nacht fliegen und Blut trinken.</p>
+<p>Die <em>Idee</em> – ein fliegendes Wesen der Nacht, das Blut trinkt, mit einem menschlichen Gesicht – bekommt durch die Neue Welt eine physische Gestalt.</p>
+<p>Vorher war der europäische Vampir ein Wiedergänger. Ein Toter, der aus dem Grab steigt. Bleich. Aufgedunsen. Aber er hatte keine Flügel. Er verwandelte sich nicht in eine Fledermaus. Er <em>flog</em> nicht.</p>
+<p>Nach den Berichten aus Amerika ändert sich das.</p>
+<span class="riddle">Vor der Conquista hatte der europäische Vampir keine Flügel. Danach schon. Eine Kreatur aus Zealandia, gefiltert durch die Anden, die Maya-Unterwelt und die Briefe der Conquistadoren, verändert die Mythologie eines ganzen Kontinents.</span>`,
+    choices: [
+        { text: 'Der Weg nach Transsylvanien…', target: 'bat_europe' }
+    ]
+},
+
+bat_europe: {
+    chapter: 'Kapitel X · Osteuropa',
+    text: `<p>Im 18. Jahrhundert erreichen die Geschichten Osteuropa. Serbien. Ungarn. Rumänien. Dort gibt es bereits Vampire – Strigoi, Moroi, Nosferatu. Tote, die aus ihren Gräbern steigen.</p>
+<p>Aber die osteuropäischen Vampire hatten keine Flügel. Sie waren bleiche Leichen. Aufgedunsene Körper mit Blut um den Mund. Erdgebunden. Langsam.</p>
+<p>Dann kommen die Berichte aus Amerika. Und plötzlich verschmilzt etwas: Das bleiche Wesen, das in der Nacht erscheint. Das Blut trinkt. Das <em>fliegen</em> kann. Das sich in eine Fledermaus verwandelt.</p>
+<p>Du – oder das, was von deiner Erinnerung übrig ist – dringst in die europäische Folklore ein. Ein Schatten aus Zealandia, der über Südamerika nach Europa gewandert ist. Nicht als Tier. Sondern als <em>Geschichte</em>.</p>`,
+    choices: [
+        { text: 'Und dann schreibt ein Ire ein Buch…', target: 'bat_dracula', onSelect: () => inventory.add('🧛 Vampir-Genese') }
+    ]
+},
+
+bat_dracula: {
+    chapter: 'Kapitel XI · Der Graf',
+    text: `<p>1897. Dublin. Ein irischer Theatermanager namens Bram Stoker veröffentlicht einen Roman. <em>Dracula</em>.</p>
+<p>Sein Held – oder Schurke – ist ein Aristokrat aus Transsylvanien. Blass. Unsterblich. Nachtaktiv. Er trinkt menschliches Blut. Und – das entscheidende Detail – er kann sich in eine <em>Fledermaus</em> verwandeln.</p>
+<p>Stoker hat nie Rumänien besucht. Aber er hat die Berichte gelesen. Die Chroniken der Conquistadoren. Die Beschreibungen von Vampirfledermäusen. Die Legenden von Camazotz, gefiltert durch Jahrhunderte europäischer Nacherzählung.</p>
+<p>Und da ist es. Die letzte Transformation. Das letzte Echo.</p>
+<span class="riddle">Eine Fledermaus auf Zealandia. Eine Überquerung des Pazifiks. Ein Gott namens Viracocha. Ein Dämon namens Camazotz. Blutbecher der Moche. Herzen auf den Stufen des Templo Mayor. Briefe der Conquistadoren. Und am Ende: Graf Dracula, der sich in eine Fledermaus verwandelt.</span>
+<span class="whisper">Das Echo braucht manchmal Jahrmillionen, um anzukommen.</span>`,
+    choices: [
+        { text: 'Wie endet das Echo?', target: 'bat_epilogue' }
+    ]
+},
+
+bat_epilogue: {
+    chapter: 'Epilog · Das Dunkle Echo',
+    text: `<p>Du hängst kopfüber in der Dunkelheit. Oder erinnerst du dich nur daran?</p>
+<p>Es spielt keine Rolle. Denn du bist jetzt überall.</p>
+<p>Du bist in den Ruinen von Huaca de la Luna, wo Archäologen Blutbecher ausgraben. Du bist in den Cenoten von Yucatán, wo die Maya ihre Opfer ins Wasser warfen. Du bist auf dem Sonnenstein der Azteken, dessen Zunge nach Blut leckt.</p>
+<p>Du bist in den Schlössern Transsylvaniens. In den Filmen aus Hollywood. In jedem Horrorfilm, in dem ein Umhang sich in Flügel verwandelt.</p>
+<p>Du bist das Wesen, das aus dem Untergang Zealandias geboren wurde – und dessen Hunger eine ganze Mythologie erschuf. Von den Anden bis nach Europa. Von Viracocha bis Dracula.</p>
+${inventory.size > 0 ? '<span class="detail">Deine gesammelten Echos: ' + [...inventory].join(' · ') + '</span>' : ''}
+<span class="whisper">Das Wesen im Licht hinterließ Echos in Stein. Das Wesen in der Dunkelheit hinterließ Echos im Blut.</span>`,
+    choices: [
+        { text: 'Die Stille akzeptieren.', target: 'true_end' },
+        { text: 'Noch einmal von vorne. Als anderes Wesen.', target: 'restart' }
+    ]
+}
+
+        };
+
+        function render(id) {
+            const node = S[id];
+            if (!node) return;
+            depth++;
+
+            const content = document.getElementById('story-content');
+            const choices = document.getElementById('choices-container');
+            const chapter = document.getElementById('chapter-label');
+            const depthEl = document.getElementById('depth-display');
+            const invEl = document.getElementById('inventory-display');
+
+            content.style.animation = 'none';
+            content.offsetHeight;
+            content.style.animation = 'fadeIn 0.9s ease-out 0.1s forwards';
+
+            chapter.textContent = node.chapter;
+            content.innerHTML = node.text;
+            depthEl.textContent = 'Tiefe: ' + depth;
+            choices.innerHTML = '';
+
+            if (inventory.size > 0) {
+                invEl.className = 'visible';
+                invEl.id = 'inventory-display';
+                invEl.innerHTML = 'Echos: ' + [...inventory].map(i => '<span>' + i + '</span>').join('');
+            }
+
+            node.choices.forEach(c => {
+                const btn = document.createElement('button');
+                btn.innerHTML = c.text + (c.hint ? '<span class="hint">' + c.hint + '</span>' : '');
+                btn.onclick = () => {
+                    if (c.onSelect) c.onSelect();
+                    render(c.target);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
+                choices.appendChild(btn);
+            });
+        }
+
+        setTimeout(() => render('start'), 500);
+    })();
+    </script>
+</body>
+</html>

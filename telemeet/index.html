@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TeleMeet | Video Conference with Teleprompter</title>
+    <link rel="stylesheet" href="styles.css?v=6">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/telemeet/">
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="Offizielle Seite: TeleMeet | Video Conference with Teleprompter. Erfahren Sie mehr auf https://mediclean-pro.at/telemeet.">
+    <meta property="og:title" content="TeleMeet | Video Conference with Teleprompter">
+    <meta property="og:url" content="https://mediclean-pro.at/telemeet/">
+    <meta property="og:type" content="website">
+    
+    <!-- Google Funding Choices -->
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Floating Reactions Container -->
+    <div id="reaction-container"></div>
+
+    <!-- Join Screen -->
+    <div id="join-screen">
+        <div class="join-card">
+            <h1>TeleMeet</h1>
+            <p>Enterprise Video-Conferencing mit Teleprompter</p>
+            <input type="text" id="username-input" placeholder="Dein Name" required>
+            <input type="text" id="room-input" placeholder="Raum ID (z.B. podcast1)" required>
+            <input type="password" id="pin-input" placeholder="Raum PIN (Sicherheit)" required>
+            <label class="checkbox-group" id="host-label">
+                <input type="checkbox" id="host-checkbox">
+                Ich bin der Host (Teleprompter aktivieren)
+            </label>
+            <button class="btn" id="join-btn">Meeting beitreten</button>
+            <div id="ad-container" style="margin-top: 1.5rem;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Waiting Room Screen -->
+    <div id="waiting-room" class="hidden">
+        <div class="join-card">
+            <h1>🚪 Wartezimmer</h1>
+            <p>Der Host wurde benachrichtigt. Bitte warte, bis du zugelassen wirst...</p>
+            <div class="waiting-spinner"></div>
+            <button class="btn btn-danger" id="leave-waiting-btn" style="margin-top:1rem;">Abbrechen</button>
+        </div>
+    </div>
+
+    <!-- Meeting UI -->
+    <div id="meeting-ui">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <span id="room-name-display"></span>
+            <span id="meeting-timer">00:00:00</span>
+            <span id="participant-count" title="Teilnehmerliste öffnen" style="cursor:pointer;">0 Teilnehmer</span>
+        </div>
+
+        <div class="main-content">
+            <div id="video-grid">
+                <div class="video-container" id="local-video-container">
+                    <video id="local-video" autoplay muted playsinline></video>
+                    <div class="video-label" id="local-label">Du</div>
+                </div>
+            </div>
+
+            <!-- Teleprompter -->
+            <div id="teleprompter">
+                <div class="teleprompter-controls">
+                    <button class="tp-btn" id="tp-scroll-btn">▶ Scroll</button>
+                    <button class="tp-btn" id="tp-speed-up">+</button>
+                    <button class="tp-btn" id="tp-speed-down">-</button>
+                    <span class="tp-speed-label" id="tp-speed-label">50ms</span>
+                </div>
+                <textarea id="teleprompter-text" placeholder="Füge hier deinen Teleprompter-Text ein..."></textarea>
+            </div>
+
+            <!-- Chat Sidebar -->
+            <div id="chat-sidebar">
+                <div class="chat-header">Chat <button class="chat-close-btn" id="chat-close-btn">&times;</button></div>
+                <div id="chat-messages"></div>
+                <div class="chat-input">
+                    <input type="text" id="chat-msg-input" placeholder="Nachricht...">
+                    <button id="send-chat-btn"><i data-lucide="send" style="width:16px;"></i></button>
+                </div>
+            </div>
+
+            <!-- Participants Panel -->
+            <div id="participants-panel">
+                <div class="chat-header">Teilnehmer <button class="chat-close-btn" id="participants-close-btn">&times;</button></div>
+                <div id="participants-list"></div>
+                <!-- Pending users (host only) -->
+                <div id="pending-section" class="hidden">
+                    <div class="pending-header">🚪 Wartezimmer</div>
+                    <div id="pending-list"></div>
+                </div>
+            </div>
+
+            <!-- Poll Panel -->
+            <div id="poll-panel">
+                <div class="chat-header">📊 Umfrage <button class="chat-close-btn" id="poll-close-btn">&times;</button></div>
+                <div id="poll-content"></div>
+            </div>
+        </div>
+
+        <!-- Reaction Bar (above controls) -->
+        <div id="reaction-bar" class="hidden">
+            <button class="reaction-emoji" data-emoji="👏">👏</button>
+            <button class="reaction-emoji" data-emoji="❤️">❤️</button>
+            <button class="reaction-emoji" data-emoji="😂">😂</button>
+            <button class="reaction-emoji" data-emoji="🔥">🔥</button>
+            <button class="reaction-emoji" data-emoji="👍">👍</button>
+            <button class="reaction-emoji" data-emoji="🎉">🎉</button>
+        </div>
+
+        <!-- Controls -->
+        <div class="control-bar">
+            <button class="ctrl-btn" id="mute-btn"><i data-lucide="mic-off"></i><span>Stumm</span></button>
+            <button class="ctrl-btn" id="video-btn"><i data-lucide="video"></i><span>Video</span></button>
+            <button class="ctrl-btn" id="share-btn"><i data-lucide="monitor-up"></i><span>Teilen</span></button>
+            <button class="ctrl-btn" id="hand-btn"><i data-lucide="hand"></i><span>Hand</span></button>
+            <button class="ctrl-btn" id="react-btn"><i data-lucide="smile"></i><span>Reagieren</span></button>
+            <button class="ctrl-btn" id="chat-btn"><i data-lucide="message-square"></i><span>Chat</span></button>
+            <button class="ctrl-btn hidden" id="poll-btn"><i data-lucide="bar-chart-3"></i><span>Umfrage</span></button>
+            <button class="ctrl-btn hidden" id="tp-toggle-btn"><i data-lucide="align-center"></i><span>Prompter</span></button>
+            <button class="ctrl-btn" id="invite-btn" style="color:var(--primary);"><i data-lucide="user-plus"></i><span>Einladen</span></button>
+            <button class="ctrl-btn" id="fullscreen-btn"><i data-lucide="maximize"></i><span>Vollbild</span></button>
+            <button class="ctrl-btn danger" id="leave-btn">Verlassen</button>
+        </div>
+    </div>
+
+    <script src="app.js?v=6"></script>
+</body>
+</html>

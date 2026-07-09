@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Step 8 Verifikation</title>
+    <style>
+        body { background: #f0f0f0; display: flex; justify-content: center; padding: 40px; }
+        canvas { background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: default; }
+    </style>
+</head>
+<body>
+    <canvas id="bwebCanvas" width="800" height="1500"></canvas>
+    
+    <script>
+    const FLAG_CLICKABLE = 1;
+    const FLAG_PROP_BINDING = 2;
+    
+    let bwebNodes = [];
+    let bwebNodesCount = 0;
+
+    function drawNode(ctx, nodeId, offsetX, offsetY, props) {
+        if (nodeId === 0xFFFF) return;
+        const node = bwebNodes[nodeId];
+        const lay = node.layout;
+        
+        if (node.tagId === 5) { // INSTANCE
+            let instanceProps = {};
+            if (node.text) {
+                try { instanceProps = JSON.parse(node.text); } catch(e){}
+            }
+            // An instance node draws its template (firstChildId) shifted by lay.x, lay.y
+            drawNode(ctx, node.firstChildId, lay.x, lay.y, instanceProps);
+        } else {
+            const absX = lay.x + offsetX;
+            const absY = lay.y + offsetY;
+            
+            let nodeText = node.text;
+            if (nodeText && nodeText.startsWith('PROP:')) {
+                const propName = nodeText.substring(5);
+                nodeText = (props && props[propName] !== undefined) ? props[propName] : '';
+            }
+
+            if (node.tagId === 1 || node.tagId === 2) { // H1 or P
+                if (lay.size > 0) {
+                    ctx.font = `${node.tagId === 1 ? 'bold ' : ''}${lay.size}px sans-serif`;
+                    ctx.fillStyle = `rgb(${lay.r}, ${lay.g}, ${lay.b})`;
+                    ctx.textBaseline = "top";
+                    ctx.fillText(nodeText || '', absX, absY);
+                    ctx.textBaseline = "alphabetic";
+                }
+            } 
+            else if (node.tagId === 3 || node.tagId === 4) { // DIV or BUTTON
+                if (lay.w > 0 && lay.h > 0) {
+                    ctx.fillStyle = node.tagId === 4 ? `rgb(${lay.r}, ${lay.g}, ${lay.b})` : "#ffffff";
+                    ctx.strokeStyle = node.tagId === 4 ? `rgb(${lay.r}, ${lay.g}, ${lay.b})` : `rgb(${lay.r}, ${lay.g}, ${lay.b})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.roundRect(absX, absY, lay.w, lay.h, 8);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    if (node.tagId === 4) { // Button text
+                        ctx.font = "bold 16px sans-serif";
+                        ctx.fillStyle = "#ffffff";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText(nodeText || '', absX + lay.w / 2, absY + lay.h / 2);
+                        ctx.textAlign = "start";
+                        ctx.textBaseline = "alphabetic";
+                    }
+                }
+            }
+            
+            // Draw children
+            let child = node.firstChildId;
+            while (child !== 0xFFFF) {
+                drawNode(ctx, child, offsetX, offsetY, props);
+                child = bwebNodes[child].nextSiblingId;
+            }
+        }
+    }
+
+    function drawTree() {
+        const canvas = document.getElementById('bwebCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Find root node (usually the last added node without a parent)
+        let mainRootId = 0xFFFF;
+        for (let i = bwebNodesCount - 1; i >= 0; i--) {
+            if (bwebNodes[i].parentId === 0xFFFF && bwebNodes[i].tagId !== 5 && bwebNodes[i].layout.w === 0 && bwebNodes[i].layout.h === 0) {
+                // Heuristic: The body container has no width/height in our layout and is at root
+                mainRootId = i;
+                break;
+            }
+        }
+        
+        if (mainRootId !== 0xFFFF) {
+            drawNode(ctx, mainRootId, 0, 0, {});
+        }
+    }
+
+    async function verifyBweb() {
+        try {
+            const res = await fetch('dist/hello.bweb');
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            const buffer = await res.arrayBuffer();
+            const view = new DataView(buffer);
+            
+            let bdtOffset = 0, bmlOffset = 0, blbOffset = 0;
+            const sectionCount = view.getUint8(5);
+            let headerPos = 6;
+            for (let i = 0; i < sectionCount; i++) {
+                const type = view.getUint8(headerPos);
+                if (type === 0) bdtOffset = view.getUint32(headerPos + 1);
+                if (type === 1) bmlOffset = view.getUint32(headerPos + 1);
+                if (type === 2) blbOffset = view.getUint32(headerPos + 1);
+                headerPos += 9;
+            }
+            
+            bwebNodesCount = view.getUint16(bdtOffset);
+            bwebNodes = Array(bwebNodesCount);
+            let bdtPos = bdtOffset + 2;
+            for (let i = 0; i < bwebNodesCount; i++) {
+                bwebNodes[i] = {
+                    id: view.getUint16(bdtPos),
+                    parentId: view.getUint16(bdtPos + 2),
+                    firstChildId: view.getUint16(bdtPos + 4),
+                    nextSiblingId: view.getUint16(bdtPos + 6),
+                    flags: view.getUint8(bdtPos + 8),
+                    tagId: 0, text: '', layout: null
+                };
+                bdtPos += 9;
+            }
+            
+            let bmlPos = bmlOffset + 2; 
+            for (let i = 0; i < bwebNodesCount; i++) {
+                bwebNodes[i].tagId = view.getUint8(bmlPos);
+                bwebNodes[i].textOffset = view.getUint32(bmlPos + 1);
+                bwebNodes[i].textLength = view.getUint16(bmlPos + 5);
+                bmlPos += 7;
+            }
+            
+            const textPoolSize = view.getUint32(bmlPos); bmlPos += 4;
+            const textPoolBuffer = new Uint8Array(buffer, bmlPos, textPoolSize);
+            const decoder = new TextDecoder('utf-8');
+            for (let i = 0; i < bwebNodesCount; i++) {
+                if (bwebNodes[i].textLength > 0) {
+                    bwebNodes[i].text = decoder.decode(textPoolBuffer.subarray(bwebNodes[i].textOffset, bwebNodes[i].textOffset + bwebNodes[i].textLength));
+                }
+            }
+            
+            let blbPos = blbOffset + 2; 
+            for (let i = 0; i < bwebNodesCount; i++) {
+                bwebNodes[i].layout = {
+                    x: view.getFloat32(blbPos),
+                    y: view.getFloat32(blbPos + 4),
+                    w: view.getFloat32(blbPos + 8),
+                    h: view.getFloat32(blbPos + 12),
+                    size: view.getUint8(blbPos + 16),
+                    r: view.getUint8(blbPos + 17),
+                    g: view.getUint8(blbPos + 18),
+                    b: view.getUint8(blbPos + 19)
+                };
+                blbPos += 20;
+            }
+
+            drawTree();
+            console.log("Components geladen.");
+            
+        } catch (e) {
+            console.error("Verification failed:", e);
+        }
+    }
+    
+    verifyBweb();
+    </script>
+</body>
+</html>

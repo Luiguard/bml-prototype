@@ -1,0 +1,909 @@
+{
+  "compilation_id": "2f2470d61b5b9e5dd4384e5720991bc815360d44503e68ac82bd38332d85b5f1",
+  "steps": [
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "cleaned_test2.html",
+      "variant_param": null,
+      "vfs_path": "cleaned_test2.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "cleaned_test2.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "agb.html",
+      "variant_param": null,
+      "vfs_path": "agb.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "agb.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "aura-shop.html",
+      "variant_param": null,
+      "vfs_path": "aura-shop.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "aura-shop.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "consulting.html",
+      "variant_param": null,
+      "vfs_path": "consulting.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "consulting.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "customer_login.html",
+      "variant_param": null,
+      "vfs_path": "customer_login.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "customer_login.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "customer_register.html",
+      "variant_param": null,
+      "vfs_path": "customer_register.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "customer_register.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "datenschutz.html",
+      "variant_param": null,
+      "vfs_path": "datenschutz.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "datenschutz.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "impressum.html",
+      "variant_param": null,
+      "vfs_path": "impressum.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "impressum.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "index.html",
+      "variant_param": null,
+      "vfs_path": "index.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "index.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "login.html",
+      "variant_param": null,
+      "vfs_path": "login.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "login.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "nachhaltigkeit.html",
+      "variant_param": null,
+      "vfs_path": "nachhaltigkeit.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "nachhaltigkeit.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "service.html",
+      "variant_param": null,
+      "vfs_path": "service.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "service.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "sitemap.html",
+      "variant_param": null,
+      "vfs_path": "sitemap.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "sitemap.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "termin.html",
+      "variant_param": null,
+      "vfs_path": "termin.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "termin.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "ueber-uns.html",
+      "variant_param": null,
+      "vfs_path": "ueber-uns.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "ueber-uns.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "portal/customer_dashboard.html",
+      "variant_param": null,
+      "vfs_path": "portal/customer_dashboard.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "portal/customer_dashboard.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "portal/employee_dashboard.html",
+      "variant_param": null,
+      "vfs_path": "portal/employee_dashboard.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "portal/employee_dashboard.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "omnia-vault/dashboard.html",
+      "variant_param": null,
+      "vfs_path": "omnia-vault/dashboard.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "omnia-vault/dashboard.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "omnia-vault/login.html",
+      "variant_param": null,
+      "vfs_path": "omnia-vault/login.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "omnia-vault/login.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "omnia-vault/index.html",
+      "variant_param": null,
+      "vfs_path": "omnia-vault/index.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "omnia-vault/index.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "omnia-vault/delegate.html",
+      "variant_param": null,
+      "vfs_path": "omnia-vault/delegate.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "omnia-vault/delegate.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "omnia-vault/heir.html",
+      "variant_param": null,
+      "vfs_path": "omnia-vault/heir.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "omnia-vault/heir.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "MAP_ROUTE",
+      "source_path": "custom-rag/index.html",
+      "variant_param": null,
+      "vfs_path": "custom-rag/index.html",
+      "status": "SUCCESS"
+    },
+    {
+      "op": "CSS_COMPUTATION",
+      "source": "custom-rag/index.html",
+      "target_node": "bml:001",
+      "breakpoint": "desktop",
+      "blb_tag": 45,
+      "blb_type": "visibility",
+      "properties": {
+        "visibility": "hidden"
+      }
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 9,
+      "description": "TOC",
+      "length": 779,
+      "payload": "0900000306564653017b22636c65616e65645f74657374322e68746d6c223a7b22696e646578223a307d2c226167622e68746d6c223a7b22696e646578223a317d2c226175..."
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 1,
+      "description": "BML",
+      "length": 13,
+      "payload": "0100000008424d4c0100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 2,
+      "description": "BDT",
+      "length": 13,
+      "payload": "02000000084244540100000001"
+    },
+    {
+      "op": "EMIT_BLOCK",
+      "type": 7,
+      "description": "BLB_DESKTOP",
+      "length": 13,
+      "payload": "0700000008424c420100000001"
+    }
+  ]
+}

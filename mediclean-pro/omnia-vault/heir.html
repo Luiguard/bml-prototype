@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNIA | Heritage Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { gold: '#D4AF37', obsidian: '#050505' },
+                    fontFamily: { serif: ['Cinzel', 'serif'], sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; color: #fff; }
+        .glass-panel { background: rgba(5,5,5,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.8s ease-out; }
+        .fade-delay-1 { animation-delay: 0.2s; animation-fill-mode: backwards; }
+        .fade-delay-2 { animation-delay: 0.4s; animation-fill-mode: backwards; }
+        .item-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.3s;
+        }
+        .item-card:hover {
+            border-color: rgba(212,175,55,0.2);
+            background: rgba(255,255,255,0.04);
+        }
+        .type-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px;
+            background: rgba(212,175,55,0.1); color: #D4AF37;
+            border: 1px solid rgba(212,175,55,0.15);
+        }
+        .photo-thumb {
+            width: 100%; height: 160px; object-fit: cover;
+            border-radius: 8px; margin-bottom: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .upload-zone {
+            border: 2px dashed rgba(212,175,55,0.2);
+            border-radius: 16px; padding: 3rem 2rem; text-align: center;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .upload-zone:hover { border-color: rgba(212,175,55,0.5); background: rgba(212,175,55,0.02); }
+        .upload-zone.drag-over { border-color: #D4AF37; background: rgba(212,175,55,0.05); }
+    </style>
+        crossorigin="anonymous"></script>
+
+    
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/omnia-vault/heir.html">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Offizielle Seite: OMNIA | Heritage Access. Erfahren Sie mehr auf https://mediclean-pro.at.">
+    <meta property="og:title" content="OMNIA | Heritage Access">
+    <meta property="og:url" content="https://mediclean-pro.at/omnia-vault/heir.html">
+    <meta property="og:type" content="website">
+</head>
+<body class="font-sans antialiased min-h-screen">
+
+    <div class="fixed inset-0 bg-gradient-to-br from-obsidian via-gray-950 to-obsidian -z-10"></div>
+
+    <!-- Header -->
+    <header class="border-b border-white/5 backdrop-blur-sm">
+        <div class="max-w-5xl mx-auto px-6 py-5 flex justify-between items-center">
+            <div>
+                <h1 class="font-serif text-2xl tracking-[0.2em] text-white">OMNIA</h1>
+                <p class="text-[0.6rem] uppercase tracking-widest text-gold/50 mt-0.5">Heritage Access</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <i data-lucide="shield-check" class="w-5 h-5 text-emerald-500"></i>
+                <span class="text-xs text-emerald-500 uppercase tracking-wider">End-to-End Encrypted</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- No Key State -->
+    <div id="no-key" class="hidden max-w-lg mx-auto text-center py-20 px-6">
+        <i data-lucide="key" class="w-16 h-16 text-red-400 mx-auto mb-6"></i>
+        <h2 class="text-2xl font-serif text-red-400 mb-3">Missing Decryption Key</h2>
+        <p class="text-gray-500 text-sm">This link does not contain a valid decryption key. Please use the exact link provided by the vault owner.</p>
+    </div>
+
+    <!-- Upload State -->
+    <div id="upload-state" class="hidden max-w-lg mx-auto py-16 px-6 fade-in">
+        <div class="text-center mb-8">
+            <i data-lucide="lock" class="w-12 h-12 text-gold mx-auto mb-4"></i>
+            <h2 class="font-serif text-2xl text-white mb-2">Heritage Vault Access</h2>
+            <p class="text-gray-500 text-sm">Upload the encrypted vault file (<code class="text-gold">.omnia.enc</code>) you received to decrypt and view the contents.</p>
+        </div>
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <i data-lucide="upload" class="w-10 h-10 text-gold/40 mx-auto mb-3"></i>
+            <p class="text-gray-400 text-sm mb-1">Drop <code class="text-gold">.omnia.enc</code> file here</p>
+            <p class="text-gray-600 text-xs">or click to browse</p>
+        </div>
+        <input type="file" id="file-input" accept=".enc,.omnia" class="hidden" onchange="handleFile(this.files[0])">
+        <div id="decrypt-error" class="hidden text-red-400 text-xs text-center mt-4"></div>
+        <div id="decrypting" class="hidden text-center mt-6">
+            <div class="inline-block w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin mb-2"></div>
+            <p class="text-gray-500 text-xs uppercase tracking-widest">Decrypting...</p>
+        </div>
+    </div>
+
+    <!-- Main Content (after decryption) -->
+    <main id="main-content" class="hidden max-w-5xl mx-auto px-6 py-10">
+        <!-- Greeting -->
+        <div class="text-center mb-12 fade-in">
+            <p class="text-xs uppercase tracking-widest text-gold/50 mb-3">The Estate of</p>
+            <h2 class="font-serif text-4xl lg:text-5xl text-white mb-2" id="owner-name">—</h2>
+            <p class="text-gray-500 text-sm" id="heir-greeting">—</p>
+            <p class="text-gray-700 text-xs mt-2" id="export-date">—</p>
+        </div>
+
+        <!-- Summary Bar -->
+        <div class="glass-panel rounded-xl p-6 mb-10 flex flex-wrap justify-center gap-10 text-center fade-in fade-delay-1">
+            <div>
+                <p class="text-2xl font-serif text-gold" id="total-value">—</p>
+                <p class="text-[0.65rem] uppercase tracking-widest text-gray-500 mt-1">Total Estate Value</p>
+            </div>
+            <div class="w-px bg-white/10 hidden sm:block"></div>
+            <div>
+                <p class="text-2xl font-serif text-white" id="item-count">—</p>
+                <p class="text-[0.65rem] uppercase tracking-widest text-gray-500 mt-1">Registered Items</p>
+            </div>
+        </div>
+
+        <!-- Items Grid -->
+        <div class="fade-in fade-delay-2">
+            <h3 class="font-serif text-lg text-gold/80 mb-6 flex items-center gap-2">
+                <i data-lucide="archive" class="w-5 h-5"></i> Vault Contents
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="items-grid"></div>
+            <div id="empty-state" class="hidden text-center py-16">
+                <i data-lucide="package" class="w-12 h-12 text-gray-700 mx-auto mb-4"></i>
+                <p class="text-gray-500">No items have been registered in this vault yet.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-white/5 mt-20 py-6 text-center">
+        <p class="text-[0.6rem] uppercase tracking-widest text-gray-700">OMNIA Vault — Zero-Knowledge Private Wealth System</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // Extract key from URL hash (never sent to server)
+        const keyB64 = window.location.hash.substring(1);
+
+        if (!keyB64) {
+            document.getElementById('no-key').classList.remove('hidden');
+        } else {
+            document.getElementById('upload-state').classList.remove('hidden');
+            setupDragDrop();
+        }
+
+        function setupDragDrop() {
+            const zone = document.getElementById('drop-zone');
+            ['dragenter', 'dragover'].forEach(e => {
+                zone.addEventListener(e, (ev) => { ev.preventDefault(); zone.classList.add('drag-over'); });
+            });
+            ['dragleave', 'drop'].forEach(e => {
+                zone.addEventListener(e, (ev) => { ev.preventDefault(); zone.classList.remove('drag-over'); });
+            });
+            zone.addEventListener('drop', (ev) => {
+                const file = ev.dataTransfer.files[0];
+                if (file) handleFile(file);
+            });
+        }
+
+        async function handleFile(file) {
+            if (!file) return;
+
+            const errEl = document.getElementById('decrypt-error');
+            errEl.classList.add('hidden');
+            document.getElementById('decrypting').classList.remove('hidden');
+
+            try {
+                // Restore base64url to base64
+                let keyStr = keyB64.replace(/-/g, '+').replace(/_/g, '/');
+                while (keyStr.length % 4) keyStr += '=';
+                const keyBytes = Uint8Array.from(atob(keyStr), c => c.charCodeAt(0));
+
+                // Import key
+                const key = await crypto.subtle.importKey(
+                    'raw', keyBytes, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+                );
+
+                // Read file
+                const arrayBuffer = await file.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+
+                // Extract IV (first 12 bytes) and ciphertext
+                const iv = data.slice(0, 12);
+                const ciphertext = data.slice(12);
+
+                // Decrypt
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv }, key, ciphertext
+                );
+
+                const json = JSON.parse(new TextDecoder().decode(decrypted));
+                displayVault(json);
+
+            } catch (e) {
+                console.error('Decryption error:', e);
+                document.getElementById('decrypting').classList.add('hidden');
+                errEl.textContent = 'Decryption failed. Wrong key or corrupted file.';
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        function displayVault(data) {
+            document.getElementById('upload-state').classList.add('hidden');
+
+            // Fill header
+            document.getElementById('owner-name').textContent = data.ownerName || 'Principal';
+            document.getElementById('heir-greeting').textContent = data.heirName
+                ? `Designated to ${data.heirName}`
+                : 'Heritage Access';
+            if (data.exportDate) {
+                document.getElementById('export-date').textContent =
+                    `Exported ${new Date(data.exportDate).toLocaleDateString()}`;
+            }
+
+            const vault = data.vault || {};
+            const assets = vault.assets || [];
+            const totalValue = vault.net_worth || 0;
+
+            // Summary
+            document.getElementById('total-value').textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency', currency: 'USD', maximumFractionDigits: 0
+            }).format(totalValue);
+            document.getElementById('item-count').textContent = assets.length;
+
+            // Items
+            const grid = document.getElementById('items-grid');
+            if (assets.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+            } else {
+                grid.innerHTML = assets.map(item => {
+                    const valueStr = item.value
+                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(item.value)
+                        : '—';
+
+                    let photoHtml = '';
+                    const notes = item.notes || '';
+                    if (notes.includes('📷 Photo:')) {
+                        const photoUrl = notes.split('📷 Photo:')[1].trim();
+                        photoHtml = `<img src="${photoUrl}" alt="${item.name}" class="photo-thumb">`;
+                    }
+                    const cleanNotes = notes.replace(/📷 Photo:.*$/m, '').trim();
+
+                    return `
+                        <div class="item-card">
+                            ${photoHtml}
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="text-sm text-white font-medium">${item.name}</h4>
+                            </div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="type-badge">${item.type || 'Other'}</span>
+                            </div>
+                            <p class="text-lg text-gold font-serif">${valueStr}</p>
+                            ${cleanNotes ? `<p class="text-xs text-gray-500 mt-2">${cleanNotes}</p>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('main-content').classList.remove('hidden');
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

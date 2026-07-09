@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CustomRAG | Lokale KI für dein Wissen</title>
+    <meta name="description" content="Lade Dokumente und Links hoch, trainiere deine lokale KI und behalte 100% Privatsphäre. Die beste RAG-Lösung für den Desktop.">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🧠 CustomRAG</div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#download" class="btn-primary-small">Download</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Dein Wissen. <br><span class="gradient-text">Deine KI.</span></h1>
+            <p>Trainiere deine lokale KI mit eigenen PDFs, Textdateien und Web-Links. Komplett offline, extrem schnell und 100% sicher dank lokaler LanceDB-Vektordatenbank.</p>
+            <div class="hero-buttons">
+                <a href="#download" class="btn-primary">Jetzt herunterladen</a>
+                <a href="#features" class="btn-secondary">Mehr erfahren</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="glass-card mockup">
+                <div class="mockup-header">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                </div>
+                <div class="mockup-body">
+                    <p class="sys">✅ KI-Training bereit.</p>
+                    <p class="usr">📥 Lade Inhalte von: https://example.com/wissen</p>
+                    <p class="sys">✅ Text extrahiert und gespeichert.</p>
+                    <p class="sys">⚡ Starte KI-Training für 'Projekt_Alpha' ...</p>
+                    <p class="sys">✅ Training erfolgreich abgeschlossen!</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="features">
+        <h2>Warum CustomRAG?</h2>
+        <div class="feature-grid">
+            <div class="glass-card feature-card">
+                <div class="icon">🔒</div>
+                <h3>100% Lokal & Privat</h3>
+                <p>Keine API-Kosten, keine Cloud. Deine Dokumente verlassen niemals deinen Computer.</p>
+            </div>
+            <div class="glass-card feature-card">
+                <div class="icon">⚡</div>
+                <h3>Echtzeit-Indizierung</h3>
+                <p>Modernste Vektorsuche mit LanceDB. Dokumente werden in Sekunden verarbeitet.</p>
+            </div>
+            <div class="glass-card feature-card">
+                <div class="icon">🔗</div>
+                <h3>Web- & File-Upload</h3>
+                <p>Füge Links per Klick hinzu oder ziehe PDFs und Textdateien direkt in den Collector.</p>
+            </div>
+            <div class="glass-card feature-card">
+                <div class="icon">🗂️</div>
+                <h3>Multi-Workspace</h3>
+                <p>Erstelle unbegrenzt viele Wissensdatenbanken und wechsle sie fließend in der Chat-GUI.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="download" class="download">
+        <h2>Bereit für deine eigene KI?</h2>
+        <p>Wähle dein Betriebssystem und starte in wenigen Minuten.</p>
+        <div class="download-grid">
+            <a href="downloads/CustomRAG-Windows.zip" class="glass-card download-card" id="dl-win">
+                <div class="icon os-icon">🪟</div>
+                <h3>Windows</h3>
+                <p>Windows 10 / 11 (64-bit)</p>
+                <button class="btn-download">Download .zip</button>
+            </a>
+            <a href="downloads/CustomRAG-Mac.zip" class="glass-card download-card" id="dl-mac">
+                <div class="icon os-icon">🍎</div>
+                <h3>macOS</h3>
+                <p>Apple Silicon (M1/M2) & Intel</p>
+                <button class="btn-download">Download .zip</button>
+            </a>
+            <a href="downloads/CustomRAG-Linux.zip" class="glass-card download-card" id="dl-linux">
+                <div class="icon os-icon">🐧</div>
+                <h3>Linux</h3>
+                <p>Ubuntu, Debian, Arch, Fedora</p>
+                <button class="btn-download">Download .zip</button>
+            </a>
+        </div>
+    </section>
+
+    <!-- CustomRAG Chat -->
+    <section id="demo-chat" class="ai-chat-section">
+        <h2>Deine <span class="gradient-text">KI-Assistenz</span></h2>
+        <p>Lade Dokumente hoch, stelle Fragen, konvertiere Dateien — alles lokal und sicher.</p>
+        
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                <div class="sidebar-header">
+                    <span class="sidebar-logo">🧠</span>
+                    <span class="sidebar-title">Wissensbasis</span>
+                </div>
+                <div class="upload-zone" id="upload-zone">
+                    <div class="upload-zone-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <p>Dokumente ablegen<br><span>PDF, DOCX, TXT, CSV</span></p>
+                    <input type="file" id="file-upload" hidden multiple accept=".pdf,.txt,.docx,.csv">
+                </div>
+                <div class="document-list" id="document-list"></div>
+                <div class="sidebar-actions">
+                    <button id="cv-upload-btn" class="sidebar-action-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Datei bearbeiten
+                    </button>
+                    <input type="file" id="cv-upload" hidden accept="*/*">
+                    <button id="export-btn" class="sidebar-action-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        KI exportieren
+                    </button>
+                    <button id="import-btn-ui" class="sidebar-action-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        KI importieren
+                    </button>
+                    <input type="file" id="import-upload" hidden accept=".zip">
+                </div>
+            </div>
+            <div class="chat-main">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message system">
+                        <div class="avatar">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                        </div>
+                        <div class="bubble">
+                            <strong>Willkommen!</strong><br>
+                            Ich bin deine lokale KI-Assistenz. Ich kann Dateien konvertieren, komprimieren, Webseiten lesen, im Internet suchen und Fragen zu deinen Dokumenten beantworten.<br><br>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">📎 Hänge eine Datei an · 📁 Lade Wissen hoch · 🔍 Frag mich etwas</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="chat-attached-files" id="attached-files"></div>
+                    <form id="chat-form" class="chat-input-row">
+                        <input type="file" id="chat-inline-upload" hidden accept="*/*">
+                        <button type="button" class="chat-icon-btn" id="attach-btn" title="Datei anhängen">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path></svg>
+                        </button>
+                        <div class="chat-textarea-wrap">
+                            <textarea id="chat-input" rows="1" placeholder="Nachricht eingeben..." autocomplete="off"></textarea>
+                        </div>
+                        <button type="submit" class="chat-send-btn" id="send-btn" aria-label="Senden">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 CustomRAG. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const uploadZone = document.getElementById('upload-zone');
+            const fileUpload = document.getElementById('file-upload');
+            const docList = document.getElementById('document-list');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const chatForm = document.getElementById('chat-form');
+            const attachBtn = document.getElementById('attach-btn');
+            const chatInlineUpload = document.getElementById('chat-inline-upload');
+            const attachedFilesArea = document.getElementById('attached-files');
+
+            const exportBtn = document.getElementById('export-btn');
+            const importBtnUi = document.getElementById('import-btn-ui');
+            const importUpload = document.getElementById('import-upload');
+            const cvUploadBtn = document.getElementById('cv-upload-btn');
+            const cvUpload = document.getElementById('cv-upload');
+
+            const sessionId = "sess_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
+
+            let API_BASE = 'http://127.0.0.1:8000';
+            if (window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost' && window.location.protocol.startsWith('http')) {
+                API_BASE = window.location.protocol + '//' + window.location.host.replace(/(8080|3000|5500)/, '8000');
+            }
+
+            let uploadedDocs = 0;
+            let pendingFile = null;
+
+            // --- Auto-resize textarea ---
+            chatInput.addEventListener('input', () => {
+                chatInput.style.height = 'auto';
+                chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+            });
+
+            // Enter = send, Shift+Enter = newline
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    chatForm.requestSubmit();
+                }
+            });
+
+            // --- Attach file (don't upload yet, just stage it) ---
+            attachBtn.addEventListener('click', () => chatInlineUpload.click());
+
+            chatInlineUpload.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    pendingFile = e.target.files[0];
+                    renderFileChip();
+                    e.target.value = '';
+                }
+            });
+
+            function renderFileChip() {
+                attachedFilesArea.innerHTML = '';
+                if (!pendingFile) return;
+                const ext = pendingFile.name.split('.').pop().toUpperCase();
+                const size = (pendingFile.size / 1024).toFixed(0);
+                const chip = document.createElement('div');
+                chip.className = 'file-chip';
+                chip.innerHTML = `
+                    <span class="file-chip-icon">${getFileIcon(ext)}</span>
+                    <span class="file-chip-name">${pendingFile.name}</span>
+                    <span class="file-chip-size">${size} KB</span>
+                    <button type="button" class="file-chip-remove" title="Entfernen">✕</button>
+                `;
+                chip.querySelector('.file-chip-remove').addEventListener('click', () => {
+                    pendingFile = null;
+                    renderFileChip();
+                });
+                attachedFilesArea.appendChild(chip);
+            }
+
+            function getFileIcon(ext) {
+                const icons = {PDF:'📄',DOCX:'📝',DOC:'📝',TXT:'📃',CSV:'📊',
+                    JPG:'🖼️',JPEG:'🖼️',PNG:'🖼️',WEBP:'🖼️',GIF:'🖼️',
+                    MP4:'🎬',AVI:'🎬',MKV:'🎬',MOV:'🎬',WEBM:'🎬',
+                    MP3:'🎵',WAV:'🎵',OGG:'🎵',FLAC:'🎵',AAC:'🎵'};
+                return icons[ext] || '📎';
+            }
+
+            // --- Combined send: upload file (if any) + send message ---
+            chatForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const text = chatInput.value.trim();
+                if (!text && !pendingFile) return;
+
+                // Build user message display
+                let displayMsg = '';
+                if (pendingFile) displayMsg += `📎 ${pendingFile.name}\n`;
+                if (text) displayMsg += text;
+                addMessage(displayMsg, 'user');
+
+                chatInput.value = '';
+                chatInput.style.height = 'auto';
+                const fileToSend = pendingFile;
+                pendingFile = null;
+                renderFileChip();
+
+                // Show typing
+                const typingId = 'typing-' + Date.now();
+                showTyping(typingId);
+
+                try {
+                    let filePath = null;
+
+                    // Step 1: Upload file if attached
+                    if (fileToSend) {
+                        const formData = new FormData();
+                        formData.append('file', fileToSend);
+                        const uploadRes = await fetch(API_BASE + '/upload_cv', { method: 'POST', body: formData });
+                        const uploadData = await uploadRes.json();
+                        if (uploadData.status === 'success') {
+                            filePath = uploadData.path;
+                        } else {
+                            removeTyping(typingId);
+                            addMessage(`Fehler beim Upload: ${uploadData.message}`, 'system');
+                            return;
+                        }
+                    }
+
+                    // Step 2: Build the message for the KI
+                    let aiMessage = '';
+                    if (filePath && text) {
+                        aiMessage = `SYSTEM-INFO: Der Nutzer hat die Datei "${fileToSend.name}" hochgeladen. Absoluter Dateipfad: ${filePath}\n\nAnweisung des Nutzers: ${text}`;
+                    } else if (filePath && !text) {
+                        aiMessage = `SYSTEM-INFO: Der Nutzer hat die Datei "${fileToSend.name}" hochgeladen. Absoluter Dateipfad: ${filePath}\n\nFrage den Nutzer, was du mit der Datei tun sollst.`;
+                    } else {
+                        aiMessage = text;
+                    }
+
+                    // Step 3: Send to KI
+                    const chatRes = await fetch(API_BASE + '/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Session-ID': sessionId },
+                        body: JSON.stringify({ message: aiMessage })
+                    });
+                    const chatData = await chatRes.json();
+                    removeTyping(typingId);
+                    addMessage(chatData.response, 'system');
+
+                } catch (err) {
+                    removeTyping(typingId);
+                    addMessage(`Netzwerkfehler: ${err}`, 'system');
+                }
+            });
+
+            // --- Export / Import ---
+            exportBtn.addEventListener('click', () => {
+                addMessage('Erstelle Export...', 'system');
+                setTimeout(() => { window.location.href = API_BASE + '/export'; }, 500);
+            });
+            importBtnUi.addEventListener('click', () => importUpload.click());
+            importUpload.addEventListener('change', (e) => {
+                if (!e.target.files.length) return;
+                const formData = new FormData();
+                formData.append('file', e.target.files[0]);
+                addMessage('Importiere KI-Datenbank...', 'system');
+                fetch(API_BASE + '/import', { method: 'POST', body: formData })
+                    .then(r => r.json()).then(d => addMessage(d.message, 'system'))
+                    .catch(err => addMessage(`Import-Fehler: ${err}`, 'system'));
+            });
+
+            // --- CV Upload (sidebar button, legacy) ---
+            cvUploadBtn.addEventListener('click', () => cvUpload.click());
+            cvUpload.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    pendingFile = e.target.files[0];
+                    renderFileChip();
+                    chatInput.focus();
+                }
+            });
+
+            // --- RAG Document Upload (sidebar drop zone) ---
+            uploadZone.addEventListener('click', () => fileUpload.click());
+            uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+            uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                if (e.dataTransfer.items) {
+                    Array.from(e.dataTransfer.items).forEach(item => {
+                        if (item.kind === 'file') {
+                            const entry = item.webkitGetAsEntry();
+                            if (entry) traverseFileTree(entry);
+                        }
+                    });
+                } else if (e.dataTransfer.files.length) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+            fileUpload.addEventListener('change', (e) => { if (e.target.files.length) handleFiles(e.target.files); });
+
+            function traverseFileTree(item) {
+                if (item.isFile) {
+                    item.file(file => handleFiles([file]));
+                } else if (item.isDirectory) {
+                    const dirReader = item.createReader();
+                    dirReader.readEntries(entries => entries.forEach(e => traverseFileTree(e)));
+                    const docItem = document.createElement('div');
+                    docItem.className = 'doc-item';
+                    docItem.innerHTML = `<span class="doc-icon">📁</span> <span>${item.name}/</span>`;
+                    docList.appendChild(docItem);
+                }
+            }
+
+            function handleFiles(files) {
+                const formData = new FormData();
+                Array.from(files).forEach(file => {
+                    uploadedDocs++;
+                    formData.append('files', file);
+                    const docItem = document.createElement('div');
+                    docItem.className = 'doc-item';
+                    docItem.innerHTML = `<span class="doc-icon">📄</span> <span>${file.name}</span>`;
+                    docList.appendChild(docItem);
+                });
+                fetch(API_BASE + '/upload', { method: 'POST', body: formData })
+                    .then(r => r.json())
+                    .then(d => addMessage(`${d.chunks} Chunks ins Wissen aufgenommen. Du kannst jetzt Fragen dazu stellen.`, 'system'))
+                    .catch(err => addMessage(`Upload-Fehler: ${err}`, 'system'));
+            }
+
+            // --- Chat UI Helpers ---
+            function addMessage(text, sender) {
+                const msg = document.createElement('div');
+                msg.className = `message ${sender}`;
+                const avatar = sender === 'user' ? '👤' : '🤖';
+                const formattedText = text.replace(/\n/g, '<br>');
+                msg.innerHTML = `<div class="avatar">${avatar}</div><div class="bubble">${formattedText}</div>`;
+                chatMessages.appendChild(msg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function showTyping(id) {
+                const el = document.createElement('div');
+                el.className = 'message system typing';
+                el.id = id;
+                el.innerHTML = `<div class="avatar">🤖</div><div class="bubble typing-dots"><span></span><span></span><span></span></div>`;
+                chatMessages.appendChild(el);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function removeTyping(id) {
+                const el = document.getElementById(id);
+                if (el) el.remove();
+            }
+
+            // Drag files onto chat area to attach
+            const chatMain = document.querySelector('.chat-main');
+            chatMain.addEventListener('dragover', (e) => { e.preventDefault(); chatMain.classList.add('drag-active'); });
+            chatMain.addEventListener('dragleave', () => chatMain.classList.remove('drag-active'));
+            chatMain.addEventListener('drop', (e) => {
+                e.preventDefault();
+                chatMain.classList.remove('drag-active');
+                if (e.dataTransfer.files.length) {
+                    pendingFile = e.dataTransfer.files[0];
+                    renderFileChip();
+                    chatInput.focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -38,14 +38,25 @@ def check_service(service):
     result = subprocess.run(["systemctl", "is-active", service], capture_output=True, text=True)
     return result.stdout.strip() == "active"
 
+def kill_stale_port(port=8001):
+    try:
+        subprocess.run(["fuser", "-k", f"{port}/tcp"], timeout=5, capture_output=True)
+        time.sleep(1)
+    except Exception:
+        pass
+
 def restart_service(service):
     log.warning(f"Dienst '{service}' ist DOWN — Neustart wird versucht...")
     send_notification(f"⚠️ {service} ist down! Neustart wird versucht...")
 
+    if service == "mediclean-server":
+        kill_stale_port()
+
     for attempt in range(1, MAX_RESTART_ATTEMPTS + 1):
         log.info(f"  Versuch {attempt}/{MAX_RESTART_ATTEMPTS}...")
         subprocess.run(["sudo", "systemctl", "restart", service])
-        time.sleep(5)
+        wait = 5 + (attempt * 5)
+        time.sleep(wait)
 
         if check_service(service):
             msg = f"✅ {service} wurde erfolgreich repariert (Versuch {attempt})."
@@ -56,8 +67,6 @@ def restart_service(service):
     msg = f"❌ REPARATUR FEHLGESCHLAGEN: {service} nach {MAX_RESTART_ATTEMPTS} Versuchen!"
     log.critical(msg)
     send_notification(msg)
-    play_alert()
-    play_alert()
     play_alert()
     return False
 

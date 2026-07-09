@@ -1,0 +1,20 @@
+{
+  "name": "hello-bweb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "step1-compiler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  }
+}

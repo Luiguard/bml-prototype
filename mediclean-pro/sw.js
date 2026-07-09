@@ -1,9 +1,9 @@
-const CACHE_NAME = 'mediclean-pro-v36';
+const CACHE_NAME = 'mediclean-pro-v37';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
-    './employee_dashboard.html',
-    './customer_dashboard.html',
+    './portal/employee_dashboard.html',
+    './portal/customer_dashboard.html',
     './ueber-uns.html',
     './service.html',
     './consulting.html',
@@ -13,9 +13,9 @@ const ASSETS_TO_CACHE = [
     './agb.html',
     './customer_login.html',
     './login.html',
-    './css/style.css',
     './css/style.v3.css',
     './css/responsive_auth.css',
+    './js/toast.js',
     './js/script.js',
     './js/auth.js',
     './js/filesystem.js',
@@ -118,7 +118,7 @@ self.addEventListener('fetch', (event) => {
 // --- Push Notification Event (Background) ---
 self.addEventListener('push', (event) => {
     console.log('[Service Worker] Push Received.');
-    let data = { title: 'MediClean Pro Task', body: 'Neue Aufgabe verfügbar!', url: './employee_dashboard.html' };
+    let data = { title: 'MediClean Pro Task', body: 'Neue Aufgabe verfügbar!', url: './portal/employee_dashboard.html' };
 
     if (event.data) {
         try {
@@ -134,7 +134,7 @@ self.addEventListener('push', (event) => {
         badge: 'images/20260108_114357-1024x1024.png',
         vibrate: [100, 50, 100],
         data: {
-            url: data.url || './employee_dashboard.html'
+            url: data.url || './portal/employee_dashboard.html'
         }
     };
 
@@ -156,7 +156,7 @@ self.addEventListener('notificationclick', (event) => {
             }
             // Otherwise open new
             if (clients.openWindow) {
-                return clients.openWindow(event.notification.data.url || './employee_dashboard.html');
+                return clients.openWindow(event.notification.data.url || './portal/employee_dashboard.html');
             }
         })
     );

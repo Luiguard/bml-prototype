@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
         
         :root {
             --primary: #2563eb;
@@ -13,12 +13,12 @@
             --accent: #f1f5f9;
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
             font-family: 'Inter', sans-serif;
             color: var(--text-main);
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
             background: var(--bg);
         }
 
@@ -26,38 +26,30 @@
             max-width: 900px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 300px 1fr;
+            grid-template-columns: 280px 1fr;
             min-height: 100vh;
         }
 
         .sidebar {
             background: var(--accent);
-            padding: 40px;
+            padding: 40px 30px;
             border-right: 1px solid #e2e8f0;
         }
 
         .main-content {
-            padding: 40px 60px;
-        }
-
-        .profile-img {
-            width: 150px;
-            height: 150px;
-            background: #cbd5e1;
-            border-radius: 20px;
-            margin-bottom: 20px;
+            padding: 40px 50px;
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin: 0 0 10px 0;
+            font-size: 2.2rem;
             font-weight: 800;
             color: var(--primary);
-            line-height: 1;
+            line-height: 1.1;
+            margin-bottom: 6px;
         }
 
         .job-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: var(--text-light);
             text-transform: uppercase;
             letter-spacing: 0.1em;
@@ -66,65 +58,74 @@
         }
 
         section {
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         h2 {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             border-bottom: 2px solid var(--primary);
             display: inline-block;
-            margin-bottom: 20px;
-            padding-bottom: 5px;
+            margin-bottom: 16px;
+            padding-bottom: 4px;
         }
 
         .sidebar h2 {
             border-bottom-color: #cbd5e1;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         .contact-item {
-            margin-bottom: 15px;
-            font-size: 0.9rem;
+            margin-bottom: 12px;
+            font-size: 0.88rem;
+            word-break: break-word;
         }
 
         .contact-label {
             font-weight: 700;
             display: block;
             color: var(--text-light);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
         }
 
         .experience-item {
-            margin-bottom: 25px;
-        }
-
-        .experience-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 5px;
-        }
-
-        .role {
-            font-weight: 700;
-            font-size: 1.1rem;
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            gap: 16px;
+            margin-bottom: 22px;
         }
 
         .date {
             color: var(--text-light);
-            font-size: 0.9rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding-top: 2px;
+            line-height: 1.4;
+        }
+
+        .experience-content {}
+
+        .role {
+            font-weight: 700;
+            font-size: 1.05rem;
+            line-height: 1.3;
+            margin-bottom: 2px;
         }
 
         .company {
             color: var(--primary);
             font-weight: 600;
-            margin-bottom: 10px;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
         }
 
         .description {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--text-light);
+            line-height: 1.5;
         }
 
         .skills-list {
@@ -136,61 +137,80 @@
             background: #ffffff;
             padding: 5px 12px;
             border-radius: 6px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-size: 0.85rem;
             border: 1px solid #e2e8f0;
+        }
+
+        .lang-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.88rem;
+        }
+
+        .lang-name {
+            font-weight: 500;
+        }
+
+        .lang-level {
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        .profile-photo-container {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .profile-photo-container img {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                margin: 0;
+            }
+            @page {
+                margin: 0;
+                size: A4;
+            }
+            .resume-container {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                max-width: 100%;
+                min-height: 100vh;
+            }
         }
     </style>
 </head>
 <body>
     <div class="resume-container">
         <div class="sidebar">
-            <div class="profile-img"></div>
-            
-            <section>
-                <h2>Kontakt</h2>
-                <div class="contact-item">
-                    <span class="contact-label">Email</span>
-                    {{EMAIL}}
-                </div>
-                <div class="contact-item">
-                    <span class="contact-label">Telefon</span>
-                    {{PHONE}}
-                </div>
-                <div class="contact-item">
-                    <span class="contact-label">Standort</span>
-                    {{LOCATION}}
-                </div>
-            </section>
-
-            <section>
-                <h2>Skills</h2>
-                <ul class="skills-list">
-                    {{SKILLS_LIST}}
-                </ul>
-            </section>
+            {{SECTION_PHOTO}}
+            {{SECTION_CONTACT}}
+            {{SECTION_SKILLS}}
+            {{SECTION_LANGUAGES}}
         </div>
 
         <div class="main-content">
             <header>
                 <h1>{{NAME}}</h1>
-                <div class="job-title">{{TITLE}}</div>
+                {{SECTION_TITLE}}
             </header>
 
-            <section>
-                <h2>Über mich</h2>
-                <p class="description">{{SUMMARY}}</p>
-            </section>
-
-            <section>
-                <h2>Berufserfahrung</h2>
-                {{EXPERIENCE_ITEMS}}
-            </section>
-
-            <section>
-                <h2>Ausbildung</h2>
-                {{EDUCATION_ITEMS}}
-            </section>
+            {{SECTION_SUMMARY}}
+            {{SECTION_EXPERIENCE}}
+            {{SECTION_EDUCATION}}
         </div>
     </div>
 </body>

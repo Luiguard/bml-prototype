@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Pro | Host Dashboard</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --surface-color: rgba(255, 255, 255, 0.05);
+            --primary-color: #ec4899;
+            --primary-hover: #db2777;
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: var(--surface-color);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h1, h2 {
+            margin-top: 0;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h1 { margin-bottom: 2rem; text-align: center; font-size: 2rem; }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .alert.success { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .alert.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .hidden { display: none !important; }
+
+        .switch-link {
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .switch-link:hover { color: white; }
+
+        .subscriber-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .subscriber-list li {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subscriber-list li:last-child { border-bottom: none; }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: auto;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            margin-left: auto;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .header-flex h1 { margin-bottom: 0; }
+    </style>
+        crossorigin="anonymous"></script>
+
+    
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/podcast-pro/host.html">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Offizielle Seite: Podcast Pro | Host Dashboard. Erfahren Sie mehr auf https://mediclean-pro.at/podcast-pro.">
+    <meta property="og:title" content="Podcast Pro | Host Dashboard">
+    <meta property="og:url" content="https://mediclean-pro.at/podcast-pro/host.html">
+    <meta property="og:type" content="website">
+    <!-- Google Funding Choices -->
+</head>
+<body>
+
+    <!-- Auth View -->
+    <div class="container" id="auth-view">
+        <h1 style="justify-content: center;"><i data-lucide="mic"></i> Podcast Pro Host</h1>
+        
+        <div class="card" id="login-card">
+            <h2>Anmelden</h2>
+            <div id="login-alert" class="alert error"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Benutzername</label>
+                    <input type="text" id="login-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Passwort</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit">Einloggen</button>
+            </form>
+            <div class="switch-link" onclick="toggleAuth()">Noch keinen Account? Hier registrieren.</div>
+        </div>
+
+        <div class="card hidden" id="register-card">
+            <h2>Registrieren</h2>
+            <div id="register-alert" class="alert error"></div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label>Benutzername</label>
+                    <input type="text" id="reg-username" required>
+                </div>
+                <div class="form-group">
+                    <label>E-Mail</label>
+                    <input type="email" id="reg-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Passwort</label>
+                    <input type="password" id="reg-password" required>
+                </div>
+                <button type="submit">Registrieren</button>
+            </form>
+            <div class="switch-link" onclick="toggleAuth()">Bereits registriert? Hier einloggen.</div>
+        </div>
+    </div>
+
+    <!-- Dashboard View -->
+    <div class="container hidden" id="dashboard-view">
+        <div class="header-flex">
+            <h1><i data-lucide="mic"></i> Host Dashboard</h1>
+            <button class="logout-btn" onclick="logout()"><i data-lucide="log-out"></i> Abmelden</button>
+        </div>
+        <div class="card" style="border-color: rgba(236,72,153,0.3); background: linear-gradient(135deg, rgba(236,72,153,0.05), rgba(139,92,246,0.05));">
+            <h2><i data-lucide="radio"></i> Live Podcast Session</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">
+                Starte eine Live-Session und lade deinen Gast ein. Ihr könnt euch in Echtzeit unterhalten und die Aufnahme direkt herunterladen.
+            </p>
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                <input type="text" id="live-room-id" placeholder="Session-Name (z.B. episode-43)" style="flex: 1; margin-bottom: 0;">
+                <button style="width: auto; padding: 0.8rem 1.5rem;" class="btn-primary" onclick="startLiveSession()">
+                    <i data-lucide="play"></i> Session starten
+                </button>
+            </div>
+            <div id="live-link-box" class="hidden" style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem;">
+                <p style="font-size: 0.8rem; color: #10b981; margin-bottom: 0.5rem;">✓ Session erstellt! Sende diesen Link an deinen Gast:</p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="live-invite-url" readonly style="flex: 1; margin-bottom: 0; font-size: 0.8rem;">
+                    <button style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem;" class="btn-outline" onclick="copyLiveLink()">
+                        <i data-lucide="copy"></i>
+                    </button>
+                </div>
+                <a id="live-session-link" href="#" target="_blank" style="display: inline-block; margin-top: 0.75rem; color: #ec4899; font-size: 0.85rem; text-decoration: none;">→ Zur Session beitreten</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i data-lucide="mail"></i> E-Mail Server Setup (SMTP)</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">
+                Hier kannst du deine SMTP-Daten für Microsoft 365, Gmail oder andere Provider eintragen, damit Podcast Pro automatisch Willkommens-Mails an deine neuen Abonnenten sendet.
+            </p>
+            <div id="smtp-alert" class="alert success">Daten gespeichert!</div>
+            
+            <form id="smtp-form">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>SMTP Server (z.B. smtp.office365.com)</label>
+                        <input type="text" id="smtp-server" value="smtp.office365.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>SMTP Port (z.B. 587)</label>
+                        <input type="number" id="smtp-port" value="587" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Benutzername / E-Mail Adresse</label>
+                    <input type="email" id="smtp-user" placeholder="podcast@meinedomain.at" required>
+                </div>
+                <div class="form-group">
+                    <label>Passwort / App-Passwort</label>
+                    <input type="password" id="smtp-pass" placeholder="Dein Passwort" required>
+                </div>
+                <button type="submit"><i data-lucide="save"></i> Einstellungen speichern</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2><i data-lucide="headphones"></i> Podcast Manager</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Erstelle eine neue Episode (Live Recording) oder lade eine fertige Audio-Datei hoch.</p>
+            
+            <div id="episode-alert" class="alert success">Episode gespeichert!</div>
+            
+            <form id="episode-form" style="margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label>Titel der Episode</label>
+                    <input type="text" id="ep-title" placeholder="z.B. Episode 43: Die Zukunft der KI" required>
+                </div>
+                <div class="form-group">
+                    <label>Beschreibung / Shownotes</label>
+                    <textarea id="ep-desc" rows="3" style="width: 100%; padding: 0.8rem 1rem; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white; outline: none; font-family: inherit; resize: vertical;" placeholder="Worum geht es in dieser Episode?"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                    <!-- Upload -->
+                    <div style="flex: 1; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.3s;" id="upload-zone" onclick="document.getElementById('ep-file').click()">
+                        <i data-lucide="upload-cloud" style="color: var(--primary-color); margin-bottom: 0.5rem;"></i>
+                        <div style="font-size: 0.9rem;">Audio-Datei hochladen (.mp3, .webm)</div>
+                        <input type="file" id="ep-file" accept="audio/*" class="hidden" onchange="handleFileSelect(this)">
+                        <div id="file-name" style="font-size: 0.8rem; color: var(--primary-color); margin-top: 0.5rem;"></div>
+                    </div>
+                    
+                    <!-- Record -->
+                    <div style="flex: 1; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 1rem; text-align: center;">
+                        <i data-lucide="mic" style="color: #10b981; margin-bottom: 0.5rem;" id="mic-icon"></i>
+                        <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">Live aufnehmen</div>
+                        <button type="button" id="record-btn" style="background: transparent; border: 1px solid #10b981; color: #10b981; padding: 0.5rem; width: auto; margin: 0 auto;" onclick="toggleRecording()">Aufnahme starten</button>
+                        <audio id="audio-preview" controls style="width: 100%; margin-top: 1rem; display: none;"></audio>
+                    </div>
+                </div>
+
+                <button type="submit" id="ep-submit-btn"><i data-lucide="send"></i> Episode veröffentlichen</button>
+            </form>
+            
+            <h3 style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">Veröffentlichte Episoden</h3>
+            <ul class="subscriber-list" id="episodes-list">
+                <!-- Loaded via JS -->
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2><i data-lucide="users"></i> Abonnenten</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Alle Hörer, die sich für Updates angemeldet haben.</p>
+            <ul class="subscriber-list" id="subscriber-list">
+                <!-- Loaded via JS -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        let currentUser = JSON.parse(localStorage.getItem('podcast_host_user') || 'null');
+
+        if (currentUser && currentUser.role === 'podcast_host') {
+            showDashboard();
+        }
+
+        function toggleAuth() {
+            document.getElementById('login-card').classList.toggle('hidden');
+            document.getElementById('register-card').classList.toggle('hidden');
+        }
+
+        // Authentication
+        function showAlert(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.className = 'alert error';
+            el.style.display = 'block';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = 'Wird geladen...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('login-username').value,
+                        password: document.getElementById('login-password').value
+                    })
+                });
+                console.log('Login response status:', res.status);
+                const data = await res.json();
+                console.log('Login response:', data);
+                if (data.success && data.user && data.user.role === 'podcast_host') {
+                    currentUser = data.user;
+                    localStorage.setItem('podcast_host_user', JSON.stringify(currentUser));
+                    showDashboard();
+                } else if (data.success) {
+                    showAlert('login-alert', 'Dieser Account ist kein Podcast-Host-Account.');
+                } else {
+                    showAlert('login-alert', data.message || 'Login fehlgeschlagen.');
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                showAlert('login-alert', 'Netzwerkfehler: ' + err.message);
+            }
+            btn.textContent = 'Einloggen';
+            btn.disabled = false;
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = 'Wird geladen...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('reg-username').value,
+                        email: document.getElementById('reg-email').value,
+                        password: document.getElementById('reg-password').value,
+                        role: 'podcast_host'
+                    })
+                });
+                console.log('Register response status:', res.status);
+                const data = await res.json();
+                console.log('Register response:', data);
+                if (data.success && data.user) {
+                    currentUser = data.user;
+                    localStorage.setItem('podcast_host_user', JSON.stringify(currentUser));
+                    showDashboard();
+                } else {
+                    showAlert('register-alert', data.message || 'Registrierung fehlgeschlagen.');
+                }
+            } catch (err) {
+                console.error('Register error:', err);
+                showAlert('register-alert', 'Netzwerkfehler: ' + err.message);
+            }
+            btn.textContent = 'Registrieren';
+            btn.disabled = false;
+        });
+
+        function logout() {
+            localStorage.removeItem('podcast_host_user');
+            currentUser = null;
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('auth-view').classList.remove('hidden');
+        }
+
+        // Dashboard Init
+        function showDashboard() {
+            document.getElementById('auth-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            loadProfile();
+            loadSubscribers();
+            loadEpisodes();
+        }
+
+        function loadProfile() {
+            let pData = {};
+            try { pData = typeof currentUser.profile_data === 'string' ? JSON.parse(currentUser.profile_data) : (currentUser.profile_data || {}); } 
+            catch(e) {}
+            
+            if (pData.smtp_server) document.getElementById('smtp-server').value = pData.smtp_server;
+            if (pData.smtp_port) document.getElementById('smtp-port').value = pData.smtp_port;
+            if (pData.smtp_user) document.getElementById('smtp-user').value = pData.smtp_user;
+            if (pData.smtp_pass) document.getElementById('smtp-pass').value = pData.smtp_pass;
+        }
+
+        // Save SMTP Settings
+        document.getElementById('smtp-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const alertEl = document.getElementById('smtp-alert');
+            btn.innerHTML = '<i class="lucide-loader"></i> Speichert...';
+            
+            const pData = {
+                smtp_server: document.getElementById('smtp-server').value,
+                smtp_port: document.getElementById('smtp-port').value,
+                smtp_user: document.getElementById('smtp-user').value,
+                smtp_pass: document.getElementById('smtp-pass').value
+            };
+
+            try {
+                const res = await fetch('/api/upsert_user', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-API-KEY': currentUser.apiKey
+                    },
+                    body: JSON.stringify({ 
+                        id: currentUser.id,
+                        profile_data: JSON.stringify(pData)
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alertEl.className = 'alert success';
+                    alertEl.textContent = 'SMTP-Einstellungen erfolgreich gespeichert! Mails werden jetzt versendet.';
+                    alertEl.style.display = 'block';
+                    currentUser.profile_data = JSON.stringify(pData);
+                    localStorage.setItem('podcast_host_user', JSON.stringify(currentUser));
+                } else {
+                    alertEl.className = 'alert error';
+                    alertEl.textContent = 'Fehler beim Speichern.';
+                    alertEl.style.display = 'block';
+                }
+            } catch (err) {
+                alertEl.className = 'alert error';
+                alertEl.textContent = 'Netzwerkfehler.';
+                alertEl.style.display = 'block';
+            }
+            btn.innerHTML = '<i data-lucide="save"></i> Einstellungen speichern';
+            lucide.createIcons();
+            
+            setTimeout(() => { alertEl.style.display = 'none'; }, 5000);
+        });
+
+        // Fetch Subscribers
+        async function loadSubscribers() {
+            const listEl = document.getElementById('subscriber-list');
+            try {
+                const res = await fetch('/api/subscribers', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'subscribers'}) });
+                const data = await res.json();
+                if (data.success && data.subscribers.length > 0) {
+                    listEl.innerHTML = data.subscribers.map(sub => `
+                        <li>
+                            <div style="font-weight: 500;">${sub.email}</div>
+                            <div style="color: var(--text-muted); font-size: 0.8rem;">
+                                ${new Date(sub.created_at).toLocaleDateString()}
+                            </div>
+                        </li>
+                    `).join('');
+                } else {
+                    listEl.innerHTML = '<li style="color: var(--text-muted); text-align: center; display: block;">Noch keine Abonnenten.</li>';
+                }
+            } catch (err) {
+                listEl.innerHTML = '<li style="color: #ef4444; text-align: center; display: block;">Fehler beim Laden der Abonnenten.</li>';
+            }
+        }
+        // Podcast Audio Handling
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordedBlob = null;
+        let selectedFile = null;
+        let isRecording = false;
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                document.getElementById('file-name').textContent = selectedFile.name;
+                recordedBlob = null; // reset recording if file selected
+                document.getElementById('audio-preview').style.display = 'none';
+            }
+        }
+
+        async function toggleRecording() {
+            const btn = document.getElementById('record-btn');
+            const icon = document.getElementById('mic-icon');
+            
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = e => {
+                        if (e.data.size > 0) audioChunks.push(e.data);
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        recordedBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                        const audioUrl = URL.createObjectURL(recordedBlob);
+                        const preview = document.getElementById('audio-preview');
+                        preview.src = audioUrl;
+                        preview.style.display = 'block';
+                        selectedFile = null; // reset file if recorded
+                        document.getElementById('file-name').textContent = '';
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.textContent = 'Aufnahme stoppen';
+                    btn.style.color = '#ef4444';
+                    btn.style.borderColor = '#ef4444';
+                    icon.style.color = '#ef4444';
+                } catch (err) {
+                    alert('Mikrofon-Zugriff verweigert oder nicht verfügbar.');
+                }
+            } else {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(t => t.stop());
+                isRecording = false;
+                btn.textContent = 'Aufnahme neu starten';
+                btn.style.color = '#10b981';
+                btn.style.borderColor = '#10b981';
+                icon.style.color = '#10b981';
+            }
+        }
+
+        document.getElementById('episode-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('ep-submit-btn');
+            const alertEl = document.getElementById('episode-alert');
+            
+            if (!selectedFile && !recordedBlob) {
+                alertEl.className = 'alert error';
+                alertEl.textContent = 'Bitte eine Datei hochladen oder aufnehmen!';
+                alertEl.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="lucide-loader"></i> Lädt hoch...';
+
+            const formData = new FormData();
+            formData.append('action', 'podcast_upload');
+            formData.append('title', document.getElementById('ep-title').value);
+            formData.append('description', document.getElementById('ep-desc').value);
+            formData.append('host_id', currentUser.id);
+
+            if (selectedFile) {
+                formData.append('audio', selectedFile);
+            } else if (recordedBlob) {
+                formData.append('audio', recordedBlob, 'recording.mp3');
+            }
+
+            try {
+                const res = await fetch('/api/podcast_upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alertEl.className = 'alert success';
+                    alertEl.textContent = 'Episode erfolgreich veröffentlicht!';
+                    alertEl.style.display = 'block';
+                    document.getElementById('episode-form').reset();
+                    document.getElementById('file-name').textContent = '';
+                    document.getElementById('audio-preview').style.display = 'none';
+                    selectedFile = null;
+                    recordedBlob = null;
+                    loadEpisodes();
+                } else {
+                    alertEl.className = 'alert error';
+                    alertEl.textContent = data.message || 'Fehler beim Upload.';
+                    alertEl.style.display = 'block';
+                }
+            } catch (err) {
+                alertEl.className = 'alert error';
+                alertEl.textContent = 'Netzwerkfehler.';
+                alertEl.style.display = 'block';
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="send"></i> Episode veröffentlichen';
+            lucide.createIcons();
+            
+            setTimeout(() => { alertEl.style.display = 'none'; }, 5000);
+        });
+
+        async function loadEpisodes() {
+            const listEl = document.getElementById('episodes-list');
+            try {
+                const res = await fetch('/api/podcast_episodes', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'podcast_episodes'}) });
+                const data = await res.json();
+                if (data.success && data.episodes.length > 0) {
+                    listEl.innerHTML = data.episodes.map(ep => `
+                        <li>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 500;">${ep.title}</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">${new Date(ep.created_at).toLocaleDateString()}</div>
+                            </div>
+                            <audio controls src="${ep.audio_url}" style="height: 30px; width: 200px; margin-right: 1rem;"></audio>
+                            <button onclick="deleteEpisode(${ep.id})" style="background: transparent; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </li>
+                    `).join('');
+                } else {
+                    listEl.innerHTML = '<li style="color: var(--text-muted); text-align: center; display: block;">Noch keine Episoden.</li>';
+                }
+            } catch (err) {
+                listEl.innerHTML = '<li style="color: #ef4444; text-align: center; display: block;">Fehler beim Laden.</li>';
+            }
+        }
+
+        async function deleteEpisode(id) {
+            if (!confirm('Bist du sicher, dass du diese Episode löschen möchtest?')) return;
+            try {
+                const res = await fetch('/api/delete_podcast_episode', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id: id })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadEpisodes();
+                } else {
+                    alert('Fehler beim Löschen: ' + data.message);
+                }
+            } catch (e) {
+                alert('Netzwerkfehler beim Löschen.');
+            }
+        }
+
+        // Live Session
+        function startLiveSession() {
+            let roomId = document.getElementById('live-room-id').value.trim().toLowerCase().replace(/\s+/g, '-');
+            if (!roomId) {
+                roomId = 'session-' + Date.now().toString(36);
+                document.getElementById('live-room-id').value = roomId;
+            }
+            const sessionUrl = `${location.origin}/podcast-pro/session.html#${roomId}`;
+            document.getElementById('live-invite-url').value = sessionUrl;
+            document.getElementById('live-session-link').href = sessionUrl;
+            document.getElementById('live-link-box').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function copyLiveLink() {
+            const input = document.getElementById('live-invite-url');
+            navigator.clipboard.writeText(input.value).then(() => {
+                const btn = input.parentElement.querySelector('button');
+                btn.innerHTML = '<i data-lucide="check"></i> Kopiert!';
+                lucide.createIcons();
+                setTimeout(() => { btn.innerHTML = '<i data-lucide="copy"></i>'; lucide.createIcons(); }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 40px; background: #fff; color: #222; }
+        .title {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 700;
+            font-size: 48px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 24px;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        .text-block {
+            font-family: sans-serif;
+            line-height: 1.8;
+            font-size: 16px;
+            text-align: justify;
+            max-width: 600px;
+            margin-bottom: 40px;
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+        }
+        .rtl-text {
+            font-family: 'Arial', sans-serif;
+            font-size: 20px;
+            text-align: right;
+            direction: rtl;
+            background: #f1f2f6;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+        }
+        .heavy { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="title">Web Typography</div>
+    <div class="subtitle">An elegant test for fonts & styles</div>
+    
+    <div class="text-block">
+        Dies ist ein Paragraph, der die automatische Zeilenumbruch-Fähigkeit (word-wrap) sowie die korrekte Übernahme der Zeilenhöhe (line-height) testet. Ein Teil des Textes ist <span class="heavy">fett gedruckt</span>, um den Font-Weight Wechsel innerhalb eines Bounding-Rectangles zu demonstrieren. Zudem ist dieser Text im Blocksatz (text-align: justify) ausgerichtet.
+    </div>
+    
+    <div class="rtl-text" dir="rtl">
+        مرحبا بك في اختبار الكتابة من اليمين إلى اليسار.
+        هذا النص يجب أن يظهر بشكل صحيح، مع الحفاظ على التنسيق والاتجاه.
+    </div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { margin: 0; padding: 20px; font-family: sans-serif; background: #eee; }
+        .hero {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+        .media-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .media-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        video, img {
+            width: 100%;
+            border-radius: 4px;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .spacer {
+            height: 1200px;
+        }
+    </style>
+</head>
+<body>
+    <h2>BWEB Media Pipeline</h2>
+    
+    <!-- Image with srcset -->
+    <img class="hero" 
+         src="https://picsum.photos/800/300" 
+         srcset="https://picsum.photos/400/150 400w, https://picsum.photos/800/300 800w, https://picsum.photos/1200/450 1200w" 
+         sizes="(max-width: 600px) 400px, 800px" 
+         alt="Hero Image">
+         
+    <div class="media-grid">
+        <div class="media-card">
+            <h3>Video (Autoplay, Loop, Muted)</h3>
+            <video src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" autoplay loop muted></video>
+        </div>
+        
+        <div class="media-card">
+            <h3>Audio Player</h3>
+            <div style="height: 150px; background: #3498db; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white;">
+                Audio Cover
+            </div>
+            <audio src="https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg" controls></audio>
+        </div>
+    </div>
+    
+    <div class="spacer">Scroll down for Lazy Loading...</div>
+    
+    <div class="media-card">
+        <h3>Lazy Loaded Image</h3>
+        <img src="https://picsum.photos/600/400?lazy" loading="lazy" width="600" height="400" alt="Lazy">
+    </div>
+</body>
+</html>

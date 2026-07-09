@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: #fff; }
+        header, nav, main, footer { display: block; margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+</head>
+<body>
+    <header role="banner">
+        <h1>BWEB Accessibility Test</h1>
+    </header>
+    
+    <nav role="navigation" aria-label="Main menu">
+        <button class="btn" aria-label="Go to home page" tabindex="0">Home</button>
+        <button class="btn" aria-expanded="false" aria-controls="submenu" tabindex="0">Services</button>
+    </nav>
+    
+    <main role="main">
+        <section aria-labelledby="section-title">
+            <h2 id="section-title">Semantics & Roles</h2>
+            <p>
+                This paragraph contains a <span class="sr-only">visually hidden text for screen readers</span>.
+            </p>
+            <div role="alert" aria-live="polite" style="padding: 10px; background: #f39c12; color: white; margin-top: 10px;">
+                Action successful!
+            </div>
+        </section>
+        
+        <article>
+            <h2>Interactive Element</h2>
+            <!-- Simulating BWEB action via data-action -->
+            <button class="btn" data-action="increment" aria-label="Increment counter" tabindex="0">Click Me (or Space/Enter)</button>
+        </article>
+    </main>
+    
+    <footer role="contentinfo">
+        <p>&copy; 2026 BWEB Standard</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "name": "local-coder-vscode",
+  "displayName": "Local Coder AI",
+  "description": "Agentic AI in VSCode Sidebar",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Machine Learning"
+  ],
+  "activationEvents": [
+    "onView:localCoderAgent.chatView"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "localCoderAgent",
+          "title": "Local Agent",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "localCoderAgent": [
+        {
+          "type": "webview",
+          "id": "localCoderAgent.chatView",
+          "name": "Chat"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Local Coder AI",
+      "properties": {
+        "localCoder.plannerModel": {
+          "type": "string",
+          "default": "auto",
+          "description": "Ollama model used for the Architect and Reviewer agents. 'auto' dynamically selects the best."
+        },
+        "localCoder.coderModel": {
+          "type": "string",
+          "default": "auto",
+          "description": "Ollama model used for the Expert Coder agent. 'auto' dynamically selects the best."
+        },
+        "localCoder.ollamaEndpoint": {
+          "type": "string",
+          "default": "http://127.0.0.1:11434",
+          "description": "The API endpoint for your local Ollama instance."
+        },
+        "localCoder.enableAuditLogging": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable enterprise audit logging to a .local-coder-audit.log file in the workspace."
+        }
+      }
+    }
+  }
+}

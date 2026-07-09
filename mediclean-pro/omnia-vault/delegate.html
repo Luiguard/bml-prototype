@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNIA | Staff Entry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { gold: '#D4AF37', obsidian: '#050505' },
+                    fontFamily: { serif: ['Cinzel', 'serif'], sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; color: #fff; }
+        .glass-panel { background: rgba(5,5,5,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.8s ease-out; }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        select option { background: #111; color: #fff; }
+        .photo-zone {
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .photo-zone:hover { border-color: rgba(212,175,55,0.3); background: rgba(255,255,255,0.02); }
+        .photo-zone.has-photo { border-color: rgba(16,185,129,0.3); padding: 0; }
+        .photo-zone img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; }
+        .photo-zone .remove-photo {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(0,0,0,0.7); border: none; color: #fff;
+            width: 28px; height: 28px; border-radius: 50%;
+            cursor: pointer; font-size: 1rem; display: flex;
+            align-items: center; justify-content: center;
+        }
+    </style>
+        crossorigin="anonymous"></script>
+
+    
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/omnia-vault/delegate.html">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Offizielle Seite: OMNIA | Staff Entry. Erfahren Sie mehr auf https://mediclean-pro.at.">
+    <meta property="og:title" content="OMNIA | Staff Entry">
+    <meta property="og:url" content="https://mediclean-pro.at/omnia-vault/delegate.html">
+    <meta property="og:type" content="website">
+</head>
+<body class="font-sans antialiased min-h-screen flex items-center justify-center p-6">
+
+    <div class="absolute inset-0 bg-gradient-to-br from-obsidian via-gray-950 to-obsidian"></div>
+
+    <div class="relative z-10 w-full max-w-lg fade-in">
+        <div class="glass-panel rounded-2xl p-10 shadow-2xl">
+            <div class="text-center mb-8">
+                <h1 class="font-serif text-3xl tracking-[0.2em] mb-2 text-white">OMNIA</h1>
+                <p class="text-xs uppercase tracking-widest text-gold/60">Staff Inventory Entry</p>
+                <p class="text-gray-500 text-xs mt-4">You have been granted temporary access to submit items to a private vault. Your identity remains anonymous.</p>
+            </div>
+
+            <!-- Invalid Token Message -->
+            <div id="invalid-token" class="hidden text-center py-10">
+                <i data-lucide="shield-off" class="w-12 h-12 text-red-400 mx-auto mb-4"></i>
+                <h2 class="text-xl text-red-400 mb-2">Invalid or Expired Link</h2>
+                <p class="text-gray-500 text-sm">This delegation link is no longer active. Please contact the vault owner for a new link.</p>
+            </div>
+
+            <!-- Submission Form -->
+            <form id="submit-form" class="space-y-5" onsubmit="submitItem(event)">
+                <!-- Photo Upload / Camera -->
+                <div class="space-y-2">
+                    <label class="text-[0.65rem] uppercase tracking-widest text-gray-500">Photo</label>
+                    <div class="photo-zone" id="photo-zone" onclick="document.getElementById('photo-input').click()">
+                        <div id="photo-placeholder">
+                            <i data-lucide="camera" class="w-8 h-8 text-gray-600 mx-auto mb-2"></i>
+                            <p class="text-gray-500 text-xs">Tap to take a photo or upload from gallery</p>
+                        </div>
+                        <img id="photo-preview" src="" alt="" class="hidden">
+                        <button type="button" id="remove-photo-btn" class="remove-photo hidden" onclick="removePhoto(event)">&times;</button>
+                    </div>
+                    <input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden" onchange="handlePhoto(this)">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[0.65rem] uppercase tracking-widest text-gray-500">Item Name *</label>
+                    <input type="text" id="item-name" required placeholder="e.g. Hermès Birkin 30 Himalaya" class="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 transition-all">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[0.65rem] uppercase tracking-widest text-gray-500">Type</label>
+                        <select id="item-type" class="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-sm text-white focus:outline-none focus:border-gold/50 transition-all">
+                            <option value="Real Estate">Real Estate</option>
+                            <option value="Fine Art">Fine Art</option>
+                            <option value="Haute Couture">Haute Couture</option>
+                            <option value="Watches">Watches</option>
+                            <option value="Jewelry">Jewelry</option>
+                            <option value="Wine">Wine</option>
+                            <option value="Vehicle">Vehicle</option>
+                            <option value="Yacht">Yacht</option>
+                            <option value="Aircraft">Aircraft</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[0.65rem] uppercase tracking-widest text-gray-500">Estimated Value (USD)</label>
+                        <input type="number" id="item-value" placeholder="0" class="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 transition-all">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[0.65rem] uppercase tracking-widest text-gray-500">Notes</label>
+                    <textarea id="item-notes" rows="3" placeholder="Condition, location, serial number..." class="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 transition-all resize-none"></textarea>
+                </div>
+
+                <div id="submit-error" class="text-red-400 text-xs text-center hidden"></div>
+                <div id="submit-success" class="text-emerald-400 text-xs text-center hidden"></div>
+
+                <button type="submit" id="submit-btn" class="w-full bg-transparent border border-gold/50 text-gold hover:bg-gold hover:text-obsidian py-4 rounded-lg text-xs uppercase tracking-widest transition-all duration-300 flex justify-center items-center gap-2">
+                    Submit to Vault <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </form>
+
+            <!-- Submitted Items Counter -->
+            <div id="counter" class="mt-6 text-center hidden">
+                <p class="text-xs text-gray-500"><span id="count" class="text-gold font-bold">0</span> items submitted in this session</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        let itemCount = 0;
+        let uploadedPhotoUrl = null;
+
+        if (!token) {
+            document.getElementById('submit-form').classList.add('hidden');
+            document.getElementById('invalid-token').classList.remove('hidden');
+        }
+
+        function handlePhoto(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Show local preview immediately
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('photo-preview');
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                document.getElementById('photo-placeholder').classList.add('hidden');
+                document.getElementById('remove-photo-btn').classList.remove('hidden');
+                document.getElementById('photo-zone').classList.add('has-photo');
+            };
+            reader.readAsDataURL(file);
+
+            // Upload to server
+            uploadPhoto(file);
+        }
+
+        async function uploadPhoto(file) {
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            try {
+                const res = await fetch('/api/vault/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    uploadedPhotoUrl = data.url;
+                }
+            } catch (e) {
+                console.log('Photo upload failed, will submit without photo');
+            }
+        }
+
+        function removePhoto(e) {
+            e.stopPropagation();
+            document.getElementById('photo-preview').classList.add('hidden');
+            document.getElementById('photo-preview').src = '';
+            document.getElementById('photo-placeholder').classList.remove('hidden');
+            document.getElementById('remove-photo-btn').classList.add('hidden');
+            document.getElementById('photo-zone').classList.remove('has-photo');
+            document.getElementById('photo-input').value = '';
+            uploadedPhotoUrl = null;
+        }
+
+        async function submitItem(e) {
+            e.preventDefault();
+            const errEl = document.getElementById('submit-error');
+            const successEl = document.getElementById('submit-success');
+            errEl.classList.add('hidden');
+            successEl.classList.add('hidden');
+
+            const btn = document.getElementById('submit-btn');
+            btn.innerHTML = '<span class="spinner inline-block w-4 h-4 border-2 border-gold border-t-transparent rounded-full"></span> Submitting...';
+            btn.disabled = true;
+
+            const notes = document.getElementById('item-notes').value
+                + (uploadedPhotoUrl ? `\n📷 Photo: ${uploadedPhotoUrl}` : '');
+
+            try {
+                const res = await fetch('/api/vault/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: token,
+                        name: document.getElementById('item-name').value,
+                        type: document.getElementById('item-type').value,
+                        value: parseFloat(document.getElementById('item-value').value) || 0,
+                        notes: notes
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    itemCount++;
+                    successEl.textContent = `"${document.getElementById('item-name').value}" submitted successfully!`;
+                    successEl.classList.remove('hidden');
+                    document.getElementById('counter').classList.remove('hidden');
+                    document.getElementById('count').textContent = itemCount;
+                    // Reset form
+                    document.getElementById('item-name').value = '';
+                    document.getElementById('item-value').value = '';
+                    document.getElementById('item-notes').value = '';
+                    // Reset photo
+                    removePhoto(new Event('click'));
+                    uploadedPhotoUrl = null;
+                } else {
+                    if (data.message && data.message.includes('expired')) {
+                        document.getElementById('submit-form').classList.add('hidden');
+                        document.getElementById('invalid-token').classList.remove('hidden');
+                    } else {
+                        errEl.textContent = data.message || 'Submission failed';
+                        errEl.classList.remove('hidden');
+                    }
+                }
+            } catch (err) {
+                errEl.textContent = 'Connection error. Items will be queued locally.';
+                errEl.classList.remove('hidden');
+            }
+
+            btn.innerHTML = 'Submit to Vault <i data-lucide="send" class="w-4 h-4"></i>';
+            btn.disabled = false;
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

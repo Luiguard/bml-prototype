@@ -1,0 +1,10 @@
+{
+  "files": {
+    "hello.html": {
+      "id": "vfs_000",
+      "type": "html",
+      "hash": "9bce75be5aec0ca6d6093cb26ff270b5ef817ce81da49680d64e1540f36d3d97",
+      "absolutePath": "/home/benjamin/projects/testordner/hello-bweb/hello.html"
+    }
+  }
+}

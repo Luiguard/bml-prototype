@@ -1,109 +1,248 @@
-# BWEB Engine (Binary Web)
+# BWEB — Binary Web Format
 
-BWEB is an experimental, ultra-fast binary web format designed to replace raw HTML, CSS, and base64-encoded media with highly optimized binary streams. It consists of multiple sections (BML, BDT, BLB, BIB, BVS) that skip the browser's traditional string-parsing pipeline and map directly to a zero-latency DOM and GPU-accelerated Canvas.
+> Replace HTML/CSS with a compact binary container.  
+> Same websites. Up to 10× smaller. GPU-rendered. Zero DOM parsing.
 
----
-
-## ⚡ Formats
-
-- **BML (Binary Markup Language) - `SEC 1`**: Shrinks raw text and properties drastically. Tags are mapped to 1-byte hex codes (e.g., `<div>` becomes `0x01`).
-- **BDT (Binary DOM Tree) - `SEC 2`**: Replaces nested HTML structures with a flat, O(1) integer-pointer-based node hierarchy (11 bytes per node).
-- **BLB (Binary Layout Blocks) - `SEC 3`**: Compresses CSS styling. Every layout instruction uses a fixed 60-byte block.
-- **BIB (Binary Image Blocks) - `SEC 4`**: Natively streams pixel arrays (RGBA / WebP Bitstream) directly into `<canvas data-bind="ID">` elements using `ctx.putImageData`, skipping base64 overhead completely.
-# BWEB (Binary Web) Prototyp
-
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-Custom-green.svg)
-
-BWEB ist ein experimentelles, **100% binäres Web-Format**. Es verabschiedet sich von textbasiertem HTML und CSS und packt den DOM-Baum (BML, BDT), das vorberechnete CSS-Layout (BLB) und die rohen Bildpixel (BIB) in ein einziges Binärpaket.
-
-👉 **[BWEB Architecture Landing Page](https://mediclean-pro.at/bweb-converter/)**
-👉 **[Open Online BWEB Converter Tool](https://mediclean-pro.at/bweb-converter/converter.html)**
-
-*(Select entire website folders to instantly convert them into `.bweb` binary structures — no ZIP needed, no upload to any server).*
+[![Version](https://img.shields.io/badge/version-2.0-blue.svg)](https://github.com/Luiguard/bml-prototype/releases)
+[![License](https://img.shields.io/badge/license-Custom-green.svg)](./LICENSE)
+[![Format](https://img.shields.io/badge/format-.bweb%20%7C%20.bpg-purple.svg)](#file-format)
 
 ---
 
-## Architektur & Formate
+## Why BWEB?
 
-BWEB ist ein Container-Format (Magic: `BWEB`), das 4 Sektionen bündelt:
+Every time someone opens a webpage, a browser downloads megabytes of raw text (HTML, CSS, JavaScript), parses it character by character, builds a DOM tree, calculates layout, and only then renders pixels to your screen. This happens **every single page load, on every device, worldwide.**
 
-- **SEC 1: BML** (Binary Markup Language) — Struktur, Attribute, Text (UTF-8)
-- **SEC 2: BDT** (Binary DOM Tree) — Flache Node-Hierarchie mit Parent/Child/Sibling-Pointern (11 Bytes/Node)
-- **SEC 3: BLB** (Binary Layout Block) — Pre-computed CSS (60 Bytes/Node, fixed-point)
-- **SEC 4: BIB** (Binary Image Block) — Raw RGBA Pixeldaten (22 Bytes Header + Pixel)
-- *(SEC 6)* — Optionaler zlib-Deflate Layer für BML/BLB
+BWEB skips all of that:
 
-> 📖 **[Vollständige Byte-Level Spezifikation (SPEC.md)](SPEC.md)**
+| | Classic HTML | BWEB |
+|---|---|---|
+| Transfer format | Plain text (verbose) | Binary (compact) |
+| Average page size | ~2.1 MB | ~210 KB |
+| Parsing required | Yes — CPU-intensive | No — direct to GPU |
+| DOM tree build | Yes | Pre-computed (BDT) |
+| CSS cascade calc | Yes | Pre-computed (BLB) |
+| Cookie tracking | Possible | Architecturally blocked |
 
 ---
 
-## Installation (CLI)
+## Quick Start (5 minutes)
 
-BWEB bietet ein Node.js CLI-Tool, das den Python-Serializer ansteuert.
+### Option 1: Browser Extension — Easiest
+
+Install the extension and your browser can open `.bweb` files natively.
+
+**Chrome / Edge / Brave:**
+1. Download [`bweb-extension-chrome.zip`](https://github.com/Luiguard/bml-prototype/releases/latest/download/bweb-extension-chrome.zip)
+2. Open `chrome://extensions` (or `edge://extensions`)
+3. Enable **Developer Mode** (top right)
+4. Click **Load unpacked** → select the extracted folder
+
+**Firefox:**
+1. Download [`bweb-extension-firefox.xpi`](https://github.com/Luiguard/bml-prototype/releases/latest/download/bweb-extension-firefox.xpi)
+2. Open `about:debugging` → **This Firefox**
+3. Click **Load Temporary Add-on** → select the `.xpi` file
+
+→ [Full extension guide](./docs/extension-guide.md)
+
+---
+
+### Option 2: Drag & Drop Converter — No install needed
+
+Open **[`bweb-converter.html`](https://mediclean-pro.at/bweb-converter/bweb-converter.html)** in any browser.
+
+1. Click **"Ordner hochladen"** and select your website folder
+2. Click **"Kompilieren"**
+3. Download the resulting `.bweb` file
+
+The converter runs entirely in your browser. Nothing is uploaded to any server.
+
+→ [Full converter guide](./docs/converter-guide.md)
+
+---
+
+### Option 3: CLI — For developers
+
+Requires [Node.js](https://nodejs.org) 18+.
 
 ```bash
-# Optional: Global installieren
-npm link
+# Clone the repo
+git clone https://github.com/Luiguard/bml-prototype.git
+cd bml-prototype
 
-# Oder direkt über Node
-node cli.js help
+# Install dependencies
+npm install
+
+# Convert a single HTML file
+node cli.js convert mypage.html output.bweb
+
+# Convert an entire website folder
+node build-bweb.js ./my-website/ ./output/website.bweb
+
+# Check stats of a .bweb file
+node cli.js stats output.bweb
+
+# Validate a .bweb file (checks magic bytes & offsets)
+node cli.js validate output.bweb
+
+# Pack a .bweb into a signed .bpg container
+node testordner/hello-bweb/bweb-pack.js pack output.bweb output.bpg
 ```
 
-### CLI Befehle
+→ [Full CLI reference](./docs/cli-reference.md)
 
-```bash
-# 1. Konvertierung (HTML -> BWEB)
-bweb convert input.html output.bweb
+---
 
-# 2. Statistik (zeigt Byte-Größen pro Sektion)
-bweb stats output.bweb
+## How It Works
 
-# 3. Validierung (prüft Magic-Bytes und Offsets)
-bweb validate output.bweb
+A `.bweb` file is a binary container with multiple sections. Each section replaces a part of the traditional HTML/CSS/image pipeline:
+
+### Binary Sections
+
+| Section | ID | Replaces | Description |
+|---|---|---|---|
+| **BML** | SEC 0 | HTML tags & text | Tags become 1-byte codes (`<div>` → `0x01`). Text stays UTF-8. |
+| **BDT** | SEC 1 | DOM tree nesting | Flat array of 10-byte nodes with parent/child/sibling pointers. No recursion needed. |
+| **BLB** | SEC 2 | CSS cascade | 50-byte fixed structs per node: x, y, width, height, colors, borders. Pre-computed. |
+| **BIB** | SEC 4 | `<img>` + base64 | Raw image bytes (PNG/JPEG/WebP) stored inline. Streamed directly to `createImageBitmap`. |
+| **BVS** | SEC 5 | `<video>` | Chunked video frames ready for `VideoDecoder`. Zero container overhead. |
+| **BAS** | SEC 6 | `<audio>` | Raw audio samples for `AudioDecoder`. Synchronized via PTS with BVS. |
+| **BFF** | SEC 7 | Web fonts | Font binary data embedded, loaded via `FontFace` API. |
+| **BMS** | SEC 6 | Event handlers | Declarative interaction map: trigger → action. No JS execution needed. |
+| **BEX** | SEC 8 | JS logic | Sandboxed event bindings (click, hover → DOM state changes). |
+| **TOC** | SEC 9 | Multi-page routing | Virtual File System index for multi-page `.bweb` packages. |
+
+### Rendering Pipeline
+
+```
+.bweb file
+    ↓
+Binary parser (DataView — no string ops)
+    ↓
+BDT → node tree in memory
+BML → tag metadata + text per node
+BLB → layout rectangles per node
+    ↓
+Canvas rendering loop (requestAnimationFrame)
+    ↓  
+BIB/BVS → GPU via createImageBitmap / VideoDecoder
+    ↓
+A11y overlay DOM (transparent, for screen readers)
+```
+
+The browser's HTML parser, CSS engine, and layout engine are **never involved.**
+
+---
+
+## File Format
+
+Two container formats:
+
+| Format | Extension | Use case |
+|---|---|---|
+| BWEB | `.bweb` | Raw binary package for development and local use |
+| BPG | `.bpg` | Signed production package with SHA-256 integrity check and ECDSA handshake token |
+
+File structure (BWEB):
+```
+[4 bytes]  Magic: "BWEB"
+[1 byte]   Version
+[1 byte]   Section count
+[N × 9]    Section index (ID u8 + offset u32 + length u32 per section)
+[...]      Section data
+```
+
+→ [Full byte-level specification](./SPEC.md)  
+→ [Simplified format reference](./docs/file-format.md)
+
+---
+
+## Project Structure
+
+```
+bml-prototype/
+├── index.html              ← BWEB landing page (mediclean-pro.at)
+├── converter.html          ← Standalone polyfill viewer
+├── content.js              ← Browser extension content script (V1)
+├── build-bweb.js           ← Node.js multi-page compiler
+├── cli.js                  ← CLI entry point
+├── SPEC.md                 ← Full binary spec (byte-level)
+├── docs/                   ← Human-readable guides
+│   ├── getting-started.md
+│   ├── why-bweb.md
+│   ├── converter-guide.md
+│   ├── cli-reference.md
+│   ├── extension-guide.md
+│   ├── file-format.md
+│   ├── faq.md
+│   └── troubleshooting.md
+├── chrome-extension/       ← Packaged V1 extension
+├── mediclean-pro/          ← Production website + V2 converter
+│   └── bweb-converter.html ← Full-featured browser converter (no server)
+├── testordner/hello-bweb/  ← Development test suite & step-by-step compilers
+│   ├── bwebc.js            ← Full V2 compiler
+│   ├── bweb-engine.html    ← Standalone BWEB renderer
+│   ├── bweb-pack.js        ← BPG signer/packager
+│   └── tests/              ← Edge case test pages
+└── bml-prototype/v2.0/     ← V2.0 Chrome extension with full engine
 ```
 
 ---
 
-## Test Suite
+## Supported Features
 
-Eine vollständige Roundtrip-Testsuite für den Python-Serializer liegt unter `test/`.
-
-```bash
-# Setup
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt # falls vorhanden
-
-# Tests ausführen
-cd test
-python3 test_roundtrip.py
-python3 test_formats.py
-```
-
-## 🔒 Privatsphäre & Cookie-freie Architektur
-
-### Warum BWEB keine Cookies nutzt
-BWEB (Binary Web) bricht grundlegend mit der traditionellen, Cookie-basierten Architektur des klassischen Internets, um absolute Privatsphäre standardmäßig (Privacy by Design) zu garantieren:
-1. **Stateless Binary Container**: BWEB ist ein kompilierter, rein statischer Binär-Container. Das Format selbst ist vollkommen zustandsfrei. Es benötigt keinen Session-Cookie-Zustand auf Client-Seite für das Laden oder GPU-Rendern.
-2. **Zero Tracking Overheads**: Da BWEB das CPU-Parsing von Text-HTML und das Ausführen von verstecktem Javascript blockiert, können Tracker keine heimlichen Tracking-Pixel oder Third-Party-Cookies im Hintergrund platzieren. DSGVO-Cookie-Banner entfallen vollständig!
-3. **Kryptografische Session-Tokens**: Statt Session-IDs in Cookies zu speichern, validiert BWEB Anfragen mittels kryptografischer Einweg-Tokens auf Transaktionsbasis, wodurch Nutzeridentitäten vollständig geschützt bleiben.
+| Feature | Status |
+|---|---|
+| All standard HTML5 elements (113 tags mapped) | ✅ |
+| CSS layout (flexbox, grid, absolute, fixed, sticky) | ✅ |
+| CSS colors, gradients, shadows, borders, radius | ✅ |
+| Images (PNG, JPEG, WebP, SVG) | ✅ |
+| Web fonts (TTF, WOFF, WOFF2) | ✅ |
+| Hover states | ✅ |
+| Click events | ✅ |
+| Form inputs (text, checkbox, select, textarea) | ✅ |
+| Multi-page routing (VFS / TOC section) | ✅ |
+| Video playback (VideoDecoder) | ✅ experimental |
+| Audio playback (AudioDecoder) | ✅ experimental |
+| Responsive design (3 BLB breakpoints: desktop/tablet/mobile) | ✅ |
+| Accessibility (transparent A11y DOM overlay) | ✅ |
+| Signed packages (BPG with ECDSA) | ✅ |
+| JavaScript execution | ❌ by design |
+| `<iframe>` embedding | ❌ by design |
 
 ---
 
-## 📢 Die Zukunft der Werbung in BWEB
+## Contributing
 
-Klassische Web-Werbung bremst das Laden aus, verbraucht CPU-Strom und spioniert Nutzer aus. In BWEB wird Werbung revolutioniert, um die Ladezeiten von unter 1ms und die Privatsphäre zu sichern:
+1. Fork the repo and create a branch: `git checkout -b feature/my-feature`
+2. Test your changes: open `testordner/hello-bweb/bweb-engine.html` in Chrome
+3. Run the test suite: `node testordner/hello-bweb/bweb-testsuite.js`
+4. Submit a pull request with a description of what changed
 
-1. **BIB Ad-Slices (Binäre Werbe-Slices)**: Werbebanner in BWEB sind keine tonnenschweren Tracking-Scripts, sondern **statische binäre BIB-Slices (Binary Image Blocks)**. Sie werden direkt von der GPU gezeichnet, was Zero-Latenz und minimalen Stromverbrauch (Akku-Schonung) sichert.
-2. **Kryptografische Verifikation**: Jedes Werbe-Slice wird kryptografisch vom Werbenetzwerk signiert. Der Browser validiert die Signatur lokal, ohne Nutzerdaten oder Profile an externe Ad-Server zu senden (Zero-Knowledge Ad Delivery).
-3. **Malvertising-Schutz**: Da BWEB keine beliebige JS-Code-Ausführung erlaubt, ist das Einschleusen von Schadcode über Banner (Malvertising) physikalisch unmöglich.
+→ Found a bug? Open an [issue](https://github.com/Luiguard/bml-prototype/issues).
 
 ---
 
-## Lizenz & Attribution
+## FAQ
 
-Bitte die `LICENSE` Datei beachten. **Jede kommerzielle Nutzung erfordert dieses Zitat im UI/Doku:**
-> `"Incorporates RAG-NVMe architecture designed by Benjamin Leimer."`**
+**Does BWEB work without the extension?**  
+Yes. The JS polyfill (`content.js`) renders `.bweb` files in any modern browser using Canvas + `DataView`. The extension gives better performance via native file interception.
 
-*For more information on the RAG-NVMe integration, visit the respective repository.*
+**Does my website need to be rebuilt?**  
+No. The converter takes your existing HTML/CSS/images folder and produces a `.bweb` file. No changes to your source code.
+
+**Can I use React / Vue / Angular?**  
+Yes — build your app first (`npm run build`), then run the converter on the `dist/` folder.
+
+**What happens to JavaScript in my site?**  
+Client-side JS is not executed in BWEB. Interactivity is handled through the declarative BEX section (click/hover state changes). Server-side logic is unaffected.
+
+→ [All 15 FAQ answers](./docs/faq.md)
+
+---
+
+## License
+
+See [`LICENSE`](./LICENSE). Commercial use requires this attribution in your UI or documentation:
+
+> *"Incorporates BWEB Binary Web Format by Benjamin Leimer."*

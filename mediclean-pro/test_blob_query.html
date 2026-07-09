@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body>
+<iframe id="frm"></iframe>
+<script>
+const html = `<script>console.log("Query:", window.location.search); document.write("Query: " + window.location.search);</scr`+`ipt>`;
+const blob = new Blob([html], {type: "text/html"});
+const url = URL.createObjectURL(blob) + "?test=123";
+document.getElementById('frm').src = url;
+</script>
+</body>
+</html>

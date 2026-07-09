@@ -1,11 +1,11 @@
 # MediClean Pro® – robots.txt
-# Letzte Aktualisierung: 2026-02-28
+# Letzte Aktualisierung: 2026-05-11
 # Canonical: https://mediclean-pro.at
 
 User-agent: *
 Allow: /
 
-# Blockiere interne Bereiche
+# Blockiere interne Bereiche und passwortgeschützte Seiten
 Disallow: /admin
 Disallow: /admin/
 Disallow: /portal
@@ -16,6 +16,12 @@ Disallow: /api/
 Disallow: /assets/
 Disallow: /socket.io/
 Disallow: /uploads/
+Disallow: /omnia-vault/
+Disallow: /login.html
+Disallow: /customer_login.html
+Disallow: /customer_register.html
+Disallow: /podcast-pro/host.html
+Disallow: /podcast-pro/session.html
 
 # Erlaube SEO-relevante Assets
 Allow: /css/
@@ -24,7 +30,12 @@ Allow: /images/
 Allow: /favicon.svg
 Allow: /manifest.json
 
-# Sitemap
+# Erlaube Tools & Services für Indexierung und AdSense
+Allow: /telemeet/
+Allow: /convertany/
+Allow: /podcast-pro/
+
+# Bulletproof Sitemap
 Sitemap: https://mediclean-pro.at/sitemap.xml
 
 # Crawl-Delay (optional, schont den Server)

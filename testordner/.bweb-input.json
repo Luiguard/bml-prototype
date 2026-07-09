@@ -1,0 +1,16 @@
+{
+  "files": {
+    "bweb-compiler-v2.js": {
+      "id": "vfs_000",
+      "type": "js",
+      "hash": "f56641e08a4a2dce49f8e529d8b856d0b3e42c17d3cbb89cb5a3cb70bae22025",
+      "absolutePath": "/home/benjamin/projects/testordner/bweb-compiler-v2.js"
+    },
+    "index.html": {
+      "id": "vfs_001",
+      "type": "html",
+      "hash": "6ba8fdb0ad71017e66521ff848b755487d0f5bb296e78b996ae7e18f7769efc2",
+      "absolutePath": "/home/benjamin/projects/testordner/index.html"
+    }
+  }
+}

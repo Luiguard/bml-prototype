@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=CustomRAG Hauptmenü
+GenericName=KI-Zentrale
+Comment=Lokale Wissensbasis, Assistent und Domänen-Manager (ohne Terminal)
+Exec=bash -c 'cd /home/benjamin/projects/rag-custom-knowledge && ./start-rag.sh'
+Path=/home/benjamin/projects/rag-custom-knowledge
+Terminal=false
+Categories=Development;Utility;
+StartupNotify=true
+Keywords=AI;KI;RAG;Menu;Hauptmenü;

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNIA | The Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: '#D4AF37',
+                        obsidian: '#050505',
+                        surface: '#0A0A0C'
+                    },
+                    fontFamily: {
+                        serif: ['Cinzel', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; color: #ffffff; }
+        .hero-bg {
+            background-image: url('https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2500&auto=format&fit=crop');
+            background-position: center;
+            background-size: cover;
+        }
+        .text-glow { text-shadow: 0 0 40px rgba(212,175,55,0.3); }
+        .glass-panel {
+            background: rgba(10, 10, 12, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+    </style>
+        crossorigin="anonymous"></script>
+
+    
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/omnia-vault/index.html">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Offizielle Seite: OMNIA | The Vault. Erfahren Sie mehr auf https://mediclean-pro.at.">
+    <meta property="og:title" content="OMNIA | The Vault">
+    <meta property="og:url" content="https://mediclean-pro.at/omnia-vault/index.html">
+    <meta property="og:type" content="website">
+</head>
+<body class="font-sans antialiased overflow-x-hidden selection:bg-gold selection:text-obsidian">
+    
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 px-8 py-6 flex justify-between items-center transition-all duration-500" id="navbar">
+        <div class="font-serif text-2xl tracking-[0.3em] text-white">OMNIA</div>
+        <a href="login.html" class="text-xs uppercase tracking-widest text-gray-300 hover:text-gold transition-colors border-b border-transparent hover:border-gold pb-1">
+            Client Access
+        </a>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative h-screen flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 hero-bg scale-105 transform origin-center animate-[pulse_20s_ease-in-out_infinite] opacity-40 grayscale"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-obsidian/40 via-obsidian/80 to-obsidian"></div>
+        
+        <div class="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
+            <span class="text-gold text-xs md:text-sm uppercase tracking-[0.4em] mb-6 block border border-gold/30 px-6 py-2 rounded-full glass-panel">The Operating System for Legacy</span>
+            <h1 class="font-serif text-7xl md:text-9xl font-medium tracking-[0.2em] mb-8 text-white text-glow">OMNIA</h1>
+            <p class="text-gray-400 font-light text-lg md:text-xl max-w-2xl leading-relaxed mb-12">
+                Secure, compartmentalized, and infinitely discreet. An enclave for the world's most significant private estates and collections.
+            </p>
+            <a href="login.html" class="group relative inline-flex items-center justify-center px-10 py-4 font-sans text-sm tracking-widest uppercase text-gold transition-all duration-300 border border-gold/50 hover:bg-gold hover:text-obsidian overflow-hidden">
+                <span class="relative z-10 flex items-center gap-3">Enter The Vault <i data-lucide="arrow-right" class="w-4 h-4 transition-transform group-hover:translate-x-1"></i></span>
+            </a>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-50 animate-bounce">
+            <span class="text-[0.65rem] uppercase tracking-widest mb-4">Discover</span>
+            <div class="w-[1px] h-12 bg-gradient-to-b from-gold/50 to-transparent"></div>
+        </div>
+    </header>
+
+    <!-- Features -->
+    <section class="relative z-20 bg-obsidian py-32 px-6 md:px-12 lg:px-24">
+        <div class="max-w-7xl mx-auto space-y-40">
+            
+            <!-- Feature 1 -->
+            <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-32">
+                <div class="w-full lg:w-1/2 space-y-6">
+                    <span class="font-serif text-6xl text-gold/20 block mb-4">01</span>
+                    <h2 class="font-serif text-4xl lg:text-5xl text-white">Absolute Privacy</h2>
+                    <p class="text-gray-400 text-lg leading-relaxed font-light">
+                        Engineered with a true Zero-Knowledge architecture. Your asset data, property valuations, and staff identities reside solely with you, encrypted before they ever leave your device.
+                    </p>
+                </div>
+                <div class="w-full lg:w-1/2 h-[500px] overflow-hidden group">
+                    <img src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1200&auto=format&fit=crop" alt="Privacy" class="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-1000 transform group-hover:scale-105">
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-32">
+                <div class="w-full lg:w-1/2 space-y-6">
+                    <span class="font-serif text-6xl text-gold/20 block mb-4">02</span>
+                    <h2 class="font-serif text-4xl lg:text-5xl text-white">Discreet Delegation</h2>
+                    <p class="text-gray-400 text-lg leading-relaxed font-light">
+                        Issue blind, temporary access links to estate managers, curators, or household staff. They manage local inventory and climate data without ever viewing your consolidated net worth.
+                    </p>
+                </div>
+                <div class="w-full lg:w-1/2 h-[500px] overflow-hidden group">
+                    <img src="https://images.unsplash.com/photo-1555636222-cae831e670b3?q=80&w=1200&auto=format&fit=crop" alt="Delegation" class="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-1000 transform group-hover:scale-105">
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-32">
+                <div class="w-full lg:w-1/2 space-y-6">
+                    <span class="font-serif text-6xl text-gold/20 block mb-4">03</span>
+                    <h2 class="font-serif text-4xl lg:text-5xl text-white">Heritage & Couture</h2>
+                    <p class="text-gray-400 text-lg leading-relaxed font-light">
+                        A unified vault for haute couture, fine art, and global real estate. Digitize Certificates of Authenticity, track climate conditions in wine cellars, and systematically organize successions.
+                    </p>
+                </div>
+                <div class="w-full lg:w-1/2 h-[500px] overflow-hidden group">
+                    <img src="https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?q=80&w=1200&auto=format&fit=crop" alt="Heritage" class="w-full h-full object-cover filter grayscale hover:grayscale-0 transition-all duration-1000 transform group-hover:scale-105">
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="bg-[#020202] py-24 text-center border-t border-white/5">
+        <h2 class="font-serif text-3xl tracking-[0.3em] text-white mb-4">OMNIA</h2>
+        <p class="text-gray-500 text-xs tracking-[0.4em] uppercase">By Invitation Only</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('bg-obsidian/90', 'backdrop-blur-md', 'border-b', 'border-white/10');
+            } else {
+                nav.classList.remove('bg-obsidian/90', 'backdrop-blur-md', 'border-b', 'border-white/10');
+            }
+        });
+    </script>
+</body>
+</html>

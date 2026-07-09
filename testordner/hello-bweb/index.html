@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Step 1 Verifikation</title>
+</head>
+<body>
+    <h1>BWEB Step 1: Check Console</h1>
+    <script>
+    const TAG_MAP = { 1: 'DIV', 2: 'H1', 3: 'P', 4: 'H2', 255: '#TEXT' };
+    const ATTR_MAP = { 1: 'class' };
+
+    async function verifyBweb() {
+        try {
+            console.log("Fetching hello.bin...");
+            const res = await fetch('hello.bin');
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            const buffer = await res.arrayBuffer();
+            const view = new DataView(buffer);
+            
+            // Parse Header
+            const magic = new TextDecoder().decode(new Uint8Array(buffer, 0, 4));
+            if (magic !== 'BWEB') throw new Error("Invalid Magic: " + magic);
+            
+            const version = view.getUint8(4);
+            const sectionCount = view.getUint8(5);
+            console.log(`[Header] Magic: ${magic}, Version: ${version}, Sections: ${sectionCount}`);
+            
+            let bmlOffset = 0;
+            let bmlLength = 0;
+            
+            let headerPos = 6;
+            for (let i = 0; i < sectionCount; i++) {
+                const type = view.getUint8(headerPos);
+                const offset = view.getUint32(headerPos + 1);
+                const length = view.getUint32(headerPos + 5);
+                headerPos += 9;
+                
+                if (type === 1) { // BML
+                    bmlOffset = offset;
+                    bmlLength = length;
+                }
+            }
+            
+            console.log(`[Section] BML found at offset ${bmlOffset}, length ${bmlLength}`);
+            
+            // Parse BML Tree
+            let bmlPos = bmlOffset;
+            const decoder = new TextDecoder('utf-8');
+            
+            function parseNode() {
+                const tagId = view.getUint8(bmlPos++);
+                const tag = TAG_MAP[tagId] || `TAG_${tagId}`;
+                
+                if (tagId === 255) {
+                    const len = view.getUint16(bmlPos); bmlPos += 2;
+                    const text = decoder.decode(new Uint8Array(buffer, bmlPos, len));
+                    bmlPos += len;
+                    return { type: 'text', content: text };
+                }
+                
+                const node = { type: 'element', tag: tag, attributes: {}, children: [] };
+                
+                const attrCount = view.getUint8(bmlPos++);
+                for (let i = 0; i < attrCount; i++) {
+                    const attrId = view.getUint8(bmlPos++);
+                    const attrName = ATTR_MAP[attrId] || `ATTR_${attrId}`;
+                    const len = view.getUint16(bmlPos); bmlPos += 2;
+                    const val = decoder.decode(new Uint8Array(buffer, bmlPos, len));
+                    bmlPos += len;
+                    node.attributes[attrName] = val;
+                }
+                
+                const childCount = view.getUint16(bmlPos); bmlPos += 2;
+                for (let i = 0; i < childCount; i++) {
+                    node.children.push(parseNode());
+                }
+                
+                return node;
+            }
+            
+            const tree = parseNode();
+            console.log("[BML Tree Parsed Successfully]");
+            console.dir(tree, { depth: null });
+            
+        } catch (e) {
+            console.error("Verification failed:", e);
+        }
+    }
+    
+    verifyBweb();
+    </script>
+</body>
+</html>

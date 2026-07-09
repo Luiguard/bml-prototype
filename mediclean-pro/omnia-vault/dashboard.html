@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omnia Vault | Private Wealth Management</title>
+    <link rel="stylesheet" href="styles.css?v=2">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+        crossorigin="anonymous"></script>
+
+    
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/omnia-vault/dashboard.html">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Offizielle Seite: Omnia Vault | Private Wealth Management. Erfahren Sie mehr auf https://mediclean-pro.at.">
+    <meta property="og:title" content="Omnia Vault | Private Wealth Management">
+    <meta property="og:url" content="https://mediclean-pro.at/omnia-vault/dashboard.html">
+    <meta property="og:type" content="website">
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">O</span>
+                <h2>OMNIA</h2>
+            </div>
+            
+            <ul class="nav-menu" id="sidebar-nav">
+                <li class="active" data-target="view-overview"><a href="#"><i data-lucide="layout-dashboard"></i> Overview</a></li>
+                <li data-target="view-estates"><a href="#"><i data-lucide="map-pin"></i> Estates</a></li>
+                <li data-target="view-mobility"><a href="#"><i data-lucide="ship"></i> Mobility</a></li>
+                <li data-target="view-collections"><a href="#"><i data-lucide="palette"></i> Collections</a></li>
+                <li data-target="view-delegation"><a href="#"><i data-lucide="shield-check"></i> Delegation</a></li>
+                <li data-target="view-documents"><a href="#"><i data-lucide="file-text"></i> Documents</a></li>
+            </ul>
+
+            <div class="sidebar-bottom">
+                <div class="user-profile">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop" alt="Profile">
+                    <div class="user-info">
+                        <span class="user-name">A. Rothschild</span>
+                        <span class="user-role">Principal</span>
+                    </div>
+                </div>
+                <button class="settings-btn" id="settings-btn"><i data-lucide="settings"></i></button>
+                <button class="settings-btn" id="logout-btn" title="Logout" style="margin-left: 8px;"><i data-lucide="log-out"></i></button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="dashboard">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="search-bar">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search assets, properties, or staff...">
+                </div>
+                <div class="header-actions">
+                    <!-- Zero-Knowledge Backups -->
+                    <button class="action-btn" id="export-btn" title="Export Local Vault (.omnia)"><i data-lucide="download"></i></button>
+                    <label class="action-btn" title="Import Vault Backup" style="cursor: pointer; display: flex; align-items: center;">
+                        <i data-lucide="upload"></i>
+                        <input type="file" id="import-file" style="display: none;" accept=".omnia,.json">
+                    </label>
+                    <div style="width: 1px; height: 24px; background: var(--border); margin: 0 8px;"></div>
+                    
+                    <button class="action-btn" id="header-link-btn" title="Delegation Links"><i data-lucide="link"></i></button>
+                    <div style="position: relative;">
+                        <button class="action-btn notification" id="alerts-btn" title="Alerts"><i data-lucide="bell"></i><span class="badge" id="alerts-badge">0</span></button>
+                        <!-- Alerts Dropdown -->
+                        <div id="alerts-dropdown" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; width: 380px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); z-index: 100; overflow: hidden;">
+                            <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; font-size: 0.9rem;">Notifications</h4>
+                                <button onclick="clearAlerts()" style="background: none; border: none; color: var(--text-muted); font-size: 0.7rem; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">Clear All</button>
+                            </div>
+                            <div id="alerts-list" style="max-height: 350px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                    <button class="btn-primary" id="add-asset-btn"><i data-lucide="plus"></i> Add Asset</button>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                <div id="view-overview" class="vault-view" style="display: block;">
+                <!-- Portfolio Overview -->
+                <div class="portfolio-header">
+                    <div>
+                        <p class="subtitle">Total Insured Value</p>
+                        <h1 class="net-worth blurred" id="net-worth-display" onclick="toggleBlur(this)">$ 428,500,000</h1>
+                    </div>
+                    <div class="asset-classes">
+                        <div class="class-stat">
+                            <span class="label">Real Estate</span>
+                            <span class="value">64%</span>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 64%"></div></div>
+                        </div>
+                        <div class="class-stat">
+                            <span class="label">Fine Art</span>
+                            <span class="value">21%</span>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 21%"></div></div>
+                        </div>
+                        <div class="class-stat">
+                            <span class="label">Mobility</span>
+                            <span class="value">15%</span>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 15%"></div></div>
+                        </div>
+                        <div class="class-stat">
+                            <span class="label">Couture & Jewelry</span>
+                            <span class="value">12%</span>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 12%"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Properties Grid -->
+                <div class="section-title" style="margin-top: 3rem;">
+                    <h3>Vault Assets</h3>
+                    <a href="#" class="view-all">View All</a>
+                </div>
+                
+                <div class="estates-grid" id="assets-grid">
+                    <!-- Cards will be dynamically injected here by app.js -->
+                </div>
+
+                <!-- Middle Grid: Vault Climates & Heritage -->
+                <div class="middle-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 3rem;">
+                    <!-- Vault Climates -->
+                    <div class="panel">
+                        <div class="panel-header" style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="thermometer" style="color: var(--gold); width: 20px;"></i>
+                            <h3 style="margin: 0;">Vault Climates</h3>
+                        </div>
+                        <div class="climate-list">
+                            <div class="climate-item">
+                                <div class="c-info">
+                                    <h4>Couture & Fur Vault</h4>
+                                    <span class="c-loc">Aspen Chalet</span>
+                                </div>
+                                <div class="c-stats">
+                                    <span class="temp">10°C</span>
+                                    <span class="hum">50% <i data-lucide="droplets"></i></span>
+                                </div>
+                            </div>
+                            <div class="climate-item">
+                                <div class="c-info">
+                                    <h4>Fine Art Gallery</h4>
+                                    <span class="c-loc">London Townhouse</span>
+                                </div>
+                                <div class="c-stats">
+                                    <span class="temp">21°C</span>
+                                    <span class="hum">45% <i data-lucide="droplets"></i></span>
+                                </div>
+                            </div>
+                            <div class="climate-item">
+                                <div class="c-info">
+                                    <h4>Wine Cellar</h4>
+                                    <span class="c-loc">M/Y Serenity</span>
+                                </div>
+                                <div class="c-stats">
+                                    <span class="temp">13°C</span>
+                                    <span class="hum">70% <i data-lucide="droplets"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Heritage & Provenance -->
+                    <div class="panel">
+                        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="award" style="color: var(--gold); width: 20px;"></i>
+                                <h3 style="margin: 0;">Heritage & Provenance</h3>
+                            </div>
+                            <span class="tag" style="background: rgba(224, 82, 82, 0.2); border-color: var(--danger); color: var(--danger);">1 Action Req.</span>
+                        </div>
+                        <div class="heritage-list">
+                            <div class="h-item">
+                                <div class="h-icon"><i data-lucide="briefcase"></i></div>
+                                <div class="h-info">
+                                    <h4>Hermès Birkin 30 Matte Himalaya</h4>
+                                    <p>CoA Verified. <span style="color: var(--danger);">Appraisal expired.</span></p>
+                                </div>
+                            </div>
+                            <div class="h-item">
+                                <div class="h-icon"><i data-lucide="watch"></i></div>
+                                <div class="h-info">
+                                    <h4>Patek Philippe Nautilus 5711</h4>
+                                    <p>Legacy: Designated to <span style="color: var(--gold);">Alexander</span></p>
+                                </div>
+                            </div>
+                            <div class="h-item">
+                                <div class="h-icon"><i data-lucide="gem"></i></div>
+                                <div class="h-info">
+                                    <h4>Cartier Panthère Necklace</h4>
+                                    <p>Paris spa treatment completed. Vaulted.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity & Delegation -->
+                <div class="bottom-grid">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Recent Inventory Activity</h3>
+                        </div>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-icon"><i data-lucide="wine"></i></div>
+                                <div class="activity-text">
+                                    <p><strong>J. Butler</strong> logged <span class="accent">12x Dom Pérignon 2012</span></p>
+                                    <span class="time">London Townhouse • 2 hours ago</span>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon"><i data-lucide="palette"></i></div>
+                                <div class="activity-text">
+                                    <p><strong>M. Curator</strong> updated valuation for <span class="accent">Picasso Sketch</span></p>
+                                    <span class="time">Aspen Chalet • 5 hours ago</span>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon warning"><i data-lucide="wrench"></i></div>
+                                <div class="activity-text">
+                                    <p><strong>System</strong> flag: Engine service due</p>
+                                    <span class="time">M/Y Serenity • 1 day ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel highlight-panel">
+                        <div class="panel-header">
+                            <h3>Quick Links</h3>
+                        </div>
+                        <div class="delegation-actions" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <button class="secondary-btn" id="create-qr-btn"><i data-lucide="link"></i> Create Staff Delegation Link</button>
+                            <button class="secondary-btn" id="create-heir-btn"><i data-lucide="heart-handshake"></i> Create Heir Access Link</button>
+                        </div>
+                    </div>
+                </div>
+                </div> <!-- End Overview View -->
+
+                <!-- Skeleton Views -->
+                <div id="view-estates" class="vault-view" style="display: none; padding-top: 2rem;">
+                    <h2 style="font-family: var(--font-serif); color: var(--gold); font-size: 2rem; margin-bottom: 1rem;">Global Estates</h2>
+                    <p style="color: var(--text-muted);">Interactive map and detailed telemetry of all global properties.</p>
+                </div>
+                
+                <div id="view-mobility" class="vault-view" style="display: none; padding-top: 2rem;">
+                    <h2 style="font-family: var(--font-serif); color: var(--gold); font-size: 2rem; margin-bottom: 1rem;">Mobility Fleet</h2>
+                    <p style="color: var(--text-muted);">Live tracking and maintenance schedules for aviation, maritime, and automotive assets.</p>
+                </div>
+                
+                <div id="view-collections" class="vault-view" style="display: none; padding-top: 2rem;">
+                    <h2 style="font-family: var(--font-serif); color: var(--gold); font-size: 2rem; margin-bottom: 1rem;">Fine Art & Collections</h2>
+                    <p style="color: var(--text-muted);">High-resolution archives and live climate tracking for cellars and galleries.</p>
+                </div>
+                
+                <div id="view-delegation" class="vault-view" style="display: none; padding-top: 2rem;">
+                    <h2 style="font-family: var(--font-serif); color: var(--gold); font-size: 2rem; margin-bottom: 0.5rem;">Staff Delegation</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;">Generate secure, temporary links for staff to submit inventory items to your vault.</p>
+                    
+                    <!-- Create New Link -->
+                    <div class="panel highlight-panel" style="max-width: 700px; margin-bottom: 2rem;">
+                        <div class="panel-header" style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="link" style="color: var(--gold); width: 20px;"></i>
+                            <h3 style="margin: 0;">Create Delegation Link</h3>
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                            <input type="text" id="delegate-label" placeholder="Label (e.g. Butler London, Curator Aspen)" style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text-main); padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; outline: none;">
+                            <button class="btn-primary" id="delegation-view-qr-btn" style="white-space: nowrap;"><i data-lucide="plus"></i> Create Link</button>
+                        </div>
+                        <!-- Generated Link Display -->
+                        <div id="generated-link-box" style="display: none; margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px;">
+                            <p style="color: #10b981; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">✓ Link Created — Send via Secure Channel (e.g. Signal)</p>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="text" id="generated-link-url" readonly style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--gold); padding: 10px 12px; border-radius: 6px; font-size: 0.8rem; font-family: monospace;">
+                                <button class="secondary-btn" onclick="copyLink()" style="white-space: nowrap; padding: 10px 16px;"><i data-lucide="copy"></i> Copy</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Existing Links List -->
+                    <div class="panel" style="max-width: 700px;">
+                        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="list" style="color: var(--gold); width: 20px;"></i>
+                                <h3 style="margin: 0;">Active Links</h3>
+                            </div>
+                            <button class="secondary-btn" onclick="loadDelegates()" style="padding: 6px 12px; font-size: 0.7rem;"><i data-lucide="refresh-cw"></i> Refresh</button>
+                        </div>
+                        <div id="delegates-list" style="margin-top: 1rem;">
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="view-documents" class="vault-view" style="display: none; padding-top: 2rem;">
+                    <h2 style="font-family: var(--font-serif); color: var(--gold); font-size: 2rem; margin-bottom: 1rem;">Encrypted Documents</h2>
+                    <p style="color: var(--text-muted);">Certificates of authenticity, wills, and succession planning.</p>
+                </div>
+                
+                <div id="view-settings" class="vault-view" style="display: none; padding-top: 2rem;">
+                    <h2 style="font-family: var(--font-serif); color: var(--gold); font-size: 2rem; margin-bottom: 1rem;">Vault Settings</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;">Manage your zero-knowledge encryption keys and global preferences.</p>
+                    
+                    <div class="panel highlight-panel" style="max-width: 600px;">
+                        <div class="panel-header">
+                            <h3>Security & Backup</h3>
+                        </div>
+                        <div class="delegation-actions" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                            <button class="btn-primary" onclick="exportVault()" style="width: 100%; justify-content: center;"><i data-lucide="download"></i> Download Full Backup (.omnia)</button>
+                            <button class="secondary-btn" style="width: 100%; justify-content: center; color: var(--danger); border-color: var(--danger);" onclick="if(confirm('Warning: This will permanently delete your local vault data. Continue?')) { localStorage.clear(); location.reload(); }"><i data-lucide="trash-2"></i> Wipe Local Vault</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js?v=13"></script>
+</body>
+</html>

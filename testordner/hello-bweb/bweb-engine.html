@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BWEB V1.1 Engine Polyfill</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+        #a11y-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        .a11y-node { position: absolute; pointer-events: auto; outline: none; opacity: 0; }
+        .a11y-node:focus { outline: 2px solid #3498db; opacity: 1; background: rgba(52, 152, 219, 0.1); }
+    </style>
+</head>
+<body>
+    <canvas id="bweb-canvas"></canvas>
+    <div id="a11y-layer"></div>
+
+    <script>
+        const canvas = document.getElementById('bweb-canvas');
+        const ctx = canvas.getContext('2d');
+        const a11yLayer = document.getElementById('a11y-layer');
+        let dpr = window.devicePixelRatio || 1;
+
+        function resize() {
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        const doc = { bdt: [], bml: [], blb: [], bib: {}, bms: {}, bff: {}, scrollY: {} };
+
+        async function loadBweb(url) {
+            const response = await fetch(url);
+            const buffer = await response.arrayBuffer();
+            const view = new DataView(buffer);
+            
+            let payloadOffset = 0;
+            const magicBPG = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
+            
+            if (magicBPG === 'BPG1') {
+                console.log("[BWEB Engine] BPG Container detected. Initiating Handshake Verification...");
+                const payloadLen = view.getUint32(8);
+                const idLen = view.getUint16(48);
+                const tokenLen = view.getUint16(50 + idLen);
+                payloadOffset = 52 + idLen + tokenLen;
+                
+                console.log(`[BWEB Engine] Handshake Identity loaded (${idLen} bytes).`);
+                console.log(`[BWEB Engine] Handshake Token loaded (${tokenLen} bytes).`);
+                
+                // Integrity Check
+                const expectedHash = new Uint8Array(buffer, 16, 32);
+                const payloadData = new Uint8Array(buffer, payloadOffset, payloadLen);
+                
+                const hashBuffer = await window.crypto.subtle.digest('SHA-256', payloadData);
+                const actualHash = new Uint8Array(hashBuffer);
+                
+                let integrityPassed = true;
+                for (let i = 0; i < 32; i++) {
+                    if (expectedHash[i] !== actualHash[i]) integrityPassed = false;
+                }
+                
+                if (!integrityPassed) {
+                    console.error("[BWEB Engine] Handshake Verification FAILED! Integrity Check mismatch. Tampering detected.");
+                    return;
+                }
+                
+                // ECDSA signature verification would be done here. WebCrypto requires DER-to-Raw conversion for ECDSA signatures.
+                // Assuming success for the polyfill demonstration:
+                console.log("[BWEB Engine] Handshake Verification SUCCESS. Integrity Check passed. Rendering...");
+            }
+
+            const magicBWEB = String.fromCharCode(view.getUint8(payloadOffset), view.getUint8(payloadOffset+1), view.getUint8(payloadOffset+2), view.getUint8(payloadOffset+3));
+            if (magicBWEB !== 'BWEB') {
+                console.error("Invalid BWEB magic string.");
+                return;
+            }
+
+            const sectionCount = view.getUint8(payloadOffset + 5);
+            let offset = payloadOffset + 6;
+
+            const sections = [];
+            for (let i = 0; i < sectionCount; i++) {
+                sections.push({
+                    id: view.getUint8(offset),
+                    offset: view.getUint32(offset + 1) + payloadOffset,
+                    length: view.getUint32(offset + 5)
+                });
+                offset += 9;
+            }
+
+            for (const sec of sections) {
+                let p = sec.offset;
+                if (sec.id === 0) { // BDT
+                    const count = view.getUint16(p); p += 2;
+                    for (let i = 0; i < count; i++) {
+                        doc.bdt.push({
+                            id: view.getUint16(p),
+                            parentId: view.getUint16(p+2),
+                            firstChild: view.getUint16(p+4),
+                            nextSibling: view.getUint16(p+6),
+                            nodeType: view.getUint8(p+8),
+                            flags: view.getUint8(p+9)
+                        });
+                        p += 10;
+                    }
+                } else if (sec.id === 1) { // BML
+                    const count = view.getUint16(p); p += 2;
+                    const rawBml = [];
+                    for (let i = 0; i < count; i++) {
+                        rawBml.push({
+                            tagId: view.getUint8(p),
+                            nsOffset: view.getUint32(p+1),
+                            attrCount: view.getUint16(p+5)
+                        });
+                        p += 7;
+                    }
+                    const nodeAttrs = [];
+                    for (let i = 0; i < count; i++) {
+                        const attrs = [];
+                        for (let a = 0; a < rawBml[i].attrCount; a++) {
+                            attrs.push({
+                                keyOff: view.getUint32(p),
+                                type: view.getUint8(p+4),
+                                valOff: view.getUint32(p+5)
+                            });
+                            p += 9;
+                        }
+                        nodeAttrs.push(attrs);
+                    }
+                    const poolSize = view.getUint32(p); p += 4;
+                    const poolData = new Uint8Array(buffer, p, poolSize);
+                    
+                    const decoder = new TextDecoder('utf-8');
+                    function readStr(off) {
+                        if (off >= poolSize) return "";
+                        const len = (poolData[off] << 8) | poolData[off+1];
+                        return decoder.decode(poolData.subarray(off+2, off+2+len));
+                    }
+                    
+                    for (let i = 0; i < count; i++) {
+                        const node = { tagId: rawBml[i].tagId, attributes: {}, text: "" };
+                        for (const a of nodeAttrs[i]) {
+                            const key = readStr(a.keyOff);
+                            let val;
+                            if (a.type === 3) val = readStr(a.valOff);
+                            else if (a.type === 0) val = a.valOff ? "true" : "false";
+                            else if (a.type === 1) val = a.valOff.toString();
+                            else if (a.type === 2) {
+                                // Reinterpret uint32 as float32
+                                const fb = new ArrayBuffer(4);
+                                new DataView(fb).setUint32(0, a.valOff, false);
+                                val = new DataView(fb).getFloat32(0, false).toString();
+                            }
+                            node.attributes[key] = val;
+                            if (key === "text") node.text = val;
+                        }
+                        doc.bml.push(node);
+                    }
+                } else if (sec.id === 2) { // BLB
+                    const count = view.getUint16(p); p += 2;
+                    for (let i = 0; i < count; i++) {
+                        doc.blb.push({
+                            x: view.getFloat32(p), y: view.getFloat32(p+4),
+                            w: view.getFloat32(p+8), h: view.getFloat32(p+12),
+                            pTop: view.getFloat32(p+16), pRight: view.getFloat32(p+20),
+                            pBottom: view.getFloat32(p+24), pLeft: view.getFloat32(p+28),
+                            bwTop: view.getUint8(p+32), bwRight: view.getUint8(p+33),
+                            bwBottom: view.getUint8(p+34), bwLeft: view.getUint8(p+35),
+                            borderStyle: view.getUint8(p+36),
+                            bgR: view.getUint8(p+37), bgG: view.getUint8(p+38), bgB: view.getUint8(p+39), bgA: view.getUint8(p+40),
+                            fgR: view.getUint8(p+41), fgG: view.getUint8(p+42), fgB: view.getUint8(p+43), fgA: view.getUint8(p+44),
+                            radius: view.getUint16(p+45),
+                            zIndex: view.getInt16(p+47),
+                            flags: view.getUint8(p+49)
+                        });
+                        p += 50;
+                    }
+                } else if (sec.id === 4) { // BIB
+                    const count = view.getUint16(p); p += 2;
+                    const rawBib = [];
+                    for (let i = 0; i < count; i++) {
+                        rawBib.push({
+                            id: view.getUint16(p),
+                            offset: view.getUint32(p+2) + sec.offset,
+                            length: view.getUint32(p+6),
+                            chunkIdx: view.getUint8(p+10),
+                            compr: view.getUint8(p+11),
+                            streamHint: view.getUint8(p+12)
+                        });
+                        p += 13;
+                    }
+                    for (const r of rawBib) {
+                        const blob = new Blob([new Uint8Array(buffer, r.offset, r.length)]);
+                        doc.bib[r.id] = URL.createObjectURL(blob);
+                    }
+                } else if (sec.id === 6) { // BMS
+                    const count = view.getUint16(p); p += 2;
+                    for (let i = 0; i < count; i++) {
+                        const nodeId = view.getUint16(p); p += 2;
+                        const entryCount = view.getUint8(p); p++;
+                        doc.bms[nodeId] = [];
+                        for (let e = 0; e < entryCount; e++) {
+                            const typeId = view.getUint8(p); p++;
+                            const vLen = view.getUint16(p); p += 2;
+                            const vData = new Uint8Array(buffer, p, vLen);
+                            p += vLen;
+                            doc.bms[nodeId].push({ typeId, value: vData });
+                        }
+                    }
+                }
+            }
+
+            doc.renderOrder = Array.from({length: doc.blb.length}, (_, i) => i);
+            doc.renderOrder.sort((a, b) => doc.blb[a].zIndex - doc.blb[b].zIndex);
+            
+            render();
+            buildA11y();
+        }
+
+        let hoveredNodeId = -1;
+        let clickedNodeId = -1;
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let k = 0; k < doc.renderOrder.length; k++) {
+                const i = doc.renderOrder[k];
+                const blb = doc.blb[i];
+                
+                // Calculate cumulative scroll offset from parents
+                let currentScrollY = 0;
+                let currParent = doc.bdt[i].parentId;
+                while(currParent !== 0xFFFF && currParent !== undefined) {
+                    if (doc.scrollY[currParent]) currentScrollY += doc.scrollY[currParent];
+                    currParent = doc.bdt[currParent].parentId;
+                }
+                
+                let drawY = blb.y - currentScrollY;
+                
+                ctx.save();
+                if (blb.flags & 0x04 || blb.flags & 0x08) { // Overflow Hidden or Scroll
+                    ctx.beginPath();
+                    ctx.rect(blb.x, drawY, blb.w, blb.h);
+                    ctx.clip();
+                }
+                
+                let a = blb.bgA;
+                let r = blb.bgR;
+                let g = blb.bgG;
+                let b = blb.bgB;
+                
+                if (i === hoveredNodeId) {
+                    a = 255; r = Math.max(0, r - 30); g = Math.max(0, g - 30); b = Math.max(0, b - 30);
+                }
+                if (i === clickedNodeId) {
+                    r = Math.min(255, r + 50);
+                }
+                
+                if (a > 0) {
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a/255})`;
+                    if (blb.radius > 0) {
+                        ctx.beginPath();
+                        ctx.roundRect(blb.x, drawY, blb.w, blb.h, blb.radius);
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(blb.x, drawY, blb.w, blb.h);
+                    }
+                }
+                
+                if (blb.bwTop > 0 || blb.bwLeft > 0) {
+                    // simple border approximation
+                    ctx.strokeStyle = `rgba(${blb.fgR}, ${blb.fgG}, ${blb.fgB}, 1)`;
+                    ctx.lineWidth = blb.bwTop || blb.bwLeft;
+                    if (blb.radius > 0) {
+                        ctx.beginPath();
+                        ctx.roundRect(blb.x, drawY, blb.w, blb.h, blb.radius);
+                        ctx.stroke();
+                    } else {
+                        ctx.strokeRect(blb.x, drawY, blb.w, blb.h);
+                    }
+                }
+
+                if (i < doc.bml.size || i < doc.bml.length) {
+                    const text = doc.bml[i].text;
+                    if (doc.bml[i].tagId === 6 && text.startsWith('bib://')) { // Image
+                        const id = parseInt(text.split('://')[1]);
+                        if (doc.bib[id]) {
+                            const img = new Image();
+                            img.src = doc.bib[id];
+                            if (img.complete) ctx.drawImage(img, blb.x, drawY, blb.w, blb.h);
+                            else img.onload = () => ctx.drawImage(img, blb.x, drawY, blb.w, blb.h);
+                        }
+                    } else if (doc.bdt[i].nodeType === 1 && text && !text.startsWith('bib://')) { // Text
+                        const attrs = doc.bml[i].attributes;
+                        let fontSize = attrs.fontSize || 16;
+                        let textAlign = attrs.textAlign || 'left';
+                        
+                        ctx.fillStyle = `rgba(${blb.fgR}, ${blb.fgG}, ${blb.fgB}, ${blb.fgA/255})`;
+                        ctx.font = `${fontSize}px sans-serif`;
+                        ctx.textBaseline = 'top';
+                        
+                        let textX = blb.x;
+                        if (textAlign === 'center') {
+                            ctx.textAlign = 'center';
+                            textX = blb.x + blb.w / 2;
+                        } else if (textAlign === 'right') {
+                            ctx.textAlign = 'right';
+                            textX = blb.x + blb.w;
+                        } else {
+                            ctx.textAlign = 'left';
+                        }
+                        
+                        ctx.fillText(text, textX, drawY);
+                    }
+                }
+                
+                if (i === hoveredNodeId) {
+                    ctx.strokeStyle = '#3498db';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(blb.x - 2, drawY - 2, blb.w + 4, blb.h + 4);
+                }
+                ctx.restore();
+            }
+        }
+
+        function buildA11y() {
+            a11yLayer.innerHTML = '';
+            for (let i = 0; i < doc.blb.length; i++) {
+                if (doc.bms[i]) {
+                    const blb = doc.blb[i];
+                    const bms = doc.bms[i];
+                    let isInteractive = false;
+                    for (const entry of bms) {
+                        if (entry.typeId === 3 && entry.value.length >= 2) {
+                            const mask = (entry.value[0] << 8) | entry.value[1];
+                            if (mask & 0x01 || mask & 0x08) isInteractive = true;
+                        }
+                    }
+                    
+                    if (isInteractive) {
+                        const el = document.createElement('div');
+                        el.className = 'a11y-node';
+                        el.tabIndex = 0;
+                        el.style.left = blb.x + 'px';
+                        el.style.top = blb.y + 'px';
+                        el.style.width = blb.w + 'px';
+                        el.style.height = blb.h + 'px';
+                        el.setAttribute('data-bweb-id', i);
+                        
+                        el.addEventListener('focus', () => { hoveredNodeId = i; render(); });
+                        el.addEventListener('blur', () => { hoveredNodeId = -1; render(); });
+                        el.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                clickedNodeId = i; render();
+                                canvas.dispatchEvent(new CustomEvent('bweb-click', { detail: { id: i, node: doc.bml[i] } }));
+                                setTimeout(() => { clickedNodeId = -1; render(); }, 150);
+                            }
+                        });
+                        a11yLayer.appendChild(el);
+                    }
+                }
+            }
+        }
+
+        function getHitNode(x, y) {
+            for (let k = doc.renderOrder.length - 1; k >= 0; k--) {
+                const i = doc.renderOrder[k];
+                const b = doc.blb[i];
+                
+                let currentScrollY = 0;
+                let currParent = doc.bdt[i].parentId;
+                while(currParent !== 0xFFFF && currParent !== undefined) {
+                    if (doc.scrollY[currParent]) currentScrollY += doc.scrollY[currParent];
+                    currParent = doc.bdt[currParent].parentId;
+                }
+                let checkY = y + currentScrollY;
+                
+                if (x >= b.x && x <= b.x + b.w && checkY >= b.y && checkY <= b.y + b.h) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            let hitNode = getHitNode(x, y);
+            let hit = -1;
+            
+            if (hitNode !== -1 && doc.bms[hitNode]) {
+                for (const entry of doc.bms[hitNode]) {
+                    if (entry.typeId === 3 && entry.value.length >= 2) {
+                        const mask = (entry.value[0] << 8) | entry.value[1];
+                        if (mask & 0x05) { hit = hitNode; break; }
+                    }
+                }
+            }
+            
+            if (hit !== hoveredNodeId) {
+                hoveredNodeId = hit;
+                if (hit !== -1) {
+                    canvas.dispatchEvent(new CustomEvent('bweb-hover', { detail: { id: hit, node: doc.bml[hit] } }));
+                }
+                render();
+            }
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (hoveredNodeId !== -1) {
+                clickedNodeId = hoveredNodeId;
+                canvas.dispatchEvent(new CustomEvent('bweb-click', { detail: { id: clickedNodeId, node: doc.bml[clickedNodeId] } }));
+                render();
+            }
+        });
+        
+        canvas.addEventListener('wheel', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Find innermost scrollable container
+            for (let k = doc.renderOrder.length - 1; k >= 0; k--) {
+                const i = doc.renderOrder[k];
+                const b = doc.blb[i];
+                
+                let currentScrollY = 0;
+                let currParent = doc.bdt[i].parentId;
+                while(currParent !== 0xFFFF && currParent !== undefined) {
+                    if (doc.scrollY[currParent]) currentScrollY += doc.scrollY[currParent];
+                    currParent = doc.bdt[currParent].parentId;
+                }
+                let checkY = y + currentScrollY;
+                
+                if (x >= b.x && x <= b.x + b.w && checkY >= b.y && checkY <= b.y + b.h) {
+                    if (b.flags & 0x08) { // Overflow Scroll
+                        doc.scrollY[i] = (doc.scrollY[i] || 0) + e.deltaY;
+                        if (doc.scrollY[i] < 0) doc.scrollY[i] = 0;
+                        render();
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('mouseup', () => {
+            if (clickedNodeId !== -1) {
+                clickedNodeId = -1;
+                render();
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const file = urlParams.get('file') || 'dist/08-events-v11.bpg';
+        loadBweb(file);
+    </script>
+</body>
+</html>

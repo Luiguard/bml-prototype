@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: #f0f0f0; }
+        .tabs { display: flex; border-bottom: 2px solid #ccc; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: none; font-size: 16px; margin-right: 5px; background: #e0e0e0; }
+        .tab-btn.active { background: #3498db; color: white; font-weight: bold; }
+        .tab-content { display: none; background: white; padding: 20px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .tab-content.active { display: block; }
+        .counter-btn { margin-top: 15px; padding: 8px 16px; background: #2ecc71; color: white; border: none; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>BWEB Virtual DOM Test</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" data-target="tab1">Tab 1</button>
+        <button class="tab-btn" data-target="tab2">Tab 2</button>
+        <button class="tab-btn" data-target="tab3">Tab 3</button>
+    </div>
+    
+    <div id="tab1" class="tab-content active">
+        <h2>Welcome to Tab 1</h2>
+        <p>This is the first tab content. It's visible by default.</p>
+        <button id="counterBtn" class="counter-btn">Clicks: 0</button>
+    </div>
+    
+    <div id="tab2" class="tab-content">
+        <h2>Welcome to Tab 2</h2>
+        <p>This is the second tab content. We switched here using JS!</p>
+    </div>
+    
+    <div id="tab3" class="tab-content">
+        <h2>Welcome to Tab 3</h2>
+        <p>This is the third tab content.</p>
+    </div>
+
+    <script>
+        // Vanilla JS that operates as if in a normal DOM
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        for (let i = 0; i < tabBtns.length; i++) {
+            tabBtns[i].addEventListener('click', function(e) {
+                // Remove active classes
+                for (let j = 0; j < tabBtns.length; j++) tabBtns[j].classList.remove('active');
+                for (let j = 0; j < tabContents.length; j++) {
+                    tabContents[j].classList.remove('active');
+                    tabContents[j].style.display = 'none';
+                }
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Show target content
+                const targetId = this.dataset['data-target'];
+                const targetContent = document.getElementById(targetId);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                    targetContent.style.display = 'block';
+                }
+            });
+        }
+        
+        let clicks = 0;
+        const counterBtn = document.getElementById('counterBtn');
+        if (counterBtn) {
+            counterBtn.addEventListener('click', function(e) {
+                clicks++;
+                this.innerText = 'Clicks: ' + clicks;
+            });
+        }
+    </script>
+</body>
+</html>

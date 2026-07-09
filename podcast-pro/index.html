@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Pro | Next-Gen Audio Experience</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+        crossorigin="anonymous"></script>
+
+    
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/podcast-pro/">
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="Offizielle Seite: Podcast Pro | Next-Gen Audio Experience. Erfahren Sie mehr auf https://mediclean-pro.at/podcast-pro.">
+    <meta property="og:title" content="Podcast Pro | Next-Gen Audio Experience">
+    <meta property="og:url" content="https://mediclean-pro.at/podcast-pro/">
+    <meta property="og:type" content="website">
+    
+    <!-- Google Funding Choices -->
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div class="ambient-glow"></div>
+    
+    <nav class="glass-nav">
+        <div class="logo">
+            <i data-lucide="radio" class="pulse-icon"></i>
+            Podcast<span class="accent">Pro</span>
+        </div>
+        <div class="nav-links">
+            <a href="#episoden" class="active">Episoden</a>
+            <a href="#hosts">Hosts</a>
+            <a href="#abonnieren">Abonnieren</a>
+        </div>
+        <button class="btn-primary" onclick="document.getElementById('episoden').scrollIntoView({behavior: 'smooth'})">Jetzt Hören</button>
+    </nav>
+
+    <main class="hero-section" id="episoden">
+        <div class="hero-content">
+            <div class="badge">
+                <span class="live-dot"></span>
+                Neue Episode verfügbar
+            </div>
+            <h1>Stimmen, die<br><span class="gradient-text">bewegen.</span></h1>
+            <p class="subtitle">Tauchen Sie ein in tiefgründige Gespräche, echtes Wissen und Geschichten, die im Gedächtnis bleiben. Der Premium-Podcast für Visionäre.</p>
+            
+            <div class="player-card">
+                <div class="player-info">
+                    <img src="https://images.unsplash.com/photo-1619983081563-430f63602796?q=80&w=300&auto=format&fit=crop" alt="Episode Cover" class="cover-art">
+                    <div>
+                        <div class="ep-number">Episode 42</div>
+                        <h3>Die Zukunft der KI-Technologie</h3>
+                        <div class="author">Podcast Pro</div>
+                    </div>
+                </div>
+                <div class="player-controls">
+                    <button class="control-btn"><i data-lucide="rewind"></i></button>
+                    <button class="play-btn" id="main-play-btn"><i data-lucide="play" fill="currentColor"></i></button>
+                    <button class="control-btn"><i data-lucide="fast-forward"></i></button>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="main-progress"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hero-visual">
+            <div class="audio-waves" id="main-waves">
+                <div class="wave" style="height: 40%"></div>
+                <div class="wave" style="height: 80%"></div>
+                <div class="wave" style="height: 60%"></div>
+                <div class="wave" style="height: 100%"></div>
+                <div class="wave" style="height: 50%"></div>
+                <div class="wave" style="height: 90%"></div>
+                <div class="wave" style="height: 30%"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Episodes List Section -->
+    <section id="alle-episoden" class="content-section" style="padding-top: 2rem;">
+        <div style="max-width: 800px; margin: 0 auto;">
+            <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="list-music"></i> Neueste Episoden</h2>
+            <div id="episodes-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="text-align: center; color: var(--text-muted); padding: 2rem;">Lade Episoden...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="hosts" class="content-section">
+        <h2>Über <span class="gradient-text">Podcast Pro</span></h2>
+        <div class="hosts-grid">
+            <div class="host-card">
+                <div style="width: 100%; height: 200px; background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(236,72,153,0.3)); border-radius: 12px; display: grid; place-items: center;">
+                    <i data-lucide="mic" style="width: 48px; height: 48px; color: rgba(255,255,255,0.5);"></i>
+                </div>
+                <h3>Premium Audio</h3>
+                <p>Professionelle Produktion in Studioqualität für ein erstklassiges Hörerlebnis.</p>
+            </div>
+            <div class="host-card">
+                <div style="width: 100%; height: 200px; background: linear-gradient(135deg, rgba(236,72,153,0.3), rgba(251,146,60,0.3)); border-radius: 12px; display: grid; place-items: center;">
+                    <i data-lucide="brain" style="width: 48px; height: 48px; color: rgba(255,255,255,0.5);"></i>
+                </div>
+                <h3>Tiefgründige Themen</h3>
+                <p>Von Technologie bis Philosophie – Gespräche, die den Horizont erweitern.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Subscribe Section -->
+    <section id="abonnieren" class="content-section">
+        <h2>Jetzt <span class="gradient-text">Abonnieren</span></h2>
+        <p class="subtitle" style="margin: 0 auto 3rem auto; text-align: center;">Verpasse keine neue Episode. Höre uns auf deiner Lieblingsplattform oder melde dich für den Newsletter an.</p>
+        
+        <div class="platform-grid">
+            <a href="https://open.spotify.com" target="_blank" class="platform-card">
+                <i data-lucide="headphones"></i>
+                <span>Spotify</span>
+            </a>
+            <a href="https://podcasts.apple.com" target="_blank" class="platform-card">
+                <i data-lucide="podcast"></i>
+                <span>Apple Podcasts</span>
+            </a>
+            <a href="https://youtube.com" target="_blank" class="platform-card">
+                <i data-lucide="play-circle"></i>
+                <span>YouTube</span>
+            </a>
+        </div>
+
+        <div style="max-width: 500px; margin: 3rem auto 0;">
+            <form id="subscribe-form" onsubmit="handleSubscribe(event)" style="display: flex; gap: 0.75rem;">
+                <input type="email" id="subscribe-email" required placeholder="deine@email.com" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 18px; color: #fff; font-size: 0.9rem; outline: none;">
+                <button type="submit" class="btn-primary" id="subscribe-btn">Abonnieren</button>
+            </form>
+            <p id="subscribe-success" class="hidden" style="color: #10b981; font-size: 0.85rem; text-align: center; margin-top: 1rem;">✓ Erfolgreich angemeldet! Du erhältst eine Bestätigung per E-Mail.</p>
+            <p id="subscribe-error" class="hidden" style="color: #ef4444; font-size: 0.85rem; text-align: center; margin-top: 1rem;"></p>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Podcast Pro - Ein Service von MediClean Pro. | <a href="host.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.8rem; margin-left: 10px;">Host Login</a></p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // Smooth Scrolling for Nav Links
+        document.querySelectorAll('.nav-links a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const target = document.getElementById(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+
+        // Main Play Button Logic
+        const playBtn = document.getElementById('main-play-btn');
+        const waves = document.getElementById('main-waves');
+        
+        playBtn.addEventListener('click', () => {
+            if (!currentAudio) {
+                // If nothing is playing, try to play the first episode in the list
+                const firstEpBtn = document.querySelector('#episodes-list button');
+                if (firstEpBtn) firstEpBtn.click();
+                return;
+            }
+            
+            if (currentAudio.paused) {
+                currentAudio.play();
+                playBtn.innerHTML = '<i data-lucide="pause" fill="currentColor"></i>';
+                waves.classList.add('playing');
+            } else {
+                currentAudio.pause();
+                playBtn.innerHTML = '<i data-lucide="play" fill="currentColor"></i>';
+                waves.classList.remove('playing');
+            }
+            lucide.createIcons();
+        });
+
+        // Subscribe Form
+        async function handleSubscribe(e) {
+            e.preventDefault();
+            const email = document.getElementById('subscribe-email').value;
+            const btn = document.getElementById('subscribe-btn');
+            const successEl = document.getElementById('subscribe-success');
+            const errorEl = document.getElementById('subscribe-error');
+            successEl.classList.add('hidden');
+            errorEl.classList.add('hidden');
+            
+            btn.textContent = '...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, source: 'podcast-pro' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    successEl.classList.remove('hidden');
+                    document.getElementById('subscribe-email').value = '';
+                } else {
+                    errorEl.textContent = data.message || 'Fehler beim Anmelden.';
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                // Fallback: store locally if server unavailable
+                const subs = JSON.parse(localStorage.getItem('podcast_subs') || '[]');
+                if (!subs.includes(email)) subs.push(email);
+                localStorage.setItem('podcast_subs', JSON.stringify(subs));
+                successEl.classList.remove('hidden');
+            }
+
+            btn.textContent = 'Abonnieren';
+            btn.disabled = false;
+        }
+
+        // Fetch and Render Episodes
+        async function loadPublicEpisodes() {
+            const listEl = document.getElementById('episodes-list');
+            try {
+                const res = await fetch('/api/podcast_episodes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'podcast_episodes'})
+                });
+                const data = await res.json();
+                if (data.success && data.episodes.length > 0) {
+                    listEl.innerHTML = data.episodes.map(ep => `
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div>
+                                    <h3 style="margin-bottom: 0.5rem; font-size: 1.2rem;">${ep.title}</h3>
+                                    <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">${new Date(ep.created_at).toLocaleDateString()}</div>
+                                </div>
+                                <button onclick="playEpisode('${ep.audio_url}', '${ep.title.replace(/'/g, "\\'")}')" style="background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer; flex-shrink: 0;">
+                                    <i data-lucide="play" fill="currentColor"></i>
+                                </button>
+                            </div>
+                            <p style="color: #d1d5db; font-size: 0.95rem; line-height: 1.5;">${ep.description}</p>
+                        </div>
+                    `).join('');
+                    lucide.createIcons();
+                } else {
+                    listEl.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">Noch keine Episoden verfügbar.</div>';
+                }
+            } catch (err) {
+                listEl.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 2rem;">Fehler beim Laden der Episoden.</div>';
+            }
+        }
+
+        // Global Player Logic
+        let currentAudio = null;
+        function playEpisode(url, title) {
+            const playBtn = document.getElementById('main-play-btn');
+            const waves = document.getElementById('main-waves');
+
+            if (currentAudio) {
+                if (currentAudio.src.includes(url)) {
+                    // Just toggle play/pause if it's the same episode
+                    if (currentAudio.paused) {
+                        currentAudio.play();
+                        playBtn.innerHTML = '<i data-lucide="pause" fill="currentColor"></i>';
+                        waves.classList.add('playing');
+                    } else {
+                        currentAudio.pause();
+                        playBtn.innerHTML = '<i data-lucide="play" fill="currentColor"></i>';
+                        waves.classList.remove('playing');
+                    }
+                    lucide.createIcons();
+                    return;
+                }
+                currentAudio.pause();
+            }
+            
+            // Update Hero section to show playing episode
+            document.querySelector('.hero-content h3').textContent = title;
+            document.querySelector('.hero-content .ep-number').textContent = 'Jetzt spielt';
+            
+            currentAudio = new Audio(url);
+            currentAudio.play();
+            
+            playBtn.innerHTML = '<i data-lucide="pause" fill="currentColor"></i>';
+            waves.classList.add('playing');
+            lucide.createIcons();
+            
+            currentAudio.onended = () => {
+                playBtn.innerHTML = '<i data-lucide="play" fill="currentColor"></i>';
+                waves.classList.remove('playing');
+                lucide.createIcons();
+            };
+        }
+
+        // Initialize
+        loadPublicEpisodes();
+    </script>
+</body>
+</html>

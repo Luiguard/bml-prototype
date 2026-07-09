@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Mandant ────────────────────────────────────────────────────────────────────
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  config    String   @default("{}") // Changed from Json to String for SQLite compatibility
+  theme     String   @default("{}") // Changed from Json to String for SQLite compatibility
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users      User[]
+  workModels WorkModel[]
+  projects   Project[]
+  auditLogs  AuditLog[]
+
+  @@map("tenants")
+}
+
+// ─── Benutzer ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         String   @default("EMPLOYEE")
+  modules      String   @default("[]") // Changed from Json to String for SQLite compatibility
+  locale       String   @default("de")
+  workModelId  String?
+  active           Boolean   @default(true)
+  onboarded        Boolean   @default(false)
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  tenant       Tenant      @relation(fields: [tenantId], references: [id])
+  workModel    WorkModel?  @relation(fields: [workModelId], references: [id])
+  timeEntries  TimeEntry[]
+  shifts       Shift[]
+  businessTrips BusinessTrip[]
+  absences     Absence[]     @relation("AbsenceUser")
+  approvals    Absence[]     @relation("AbsenceApprover")
+  documents    Document[]    @relation("DocumentOwner")
+  uploads      Document[]    @relation("DocumentUploader")
+  notifications Notification[]
+  sickReports  SickReport[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("users")
+}
+
+// ─── Arbeitszeitmodell ──────────────────────────────────────────────────────────
+
+model WorkModel {
+  id                String        @id @default(cuid())
+  tenantId          String
+  name              String
+  type              String        @default("FLEX")
+  weeklyHours       Float         @default(38.5)
+  coreTimeStart     String?
+  coreTimeEnd       String?
+  maxDailyHours     Float         @default(10)
+  minBreakMinutes   Int           @default(30)
+  overtimeThreshold Float         @default(38.5)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  users  User[]
+
+  @@index([tenantId])
+  @@map("work_models")
+}
+
+// ─── Zeitbuchung ────────────────────────────────────────────────────────────────
+
+model TimeEntry {
+  id          String          @id @default(cuid())
+  userId      String
+  type        String          @default("WORK")
+  start       DateTime
+  end         DateTime?
+  duration    Int?
+  projectId   String?
+  locationLat Float?
+  locationLon Float?
+  status      String          @default("ACTIVE")
+  offlineSync Boolean         @default(false)
+  note        String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
+
+  @@index([userId, start])
+  @@index([userId, status])
+  @@map("time_entries")
+}
+
+// ─── Dienst / Schicht ───────────────────────────────────────────────────────────
+
+model Shift {
+  id           String    @id @default(cuid())
+  userId       String
+  date         DateTime
+  startTime    String
+  endTime      String
+  breakMinutes Int       @default(0)
+  type         String    @default("NORMAL")
+  location     String?
+  locationLat  Float?
+  locationLon  Float?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, date])
+  @@map("shifts")
+}
+
+// ─── Abwesenheit ────────────────────────────────────────────────────────────────
+
+model Absence {
+  id          String       @id @default(cuid())
+  userId      String
+  type        String
+  startDate   DateTime
+  endDate     DateTime
+  status      String       @default("PENDING")
+  approverId  String?
+  escalatedAt DateTime?
+  comment     String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user     User  @relation("AbsenceUser", fields: [userId], references: [id])
+  approver User? @relation("AbsenceApprover", fields: [approverId], references: [id])
+
+  @@index([userId, startDate])
+  @@index([status])
+  @@map("absences")
+}
+
+// ─── Krankenstand ───────────────────────────────────────────────────────────────
+
+model SickReport {
+  id              String           @id @default(cuid())
+  userId          String
+  startDate       DateTime
+  expectedEndDate DateTime?
+  actualEndDate   DateTime?
+  reason          String?
+  attachmentUrl   String?
+  status          String           @default("OPEN")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("sick_reports")
+}
+
+// ─── Dienstreise ────────────────────────────────────────────────────────────────
+
+model BusinessTrip {
+  id          String             @id @default(cuid())
+  userId      String
+  destination String
+  purpose     String?
+  startDate   DateTime
+  endDate     DateTime
+  kilometers  Float?
+  expenses    Float?
+  status      String             @default("PLANNED")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, startDate])
+  @@map("business_trips")
+}
+
+// ─── Dokument ───────────────────────────────────────────────────────────────────
+
+model Document {
+  id            String       @id @default(cuid())
+  userId        String
+  uploadedById  String
+  type          String       @default("OTHER")
+  filename      String
+  s3Key         String
+  mimeType      String
+  sizeBytes     Int
+  version       Int          @default(1)
+  parentId      String?
+  readAt        DateTime?
+  confirmedAt   DateTime?
+  createdAt     DateTime     @default(now())
+
+  user       User       @relation("DocumentOwner", fields: [userId], references: [id])
+  uploadedBy User       @relation("DocumentUploader", fields: [uploadedById], references: [id])
+  parent     Document?  @relation("DocumentVersions", fields: [parentId], references: [id])
+  versions   Document[] @relation("DocumentVersions")
+
+  @@index([userId, type])
+  @@map("documents")
+}
+
+// ─── Projekt ────────────────────────────────────────────────────────────────────
+
+model Project {
+  id         String   @id @default(cuid())
+  tenantId   String
+  name       String
+  costCenter String?
+  hourlyRate Float?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  timeEntries TimeEntry[]
+
+  @@index([tenantId])
+  @@map("projects")
+}
+
+// ─── Audit-Log (Append-only) ────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String?
+  action    String
+  entity    String
+  entityId  String
+  oldValue  String?  // Changed from Json to String for SQLite compatibility
+  newValue  String?  // Changed from Json to String for SQLite compatibility
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, timestamp])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
+
+// ─── Benachrichtigung ───────────────────────────────────────────────────────────
+
+model Notification {
+  id      String              @id @default(cuid())
+  userId  String
+  type    String
+  title   String
+  body    String
+  channel String              @default("IN_APP")
+  sentAt  DateTime            @default(now())
+  readAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, sentAt])
+  @@map("notifications")
+}

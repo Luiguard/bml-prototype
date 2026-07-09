@@ -3,146 +3,705 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karriere Converter - Lebensläufe perfekt konvertieren</title>
-    <meta name="description" content="Konvertieren Sie Ihren Lebenslauf in das perfekte Format für Ihre Bewerbung. Höchste Präzision für DOCX, PDF und mehr.">
+    <title>Lebenslauf Optimizer & Creator — ConvertAny Career Suite</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="canonical" href="https://mediclean-pro.at/convertany/career.html">
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="Lebenslauf erstellen oder optimieren — KI-gestützte Analyse mit manuellem Editor. Keine Halluzinationen, volle Kontrolle.">
+    <meta name="google-adsense-account" content="ca-pub-5875560078954393">
     <style>
-        .career-badge {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-            padding: 4px 12px;
-            border-radius: 99px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 1rem;
+        .mode-switch {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+            padding: 4px; background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); margin-bottom: 2rem;
         }
-        .benefit-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border-color);
-            padding: 1.5rem;
-            border-radius: 16px;
-            text-align: left;
-            margin-top: 2rem;
+        .mode-btn {
+            padding: 0.9rem 1rem; border: none; background: transparent;
+            color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;
+            border-radius: var(--radius-md); cursor: pointer;
+            transition: all 0.3s ease; display: flex; align-items: center;
+            justify-content: center; gap: 10px; font-family: inherit;
         }
-        .benefit-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 1rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+        .mode-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white; font-weight: 600;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
         }
-        .benefit-item i {
-            color: var(--success-color);
-            width: 18px;
+        .mode-panel { display: none; animation: fadeSlideUp 0.4s ease-out; }
+        .mode-panel.active { display: block; }
+
+        .editor-card {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl); padding: 2rem;
+            animation: fadeSlideUp 0.4s ease-out;
         }
+        .editor-card h3 {
+            font-size: 1.1rem; margin-bottom: 0.25rem;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .editor-subtitle {
+            font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;
+        }
+
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.75rem; padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .section-label {
+            font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.06em;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-label i { width: 16px; height: 16px; color: var(--accent-primary); }
+        .add-btn {
+            font-size: 0.75rem; padding: 5px 12px;
+            background: rgba(139, 92, 246, 0.12); color: var(--accent-primary);
+            border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 6px;
+            cursor: pointer; font-weight: 600; transition: all 0.2s;
+            font-family: inherit;
+        }
+        .add-btn:hover { background: rgba(139, 92, 246, 0.2); }
+
+        .entry-row {
+            display: grid; gap: 8px; margin-bottom: 10px;
+            padding: 12px; border-radius: var(--radius-md);
+            background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.04);
+            transition: border-color 0.2s;
+            position: relative;
+        }
+        .entry-row:hover { border-color: rgba(139, 92, 246, 0.15); }
+        .entry-row-3col { grid-template-columns: 140px 1fr 1fr; }
+        .entry-row-4col { grid-template-columns: 140px 1fr 1fr 32px; }
+        .entry-row-desc { grid-template-columns: 1fr; margin-top: -4px; }
+
+        .entry-row input, .entry-row textarea {
+            background: rgba(15,15,20,0.6); border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 8px 10px;
+            border-radius: 6px; font-family: inherit; font-size: 0.85rem;
+            outline: none; transition: border-color 0.2s;
+        }
+        .entry-row input:focus, .entry-row textarea:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .remove-btn {
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            background: transparent; border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 6px; color: var(--text-muted); cursor: pointer;
+            font-size: 0.9rem; transition: all 0.2s; align-self: center;
+        }
+        .remove-btn:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
+
+        .field-group { margin-bottom: 1.25rem; }
+        .field-group > label {
+            display: block; font-size: 0.78rem; font-weight: 500;
+            color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.04em; margin-bottom: 6px;
+        }
+
+        input[type="text"], input[type="email"], input[type="tel"] {
+            width: 100%; background: rgba(15,15,20,0.8);
+            border: 1px solid var(--border-color); color: var(--text-primary);
+            padding: 0.65rem 0.875rem; border-radius: var(--radius-sm);
+            outline: none; font-family: inherit; font-size: 0.875rem;
+            transition: border-color 0.25s ease;
+        }
+        input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus {
+            border-color: var(--accent-primary);
+        }
+
+        textarea.field-textarea {
+            width: 100%; background: rgba(15,15,20,0.8);
+            border: 1px solid var(--border-color); color: var(--text-primary);
+            padding: 0.65rem 0.875rem; border-radius: var(--radius-sm);
+            outline: none; font-family: inherit; font-size: 0.875rem;
+            resize: vertical; min-height: 70px; transition: border-color 0.25s;
+        }
+        textarea.field-textarea:focus { border-color: var(--accent-primary); }
+
+        .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .fields-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+        @media (max-width: 640px) {
+            .fields-grid, .fields-grid-3 { grid-template-columns: 1fr; }
+            .entry-row-3col, .entry-row-4col { grid-template-columns: 1fr; }
+        }
+
+        .divider {
+            height: 1px; background: var(--border-color);
+            margin: 1.5rem 0;
+        }
+
+        .generate-bar {
+            display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px;
+            align-items: end; margin-top: 1.5rem;
+        }
+        @media (max-width: 640px) { .generate-bar { grid-template-columns: 1fr; } }
+
+        .toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 1000; display: flex; flex-direction: column; gap: 0.5rem; }
     </style>
 </head>
 <body>
-    <nav style="display: flex; gap: 2rem; margin-bottom: 2rem; animation: fadeIn 0.8s ease-out;">
-        <a href="index.html" style="color: var(--text-secondary); text-decoration: none; font-weight: 500; transition: color 0.3s;">Home</a>
-        <a href="career.html" style="color: var(--text-primary); text-decoration: none; font-weight: 600; border-bottom: 2px solid var(--accent-primary);">Karriere & Lebenslauf</a>
-    </nav>
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="toast-container" id="toast-container"></div>
 
-    <div class="container">
-        <header>
-            <span class="career-badge">Career Suite</span>
-            <h1>Lebenslauf Optimizer</h1>
-            <p class="subtitle">Wir sorgen dafür, dass Ihr Lebenslauf auf jedem Gerät perfekt aussieht.</p>
-        </header>
+    <div class="app-wrapper">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <a href="index.html" class="logo" style="text-decoration:none;">
+                <i data-lucide="shuffle" style="width:22px;height:22px"></i>
+                ConvertAny
+            </a>
+            <div class="top-actions">
+                <a href="index.html" class="icon-btn" title="Zurück zum Converter">
+                    <i data-lucide="arrow-left" style="width:18px;height:18px"></i>
+                </a>
+            </div>
+        </div>
 
-        <main>
+        <!-- Hero -->
+        <div class="hero-card">
+            <span class="career-badge"><i data-lucide="award" style="width:12px;height:12px"></i> Career Suite</span>
+            <h1>Lebenslauf Studio</h1>
+            <p class="subtitle">Erstellen Sie Ihren perfekten Lebenslauf von Grund auf — oder optimieren Sie einen bestehenden mit KI-Analyse.</p>
+        </div>
+
+        <!-- Mode Switch -->
+        <div class="mode-switch">
+            <button class="mode-btn active" data-mode="create">
+                <i data-lucide="pen-line" style="width:18px;height:18px"></i>
+                Neu erstellen
+            </button>
+            <button class="mode-btn" data-mode="upload">
+                <i data-lucide="upload" style="width:18px;height:18px"></i>
+                Bestehenden optimieren
+            </button>
+        </div>
+
+        <!-- ═══════ MODE 1: CREATE ═══════ -->
+        <div class="mode-panel active" id="panel-create">
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem; text-align:center;">
+                Füllen Sie die Felder aus und generieren Sie sofort ein professionelles PDF.
+            </p>
+        </div>
+
+        <!-- ═══════ MODE 2: UPLOAD ═══════ -->
+        <div class="mode-panel" id="panel-upload">
+            <!-- Drop Zone -->
             <div id="drop-zone" class="drop-zone">
-                <input type="file" id="file-input" hidden>
+                <input type="file" id="file-input" hidden accept=".pdf,.docx,.doc,.odt,.rtf">
                 <div class="drop-zone-content">
                     <i data-lucide="file-user" class="pulse" style="color: var(--accent-primary);"></i>
-                    <p class="drop-zone-text">Lebenslauf hierher ziehen oder <span style="color: var(--accent-primary); font-weight: 600;">durchsuchen</span></p>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">Unterstützt PDF, DOCX, ODT, RTF</p>
+                    <p class="drop-zone-text">Lebenslauf hierher ziehen oder <span>durchsuchen</span></p>
+                    <p class="drop-zone-hint">PDF, DOCX, ODT, RTF</p>
                 </div>
             </div>
 
-            <div id="file-info" class="file-info">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <i data-lucide="file-text" id="file-icon"></i>
-                        <span id="file-name" style="font-weight: 500;">lebenslauf.docx</span>
+            <!-- File Info -->
+            <div id="file-info" style="display:none;" class="file-queue">
+                <div class="file-item" id="file-item-display">
+                    <div class="file-item-icon doc">DOK</div>
+                    <div class="file-item-info">
+                        <div class="file-item-name" id="file-name"></div>
+                        <div class="file-item-meta" id="file-size"></div>
+                        <div class="file-item-progress"><div class="file-item-progress-fill" id="file-progress"></div></div>
                     </div>
-                    <span id="file-size" style="color: var(--text-secondary); font-size: 0.8rem;">450 KB</span>
+                    <span class="file-item-status pending" id="file-status">Bereit</span>
                 </div>
             </div>
 
-            <div class="options-grid">
-                <div class="option-group">
-                    <label for="design-style">Design & Layout</label>
+            <!-- Extract Button -->
+            <button id="extract-btn" class="btn-primary" disabled style="margin-bottom:1.5rem;">
+                <i data-lucide="scan-search" style="width:18px;height:18px"></i>
+                KI-Analyse starten
+            </button>
+
+            <!-- Loading -->
+            <div id="loading-indicator" style="display:none; text-align:center; padding:2.5rem;">
+                <div style="margin-bottom:1rem;">
+                    <i data-lucide="brain" class="spin" style="width:40px;height:40px;color:var(--accent-primary);"></i>
+                </div>
+                <p style="color:var(--text-secondary);font-size:0.95rem;">KI analysiert Ihren Lebenslauf...</p>
+                <p style="color:var(--text-muted);font-size:0.8rem;margin-top:0.5rem;">Dies dauert ca. 10-15 Sekunden</p>
+            </div>
+        </div>
+
+        <!-- ═══════ SHARED EDITOR ═══════ -->
+        <div id="resume-editor" class="editor-card">
+            <h3 id="editor-title">Lebenslauf-Daten</h3>
+            <p class="editor-subtitle" id="editor-subtitle">Füllen Sie alle relevanten Felder aus. Leere Felder werden im fertigen Lebenslauf weggelassen.</p>
+
+            <!-- Persönliche Daten -->
+            <div class="section-header">
+                <span class="section-label"><i data-lucide="user"></i> Persönliche Daten</span>
+            </div>
+            
+            <div style="display:flex; gap:20px; align-items:flex-start; margin-bottom:1.25rem;">
+                <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:8px;">
+                    <div style="width:100px; height:100px; border-radius:50%; background:rgba(15,15,20,0.6); border:1px dashed var(--border-color); display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; cursor:pointer;" onclick="document.getElementById('re-photo-input').click()">
+                        <img id="re-photo-preview" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
+                        <i id="re-photo-icon" data-lucide="camera" style="width:24px; height:24px; color:var(--text-muted);"></i>
+                    </div>
+                    <span style="font-size:0.7rem; color:var(--text-muted); cursor:pointer;" onclick="document.getElementById('re-photo-input').click()">Foto ändern</span>
+                    <input type="file" id="re-photo-input" hidden accept="image/*">
+                </div>
+                
+                <div style="flex-grow:1;">
+                    <div class="fields-grid" style="margin-bottom:1.25rem;">
+                        <div class="field-group"><label>Vollständiger Name *</label><input type="text" id="re-name" placeholder="Max Mustermann"></div>
+                        <div class="field-group"><label>Berufsbezeichnung</label><input type="text" id="re-title" placeholder="z.B. Softwareentwickler"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="fields-grid-3 fields-grid" style="margin-bottom:1.25rem;">
+                <div class="field-group"><label>Email</label><input type="email" id="re-email" placeholder="name@firma.at"></div>
+                <div class="field-group"><label>Telefon</label><input type="tel" id="re-phone" placeholder="+43 660 ..."></div>
+                <div class="field-group"><label>Standort</label><input type="text" id="re-location" placeholder="Wien, Österreich"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Über mich -->
+            <div class="section-header">
+                <span class="section-label"><i data-lucide="text"></i> Über mich</span>
+            </div>
+            <div class="field-group">
+                <label>Kurze Zusammenfassung (optional — leer lassen zum Weglassen)</label>
+                <textarea class="field-textarea" id="re-summary" rows="3" placeholder="Erfahrener Entwickler mit 5 Jahren Berufserfahrung in..."></textarea>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Berufserfahrung -->
+            <div class="section-header">
+                <span class="section-label"><i data-lucide="briefcase"></i> Berufserfahrung</span>
+                <button type="button" class="add-btn" onclick="addExpRow()">
+                    <i data-lucide="plus" style="width:12px;height:12px;display:inline;vertical-align:-2px;"></i> Eintrag
+                </button>
+            </div>
+            <div id="re-experience"></div>
+
+            <div class="divider"></div>
+
+            <!-- Ausbildung -->
+            <div class="section-header">
+                <span class="section-label"><i data-lucide="graduation-cap"></i> Ausbildung</span>
+                <button type="button" class="add-btn" onclick="addEduRow()">
+                    <i data-lucide="plus" style="width:12px;height:12px;display:inline;vertical-align:-2px;"></i> Eintrag
+                </button>
+            </div>
+            <div id="re-education"></div>
+
+            <div class="divider"></div>
+
+            <!-- Skills -->
+            <div class="section-header">
+                <span class="section-label"><i data-lucide="star"></i> Skills & Kenntnisse</span>
+            </div>
+            <div class="field-group">
+                <label>Kommagetrennt eingeben</label>
+                <input type="text" id="re-skills" placeholder="Python, Docker, MS Office, Projektmanagement, ...">
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Sprachen -->
+            <div class="section-header">
+                <span class="section-label"><i data-lucide="languages"></i> Sprachen</span>
+                <button type="button" class="add-btn" onclick="addLangRow()">
+                    <i data-lucide="plus" style="width:12px;height:12px;display:inline;vertical-align:-2px;"></i> Sprache
+                </button>
+            </div>
+            <div id="re-languages"></div>
+
+            <div class="divider"></div>
+
+            <!-- Generate Bar -->
+            <div class="generate-bar">
+                <div class="field-group" style="margin:0;">
+                    <label>Design</label>
                     <select id="design-style">
-                        <option value="original">Originales Layout beibehalten</option>
-                        <option value="modern" selected>✨ Modernes Premium-Design</option>
-                        <option value="classic">Klassisches Business-Design</option>
-                        <option value="creative">Kreatives Portfolio-Design</option>
+                        <option value="modern" selected>✨ Modern</option>
+                        <option value="classic">Klassisch</option>
+                        <option value="creative">Kreativ</option>
                     </select>
                 </div>
-                <div class="option-group">
-                    <label for="output-format">Zielformat</label>
+                <div class="field-group" style="margin:0;">
+                    <label>Format</label>
                     <select id="output-format">
-                        <option value="">Wähle Format...</option>
-                        <option value="pdf">PDF (Empfohlen)</option>
+                        <option value="pdf" selected>PDF</option>
                         <option value="docx">Word (.docx)</option>
                         <option value="odt">LibreOffice (.odt)</option>
                     </select>
                 </div>
+                <button id="generate-btn" class="btn-success" style="height:44px;white-space:nowrap;width:auto;padding:0 2rem;">
+                    <i data-lucide="file-check" style="width:18px;height:18px"></i>
+                    Generieren
+                </button>
             </div>
+        </div>
 
-            <button id="convert-btn" class="convert-btn" disabled>Lebenslauf optimieren</button>
+        <!-- Download -->
+        <div id="download-area" style="margin-top:1.5rem; display:none;">
+            <a id="download-link" href="#" class="btn-success">
+                <i data-lucide="download" style="width:18px;height:18px"></i>
+                Lebenslauf herunterladen
+            </a>
+        </div>
 
-            <div id="progress-container" class="progress-container">
-                <div class="progress-bar">
-                    <div id="progress-fill" class="progress-fill"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span id="status-text" class="status-text">Analysiere Dokumentenstruktur...</span>
-                    <span id="percentage-text" class="status-text">0%</span>
-                </div>
+        <!-- How it works -->
+        <div class="features-grid" style="margin-top:2rem;">
+            <div class="feature-card">
+                <i data-lucide="shield-check" style="width:24px;height:24px"></i>
+                <h3>Keine Halluzinationen</h3>
+                <p>Die KI extrahiert nur, was tatsächlich im Dokument steht. Sie prüfen und korrigieren alles.</p>
             </div>
-
-            <div id="download-area" style="margin-top: 2rem; display: none;">
-                <a id="download-link" href="#" class="convert-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--success-color);">
-                    <i data-lucide="check-circle"></i>
-                    Optimierten Lebenslauf laden
-                </a>
+            <div class="feature-card">
+                <i data-lucide="eye" style="width:24px;height:24px"></i>
+                <h3>Volle Kontrolle</h3>
+                <p>Bearbeiten, ergänzen oder löschen Sie jeden einzelnen Eintrag vor der Generierung.</p>
             </div>
-
-            <div class="benefit-card">
-                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Warum hier konvertieren?</h3>
-                <div class="benefit-item">
-                    <i data-lucide="check"></i>
-                    <span>Layout-Garantie: Schriften und Abstände bleiben erhalten.</span>
-                </div>
-                <div class="benefit-item">
-                    <i data-lucide="shield-check"></i>
-                    <span>Datenschutz: Dateien werden nach der Konvertierung gelöscht.</span>
-                </div>
-                <div class="benefit-item">
-                    <i data-lucide="zap"></i>
-                    <span>ATS-Friendly: Optimierte PDF-Struktur für Bewerbungssysteme.</span>
-                </div>
+            <div class="feature-card">
+                <i data-lucide="zap" style="width:24px;height:24px"></i>
+                <h3>ATS-Optimiert</h3>
+                <p>Saubere PDF-Struktur die von jedem Bewerbungssystem erkannt wird.</p>
             </div>
-        </main>
+        </div>
 
-        <footer>
-            <p>&copy; 2026 Universal Converter Career Suite.</p>
+        <footer class="app-footer">
+            <p>&copy; 2026 ConvertAny Career Suite — Schnell, sicher, professionell.</p>
         </footer>
     </div>
 
-    <script src="script.js"></script>
     <script>
-        lucide.createIcons();
-        // Update status text for career context
-        const originalBtn = document.getElementById('convert-btn');
-        originalBtn.addEventListener('click', () => {
-            document.getElementById('status-text').textContent = "Konvertiere für maximale Kompatibilität...";
+    lucide.createIcons();
+
+    // ── Toast ──
+    function toast(msg, type = 'info') {
+        const c = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        el.className = `toast ${type}`;
+        el.innerHTML = `<span>${msg}</span>`;
+        c.appendChild(el);
+        setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 3500);
+    }
+
+    function formatBytes(b) {
+        if (!b) return '0 B';
+        const k = 1024, s = ['B','KB','MB','GB'];
+        const i = Math.floor(Math.log(b) / Math.log(k));
+        return (b / Math.pow(k, i)).toFixed(1) + ' ' + s[i];
+    }
+
+    // ── Mode Switch ──
+    let currentMode = 'create';
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            currentMode = btn.dataset.mode;
+            document.getElementById('panel-' + currentMode).classList.add('active');
+
+            if (currentMode === 'create') {
+                document.getElementById('editor-title').textContent = 'Lebenslauf-Daten';
+                document.getElementById('editor-subtitle').textContent = 'Füllen Sie alle relevanten Felder aus. Leere Felder werden im fertigen Lebenslauf weggelassen.';
+                document.getElementById('resume-editor').style.display = 'block';
+            } else {
+                document.getElementById('editor-title').textContent = 'Extrahierte Daten prüfen & bearbeiten';
+                document.getElementById('editor-subtitle').textContent = 'Prüfen Sie sorgfältig alle Felder. Löschen Sie Falsches, ergänzen Sie Fehlendes.';
+                if (!hasExtracted) {
+                    document.getElementById('resume-editor').style.display = 'none';
+                }
+            }
+            document.getElementById('download-area').style.display = 'none';
         });
+    });
+
+    // ── File Handling ──
+    let selectedFile = null;
+    let hasExtracted = false;
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+    fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); fileInput.value = ''; });
+
+    function handleFile(file) {
+        selectedFile = file;
+        hasExtracted = false;
+        document.getElementById('file-name').textContent = file.name;
+        document.getElementById('file-size').textContent = formatBytes(file.size);
+        document.getElementById('file-info').style.display = 'block';
+        document.getElementById('file-progress').style.width = '0%';
+        document.getElementById('file-status').textContent = 'Bereit';
+        document.getElementById('file-status').className = 'file-item-status pending';
+        document.getElementById('file-item-display').className = 'file-item';
+        document.getElementById('extract-btn').disabled = false;
+        document.getElementById('resume-editor').style.display = 'none';
+        document.getElementById('download-area').style.display = 'none';
+        toast('Lebenslauf geladen', 'success');
+        lucide.createIcons();
+    }
+
+    // ── Experience Rows ──
+    function addExpRow(data = {}) {
+        const div = document.createElement('div');
+        div.className = 'entry-row entry-row-4col';
+        div.innerHTML = `
+            <input type="text" class="exp-date" placeholder="Zeitraum" value="${esc(data.date)}">
+            <input type="text" class="exp-role" placeholder="Position / Rolle" value="${esc(data.role)}">
+            <input type="text" class="exp-company" placeholder="Unternehmen" value="${esc(data.company)}">
+            <button type="button" class="remove-btn" onclick="this.closest('.entry-row').remove()" title="Entfernen">✕</button>
+        `;
+        if (data.description) {
+            const d = document.createElement('div');
+            d.className = 'entry-row entry-row-desc';
+            d.style.cssText = 'margin-top:-10px;margin-bottom:10px;padding-top:0;border:none;background:transparent;';
+            d.innerHTML = `<input type="text" class="exp-desc" placeholder="Beschreibung (optional)" value="${esc(data.description)}">`;
+            document.getElementById('re-experience').appendChild(div);
+            document.getElementById('re-experience').appendChild(d);
+            return;
+        }
+        document.getElementById('re-experience').appendChild(div);
+    }
+
+    // ── Education Rows ──
+    function addEduRow(data = {}) {
+        const div = document.createElement('div');
+        div.className = 'entry-row entry-row-4col';
+        div.innerHTML = `
+            <input type="text" class="edu-date" placeholder="Zeitraum" value="${esc(data.date)}">
+            <input type="text" class="edu-degree" placeholder="Abschluss / Kurs" value="${esc(data.degree)}">
+            <input type="text" class="edu-inst" placeholder="Institution" value="${esc(data.institution)}">
+            <button type="button" class="remove-btn" onclick="this.closest('.entry-row').remove()" title="Entfernen">✕</button>
+        `;
+        document.getElementById('re-education').appendChild(div);
+    }
+
+    // ── Language Rows ──
+    function addLangRow(data = {}) {
+        const div = document.createElement('div');
+        div.className = 'entry-row';
+        div.style.cssText = 'grid-template-columns: 1fr 1fr 32px;';
+        div.innerHTML = `
+            <input type="text" class="lang-name" placeholder="Sprache" value="${esc(data.name)}">
+            <select class="lang-level" style="background:rgba(15,15,20,0.6);border:1px solid var(--border-color);color:var(--text-primary);padding:8px 10px;border-radius:6px;font-size:0.85rem;font-family:inherit;">
+                <option value="" ${!data.level ? 'selected' : ''}>Niveau wählen...</option>
+                <option value="Muttersprache" ${data.level === 'Muttersprache' ? 'selected' : ''}>Muttersprache</option>
+                <option value="Fließend (C2)" ${data.level === 'Fließend (C2)' ? 'selected' : ''}>Fließend (C2)</option>
+                <option value="Verhandlungssicher (C1)" ${data.level === 'Verhandlungssicher (C1)' ? 'selected' : ''}>Verhandlungssicher (C1)</option>
+                <option value="Gut (B2)" ${data.level === 'Gut (B2)' ? 'selected' : ''}>Gut (B2)</option>
+                <option value="Mittelstufe (B1)" ${data.level === 'Mittelstufe (B1)' ? 'selected' : ''}>Mittelstufe (B1)</option>
+                <option value="Grundkenntnisse (A2)" ${data.level === 'Grundkenntnisse (A2)' ? 'selected' : ''}>Grundkenntnisse (A2)</option>
+                <option value="Anfänger (A1)" ${data.level === 'Anfänger (A1)' ? 'selected' : ''}>Anfänger (A1)</option>
+            </select>
+            <button type="button" class="remove-btn" onclick="this.closest('.entry-row').remove()" title="Entfernen">✕</button>
+        `;
+        document.getElementById('re-languages').appendChild(div);
+    }
+
+    function esc(s) { return (s || '').replace(/"/g, '&quot;'); }
+
+    // Initialize with empty rows
+    addExpRow(); addEduRow(); addLangRow();
+
+    // ── Photo Handling ──
+    let currentPhotoBase64 = "";
+    document.getElementById('re-photo-input').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            currentPhotoBase64 = ev.target.result;
+            document.getElementById('re-photo-preview').src = currentPhotoBase64;
+            document.getElementById('re-photo-preview').style.display = 'block';
+            document.getElementById('re-photo-icon').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // ── Populate from extracted data ──
+    function populateEditor(d) {
+        if (d.photo) {
+            currentPhotoBase64 = d.photo;
+            document.getElementById('re-photo-preview').src = currentPhotoBase64;
+            document.getElementById('re-photo-preview').style.display = 'block';
+            document.getElementById('re-photo-icon').style.display = 'none';
+        } else {
+            currentPhotoBase64 = "";
+            document.getElementById('re-photo-preview').style.display = 'none';
+            document.getElementById('re-photo-icon').style.display = 'block';
+            document.getElementById('re-photo-preview').src = "";
+        }
+        
+        document.getElementById('re-name').value = d.name || '';
+        document.getElementById('re-title').value = d.title || '';
+        document.getElementById('re-email').value = d.email || '';
+        document.getElementById('re-phone').value = d.phone || '';
+        document.getElementById('re-location').value = d.location || '';
+        document.getElementById('re-summary').value = d.summary || '';
+        document.getElementById('re-skills').value = (d.skills || []).join(', ');
+
+        document.getElementById('re-experience').innerHTML = '';
+        (d.experience || []).forEach(e => addExpRow(e));
+        if (!d.experience?.length) addExpRow();
+
+        document.getElementById('re-education').innerHTML = '';
+        (d.education || []).forEach(e => addEduRow(e));
+        if (!d.education?.length) addEduRow();
+
+        document.getElementById('re-languages').innerHTML = '';
+        if (d.languages && d.languages.length) {
+            d.languages.forEach(l => addLangRow(l));
+        } else {
+            addLangRow();
+        }
+    }
+
+    // ── Collect data from editor ──
+    function collectData() {
+        const skills = document.getElementById('re-skills').value.split(',').map(s => s.trim()).filter(s => s);
+
+        const experience = [];
+        const expRows = document.querySelectorAll('#re-experience .entry-row-4col');
+        expRows.forEach(row => {
+            const date = row.querySelector('.exp-date')?.value?.trim() || '';
+            const role = row.querySelector('.exp-role')?.value?.trim() || '';
+            const company = row.querySelector('.exp-company')?.value?.trim() || '';
+            const descEl = row.nextElementSibling;
+            const desc = descEl?.classList?.contains('entry-row-desc') ? (descEl.querySelector('.exp-desc')?.value?.trim() || '') : '';
+            if (role || company) experience.push({ date, role, company, description: desc });
+        });
+
+        const education = [];
+        document.querySelectorAll('#re-education .entry-row').forEach(row => {
+            const date = row.querySelector('.edu-date')?.value?.trim() || '';
+            const degree = row.querySelector('.edu-degree')?.value?.trim() || '';
+            const institution = row.querySelector('.edu-inst')?.value?.trim() || '';
+            if (degree || institution) education.push({ date, degree, institution });
+        });
+
+        const languages = [];
+        document.querySelectorAll('#re-languages .entry-row').forEach(row => {
+            const name = row.querySelector('.lang-name')?.value?.trim() || '';
+            const level = row.querySelector('.lang-level')?.value || '';
+            if (name) languages.push({ name, level });
+        });
+
+        return {
+            photo: currentPhotoBase64,
+            name: document.getElementById('re-name').value.trim(),
+            title: document.getElementById('re-title').value.trim(),
+            email: document.getElementById('re-email').value.trim(),
+            phone: document.getElementById('re-phone').value.trim(),
+            location: document.getElementById('re-location').value.trim(),
+            summary: document.getElementById('re-summary').value.trim(),
+            skills, experience, education, languages
+        };
+    }
+
+    // ── Step 1: Extract ──
+    document.getElementById('extract-btn').addEventListener('click', async () => {
+        if (!selectedFile) return;
+        const btn = document.getElementById('extract-btn');
+        btn.disabled = true;
+
+        document.getElementById('loading-indicator').style.display = 'block';
+        document.getElementById('resume-editor').style.display = 'none';
+        document.getElementById('download-area').style.display = 'none';
+        document.getElementById('file-progress').style.width = '40%';
+        document.getElementById('file-status').textContent = 'Analysiert...';
+        document.getElementById('file-status').className = 'file-item-status converting';
+        document.getElementById('file-item-display').className = 'file-item';
+        lucide.createIcons();
+
+        const fd = new FormData();
+        fd.append('file', selectedFile);
+
+        try {
+            const res = await fetch('magic-extract', { method: 'POST', body: fd });
+            const result = await res.json();
+            if (result.success && result.data) {
+                hasExtracted = true;
+                populateEditor(result.data);
+                document.getElementById('resume-editor').style.display = 'block';
+                document.getElementById('editor-title').textContent = 'Extrahierte Daten prüfen & bearbeiten';
+                document.getElementById('editor-subtitle').textContent = 'Prüfen Sie sorgfältig alle Felder. Löschen Sie Falsches, ergänzen Sie Fehlendes.';
+                document.getElementById('file-progress').style.width = '100%';
+                document.getElementById('file-status').textContent = 'Fertig';
+                document.getElementById('file-status').className = 'file-item-status done';
+                document.getElementById('file-item-display').className = 'file-item done';
+                toast('Daten erfolgreich extrahiert — bitte prüfen!', 'success');
+            } else {
+                throw new Error(result.error || 'Extraktion fehlgeschlagen');
+            }
+        } catch (err) {
+            document.getElementById('file-status').textContent = 'Fehler';
+            document.getElementById('file-status').className = 'file-item-status error';
+            document.getElementById('file-item-display').className = 'file-item error';
+            document.getElementById('file-progress').style.width = '100%';
+            toast('Fehler: ' + err.message, 'error');
+        }
+
+        document.getElementById('loading-indicator').style.display = 'none';
+        btn.disabled = false;
+        lucide.createIcons();
+    });
+
+    // ── Step 2: Generate ──
+    document.getElementById('generate-btn').addEventListener('click', async () => {
+        const data = collectData();
+        if (!data.name) {
+            toast('Bitte mindestens den Namen eingeben.', 'error');
+            document.getElementById('re-name').focus();
+            return;
+        }
+
+        const format = document.getElementById('output-format').value || 'pdf';
+        const style = document.getElementById('design-style').value;
+        const btn = document.getElementById('generate-btn');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader" class="spin" style="width:18px;height:18px"></i> Generiere...';
+        lucide.createIcons();
+        document.getElementById('download-area').style.display = 'none';
+
+        try {
+            const res = await fetch('magic-generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ format, style, data })
+            });
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const baseName = selectedFile ? selectedFile.name.replace(/\.[^.]+$/, '') : (data.name || 'Lebenslauf');
+                const dl = document.getElementById('download-link');
+                dl.href = url;
+                dl.download = `${baseName}_optimiert.${format}`;
+                document.getElementById('download-area').style.display = 'block';
+                toast('Lebenslauf erfolgreich generiert!', 'success');
+            } else {
+                throw new Error('Generierung fehlgeschlagen');
+            }
+        } catch (err) {
+            toast('Fehler: ' + err.message, 'error');
+        }
+
+        btn.innerHTML = '<i data-lucide="file-check" style="width:18px;height:18px"></i> Generieren';
+        btn.disabled = false;
+        lucide.createIcons();
+    });
     </script>
 </body>
 </html>

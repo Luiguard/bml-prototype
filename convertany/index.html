@@ -3,91 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Converter - Alles konvertieren</title>
-    <meta name="description" content="Konvertieren Sie Word zu PDF, LibreOffice zu Word, Videos und mehr mit unserem premium Online-Tool.">
-    <link rel="stylesheet" href="styles.css">
-    <!-- Lucide Icons -->
+    <title>ConvertAny — Universeller Datei-Converter</title>
+        <link rel="stylesheet" href="styles.css?v=2">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <meta name="google-adsense-account" content="ca-pub-5875560078954393">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5875560078954393" crossorigin="anonymous"></script>
+
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/convertany/">
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="Offizielle Seite: ConvertAny — Universeller Datei-Converter. Erfahren Sie mehr auf https://mediclean-pro.at/convertany.">
+    <meta property="og:title" content="ConvertAny — Universeller Datei-Converter">
+    <meta property="og:url" content="https://mediclean-pro.at/convertany/">
+    <meta property="og:type" content="website">
+    
+    <!-- Google Funding Choices -->
+    <script async src="https://fundingchoicesmessages.google.com/i/pub-5875560078954393?ers=1"></script>
+    <script>(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
 </head>
 <body>
-    <nav style="display: flex; gap: 2rem; margin-bottom: 2rem; animation: fadeIn 0.8s ease-out;">
-        <a href="index.html" style="color: var(--text-primary); text-decoration: none; font-weight: 600; border-bottom: 2px solid var(--accent-primary);">Home</a>
-        <a href="career.html" style="color: var(--text-secondary); text-decoration: none; font-weight: 500; transition: color 0.3s;">Karriere & Lebenslauf</a>
-    </nav>
-    <div class="container">
-        <header>
-            <h1>Universal Converter</h1>
-            <p class="subtitle">Konvertieren Sie Dokumente und Videos in Sekunden.</p>
-        </header>
+    <!-- Background Effects -->
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
-        <main>
-            <div id="drop-zone" class="drop-zone">
-                <input type="file" id="file-input" hidden>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="app-wrapper">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="logo">
+                <i data-lucide="shuffle" style="width:22px;height:22px"></i>
+                ConvertAny
+            </div>
+            <div class="top-actions">
+                <button class="icon-btn" id="history-toggle-btn" title="Verlauf">
+                    <i data-lucide="clock" style="width:18px;height:18px"></i>
+                </button>
+                <button class="icon-btn" id="clear-all-btn" title="Alles zurücksetzen">
+                    <i data-lucide="rotate-ccw" style="width:18px;height:18px"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-nav" id="tab-nav">
+            <button class="tab-btn active" data-tab="converter">
+                <i data-lucide="repeat" style="width:16px;height:16px"></i>
+                Converter
+            </button>
+            <button class="tab-btn" data-tab="images">
+                <i data-lucide="image" style="width:16px;height:16px"></i>
+                Bilder-Tools
+            </button>
+            <button class="tab-btn" onclick="window.location.href='career.html'">
+                <i data-lucide="file-user" style="width:16px;height:16px"></i>
+                Karriere
+            </button>
+            <button class="tab-btn" data-tab="translator">
+                <i data-lucide="languages" style="width:16px;height:16px"></i>
+                PDF Übersetzer
+            </button>
+        </nav>
+
+        <!-- ═══════════ TAB 1: CONVERTER ═══════════ -->
+        <div class="tab-panel active" id="panel-converter">
+            <div class="hero-card">
+                <span class="hero-badge"><i data-lucide="zap" style="width:12px;height:12px"></i> Universell</span>
+                <h1>Alles konvertieren</h1>
+                <p class="subtitle">Dokumente, Videos, Audio und Bilder — ziehen Sie Ihre Dateien und wir erledigen den Rest.</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row" id="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-formats">50+</div>
+                    <div class="stat-label">Formate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-converted">0</div>
+                    <div class="stat-label">Konvertiert</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-saved">0 MB</div>
+                    <div class="stat-label">Verarbeitet</div>
+                </div>
+            </div>
+
+            <!-- Drop Zone -->
+            <div id="drop-zone-main" class="drop-zone">
+                <input type="file" id="file-input-main" hidden multiple>
                 <div class="drop-zone-content">
                     <i data-lucide="upload-cloud" class="pulse"></i>
-                    <p class="drop-zone-text">Dateien hierher ziehen oder <span style="color: var(--accent-primary); font-weight: 600;">durchsuchen</span></p>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">Word, PDF, ODT, MP4, WebM...</p>
+                    <p class="drop-zone-text">Dateien hierher ziehen oder <span>durchsuchen</span></p>
+                    <p class="drop-zone-hint">Mehrere Dateien möglich · Keine Größenbeschränkung</p>
                 </div>
             </div>
 
-            <div id="file-info" class="file-info">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <i data-lucide="file-text" id="file-icon"></i>
-                        <span id="file-name" style="font-weight: 500;">document.docx</span>
+            <!-- File Queue -->
+            <div class="file-queue" id="file-queue-main"></div>
+
+            <!-- File Analysis -->
+            <div class="file-analysis" id="file-analysis-main">
+                <div class="options-title">Datei-Analyse</div>
+                <div class="analysis-grid" id="analysis-grid-main"></div>
+            </div>
+
+            <!-- Options -->
+            <div class="options-panel" id="options-main">
+                <div class="options-title">Konvertierungsoptionen</div>
+                <div class="options-grid">
+                    <div class="option-group">
+                        <label for="output-format-main">Zielformat</label>
+                        <select id="output-format-main">
+                            <option value="">Wähle Format...</option>
+                        </select>
                     </div>
-                    <span id="file-size" style="color: var(--text-secondary); font-size: 0.8rem;">2.4 MB</span>
+                    <div class="option-group" id="quality-group-main" style="display:none">
+                        <label for="quality-main">Qualität</label>
+                        <select id="quality-main">
+                            <option value="original">Original</option>
+                            <option value="high">Hoch (1080p / 320kbps)</option>
+                            <option value="medium">Mittel (720p / 192kbps)</option>
+                            <option value="low">Kompakt (480p / 128kbps)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="options-grid">
-                <div class="option-group">
-                    <label for="output-format">Zielformat</label>
-                    <select id="output-format">
-                        <option value="">Wähle Format...</option>
-                        <optgroup label="Dokumente">
-                            <option value="pdf">PDF (.pdf)</option>
-                            <option value="docx">Word (.docx)</option>
-                            <option value="odt">LibreOffice (.odt)</option>
-                        </optgroup>
-                        <optgroup label="Video">
-                            <option value="mp4">MP4 (.mp4)</option>
-                            <option value="webm">WebM (.webm)</option>
-                            <option value="mkv">MKV (.mkv)</option>
-                        </optgroup>
-                    </select>
-                </div>
-            </div>
+            <!-- Convert Button -->
+            <button id="convert-btn-main" class="btn-primary" disabled>
+                <i data-lucide="zap" style="width:18px;height:18px"></i>
+                Jetzt konvertieren
+            </button>
 
-            <button id="convert-btn" class="convert-btn" disabled>Jetzt konvertieren</button>
-
-            <div id="progress-container" class="progress-container">
-                <div class="progress-bar">
-                    <div id="progress-fill" class="progress-fill"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span id="status-text" class="status-text">Wird verarbeitet...</span>
-                    <span id="percentage-text" class="status-text">0%</span>
-                </div>
-            </div>
-
-            <div id="download-area" style="margin-top: 2rem; display: none;">
-                <a id="download-link" href="#" class="convert-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--success-color);">
-                    <i data-lucide="download"></i>
+            <!-- Download Area -->
+            <div id="download-area-main" style="margin-top:1rem;display:none">
+                <a id="download-link-main" href="#" class="btn-success">
+                    <i data-lucide="download" style="width:18px;height:18px"></i>
                     Datei herunterladen
                 </a>
             </div>
-        </main>
 
-        <footer>
-            <p>&copy; 2026 Universal Converter. Schnell, Sicher, Einfach.</p>
+            <!-- Features -->
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i data-lucide="layers" style="width:24px;height:24px"></i>
+                    <h3>Batch-Modus</h3>
+                    <p>Mehrere Dateien gleichzeitig konvertieren</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="shield-check" style="width:24px;height:24px"></i>
+                    <h3>Privatsphäre</h3>
+                    <p>Dateien werden automatisch gelöscht</p>
+                </div>
+                <div class="feature-card">
+                    <i data-lucide="gauge" style="width:24px;height:24px"></i>
+                    <h3>Blitzschnell</h3>
+                    <p>Server-seitige Verarbeitung in Sekunden</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ TAB 2: IMAGE TOOLS ═══════════ -->
+        <div class="tab-panel" id="panel-images">
+            <div class="hero-card">
+                <span class="hero-badge" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.2);color:var(--success-color)">
+                    <i data-lucide="sparkles" style="width:12px;height:12px"></i> Bilder-Suite
+                </span>
+                <h1>Bilder & PDF Tools</h1>
+                <p class="subtitle">Konvertieren, komprimieren und skalieren Sie Bilder (und komprimieren Sie große PDF-Dateien).</p>
+            </div>
+
+            <!-- Image Tool Mode Selector -->
+            <div class="tab-nav" style="margin-bottom:1.5rem" id="image-mode-nav">
+                <button class="tab-btn active" data-imgmode="convert">Format ändern</button>
+                <button class="tab-btn" data-imgmode="compress">Komprimieren</button>
+                <button class="tab-btn" data-imgmode="resize">Skalieren</button>
+            </div>
+
+            <!-- Drop Zone Images -->
+            <div id="drop-zone-img" class="drop-zone">
+                <input type="file" id="file-input-img" hidden accept="image/*,.pdf" multiple>
+                <div class="drop-zone-content">
+                    <i data-lucide="image-plus" class="pulse" style="color:var(--success-color)"></i>
+                    <p class="drop-zone-text">Dateien hierher ziehen oder <span>durchsuchen</span></p>
+                    <p class="drop-zone-hint">Bilder & PDFs (PDF nur für Komprimierung)</p>
+                </div>
+            </div>
+
+            <!-- Image File Queue -->
+            <div class="file-queue" id="file-queue-img"></div>
+
+            <!-- Image Options: Convert -->
+            <div class="options-panel" id="options-img-convert">
+                <div class="options-title">Format-Konvertierung</div>
+                <div class="options-grid">
+                    <div class="option-group">
+                        <label for="img-target-format">Zielformat</label>
+                        <select id="img-target-format">
+                            <option value="">Wähle Format...</option>
+                            <option value="png">PNG</option>
+                            <option value="jpg">JPG</option>
+                            <option value="webp">WebP</option>
+                            <option value="gif">GIF</option>
+                            <option value="tiff">TIFF</option>
+                            <option value="bmp">BMP</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Options: Compress -->
+            <div class="options-panel" id="options-img-compress" style="display:none">
+                <div class="options-title">Komprimierung</div>
+                <div class="slider-group">
+                    <label>Qualität</label>
+                    <div class="slider-row">
+                        <input type="range" id="img-quality" min="10" max="100" value="80">
+                        <span class="slider-value" id="img-quality-value">80%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Options: Resize -->
+            <div class="options-panel" id="options-img-resize" style="display:none">
+                <div class="options-title">Größe ändern</div>
+                <div class="options-grid">
+                    <div class="option-group">
+                        <label for="img-resize-preset">Preset</label>
+                        <select id="img-resize-preset">
+                            <option value="custom">Benutzerdefiniert</option>
+                            <option value="1920x1080">Full HD (1920×1080)</option>
+                            <option value="1280x720">HD (1280×720)</option>
+                            <option value="1080x1080">Instagram (1080×1080)</option>
+                            <option value="1200x630">Facebook/OG (1200×630)</option>
+                            <option value="800x600">Web Standard (800×600)</option>
+                            <option value="256x256">Thumbnail (256×256)</option>
+                        </select>
+                    </div>
+                    <div class="option-group" id="custom-size-group">
+                        <label for="img-width">Breite (px)</label>
+                        <input type="number" id="img-width" placeholder="z.B. 1920" min="1" max="10000">
+                    </div>
+                    <div class="option-group" id="custom-height-group">
+                        <label for="img-height">Höhe (px)</label>
+                        <input type="number" id="img-height" placeholder="z.B. 1080" min="1" max="10000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Action Button -->
+            <button id="img-action-btn" class="btn-primary" disabled>
+                <i data-lucide="wand-2" style="width:18px;height:18px"></i>
+                Bilder verarbeiten
+            </button>
+
+            <!-- Image Download -->
+            <div id="download-area-img" style="margin-top:1rem;display:none">
+                <a id="download-link-img" href="#" class="btn-success">
+                    <i data-lucide="download" style="width:18px;height:18px"></i>
+                    Bild herunterladen
+                </a>
+            </div>
+        </div>
+
+
+
+        <!-- ═══════════ TAB 4: PDF TRANSLATOR ═══════════ -->
+        <div class="tab-panel" id="panel-translator">
+            <div class="hero-card">
+                <span class="career-badge" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.2);color:#3b82f6">
+                    <i data-lucide="languages" style="width:12px;height:12px"></i> AI Translator
+                </span>
+                <h1>PDF Übersetzer</h1>
+                <p class="subtitle">Übersetzen Sie PDFs vollautomatisch in jede unterstützte Sprache unter Beibehaltung des Original-Layouts (Dank lokaler KI).</p>
+            </div>
+
+            <!-- Drop Zone Translator -->
+            <div id="drop-zone-translator" class="drop-zone">
+                <input type="file" id="file-input-translator" hidden accept=".pdf">
+                <div class="drop-zone-content">
+                    <i data-lucide="file-text" class="pulse" style="color:#3b82f6"></i>
+                    <p class="drop-zone-text">PDF-Datei hierher ziehen oder <span>durchsuchen</span></p>
+                    <p class="drop-zone-hint">Nur PDF · Keine Größenbeschränkung</p>
+                </div>
+            </div>
+
+            <!-- File Queue -->
+            <div class="file-queue" id="file-queue-translator"></div>
+
+            <!-- Language Options -->
+            <div class="options-panel visible" id="options-translator" style="margin-top: 1rem;">
+                <div class="options-title">Sprachauswahl</div>
+                <div class="options-grid">
+                    <div class="option-group">
+                        <label for="lang-source">Ausgangssprache</label>
+                        <select id="lang-source">
+                            <option value="de" selected>Deutsch</option>
+                            <option value="en">Englisch</option>
+                            <option value="es">Spanisch</option>
+                            <option value="fr">Französisch</option>
+                            <option value="it">Italienisch</option>
+                            <option value="sk">Slowakisch</option>
+                            <option value="cs">Tschechisch</option>
+                            <option value="pl">Polnisch</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label for="lang-target">Zielsprache</label>
+                        <select id="lang-target">
+                            <option value="sk" selected>Slowakisch</option>
+                            <option value="de">Deutsch</option>
+                            <option value="en">Englisch</option>
+                            <option value="es">Spanisch</option>
+                            <option value="fr">Französisch</option>
+                            <option value="it">Italienisch</option>
+                            <option value="cs">Tschechisch</option>
+                            <option value="pl">Polnisch</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Translate Button -->
+            <button id="translate-btn" class="btn-primary" disabled style="background:#3b82f6; margin-top: 1rem;">
+                <i data-lucide="languages" style="width:18px;height:18px"></i>
+                PDF übersetzen
+            </button>
+
+            <!-- Translator Loading State -->
+            <div id="translator-loading" style="display:none; text-align:center; padding:2rem;">
+                <div style="color:#3b82f6; margin-bottom:1rem;">
+                    <i data-lucide="loader-2" style="width:32px;height:32px; animation:spin 1s linear infinite;"></i>
+                </div>
+                <p style="color:var(--text-secondary)">PDF wird übersetzt. Dies kann je nach Größe einige Minuten dauern...</p>
+            </div>
+
+            <div id="download-area-translator" style="margin-top:1rem;display:none">
+                <a id="download-link-translator" href="#" class="btn-success">
+                    <i data-lucide="download" style="width:18px;height:18px"></i>
+                    Übersetztes PDF laden
+                </a>
+            </div>
+        </div>
+
+        <!-- ═══════════ HISTORY PANEL (hidden by default) ═══════════ -->
+        <div class="history-panel" id="history-panel" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <div class="options-title" style="margin:0">Konvertierungs-Verlauf</div>
+                <button class="btn-secondary" id="clear-history-btn">Verlauf löschen</button>
+            </div>
+            <div id="history-list"><p style="color:var(--text-muted);font-size:0.85rem">Noch keine Konvertierungen.</p></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 ConvertAny — Schnell, Sicher, Universell.</p>
         </footer>
     </div>
 
-    <script src="script.js"></script>
-    <script>
-        // Initialize icons
-        lucide.createIcons();
-    </script>
+    <script src="script.js?v=6"></script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>

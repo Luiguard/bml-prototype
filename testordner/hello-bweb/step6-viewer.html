@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Step 6 Verifikation</title>
+    <style>
+        body { background: #f0f0f0; display: flex; justify-content: center; padding: 40px; }
+        canvas { background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: default; }
+    </style>
+</head>
+<body>
+    <canvas id="bwebCanvas" width="800" height="800"></canvas>
+    
+    <script>
+    const FLAG_CLICKABLE = 1;
+
+    async function verifyBweb() {
+        try {
+            const res = await fetch('dist/hello.bweb');
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            const buffer = await res.arrayBuffer();
+            const view = new DataView(buffer);
+            
+            // Parse Header
+            let bdtOffset = 0, bmlOffset = 0, blbOffset = 0;
+            const sectionCount = view.getUint8(5);
+            let headerPos = 6;
+            for (let i = 0; i < sectionCount; i++) {
+                const type = view.getUint8(headerPos);
+                if (type === 0) bdtOffset = view.getUint32(headerPos + 1);
+                if (type === 1) bmlOffset = view.getUint32(headerPos + 1);
+                if (type === 2) blbOffset = view.getUint32(headerPos + 1);
+                headerPos += 9;
+            }
+            
+            // 0. Parse BDT
+            const nodesCount = view.getUint16(bdtOffset);
+            const nodes = Array(nodesCount);
+            let bdtPos = bdtOffset + 2;
+            for (let i = 0; i < nodesCount; i++) {
+                nodes[i] = {
+                    id: view.getUint16(bdtPos),
+                    parentId: view.getUint16(bdtPos + 2),
+                    firstChildId: view.getUint16(bdtPos + 4),
+                    nextSiblingId: view.getUint16(bdtPos + 6),
+                    flags: view.getUint8(bdtPos + 8),
+                    // defaults to be filled:
+                    tagId: 0, text: '', layout: null
+                };
+                bdtPos += 9;
+            }
+            
+            // 1. Parse BML
+            let bmlPos = bmlOffset + 2; // skip node count (we already know it)
+            for (let i = 0; i < nodesCount; i++) {
+                nodes[i].tagId = view.getUint8(bmlPos);
+                nodes[i].textOffset = view.getUint32(bmlPos + 1);
+                nodes[i].textLength = view.getUint16(bmlPos + 5);
+                bmlPos += 7;
+            }
+            
+            const textPoolSize = view.getUint32(bmlPos); bmlPos += 4;
+            const textPoolBuffer = new Uint8Array(buffer, bmlPos, textPoolSize);
+            const decoder = new TextDecoder('utf-8');
+            for (let i = 0; i < nodesCount; i++) {
+                if (nodes[i].textLength > 0) {
+                    nodes[i].text = decoder.decode(textPoolBuffer.subarray(nodes[i].textOffset, nodes[i].textOffset + nodes[i].textLength));
+                }
+            }
+            
+            // 2. Parse BLB
+            let blbPos = blbOffset + 2; // skip node count
+            for (let i = 0; i < nodesCount; i++) {
+                nodes[i].layout = {
+                    x: view.getFloat32(blbPos),
+                    y: view.getFloat32(blbPos + 4),
+                    w: view.getFloat32(blbPos + 8),
+                    h: view.getFloat32(blbPos + 12),
+                    size: view.getUint8(blbPos + 16),
+                    r: view.getUint8(blbPos + 17),
+                    g: view.getUint8(blbPos + 18),
+                    b: view.getUint8(blbPos + 19)
+                };
+                blbPos += 20;
+            }
+
+            // Draw
+            const canvas = document.getElementById('bwebCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < nodesCount; i++) {
+                const node = nodes[i];
+                const lay = node.layout;
+                
+                if (lay.w === 0 && lay.h === 0 && lay.size === 0) continue;
+
+                if (node.tagId === 1 || node.tagId === 2) { // H1 or P
+                    ctx.font = `${node.tagId === 1 ? 'bold ' : ''}${lay.size}px sans-serif`;
+                    ctx.fillStyle = `rgb(${lay.r}, ${lay.g}, ${lay.b})`;
+                    ctx.fillText(node.text, lay.x, lay.y);
+                } 
+                else if (node.tagId === 3 || node.tagId === 4) { // DIV or BUTTON
+                    if (lay.w > 0 && lay.h > 0) {
+                        ctx.fillStyle = node.tagId === 4 ? `rgb(${lay.r}, ${lay.g}, ${lay.b})` : "#ffffff";
+                        ctx.strokeStyle = node.tagId === 4 ? `rgb(${lay.r}, ${lay.g}, ${lay.b})` : `rgb(${lay.r}, ${lay.g}, ${lay.b})`;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.roundRect(lay.x, lay.y, lay.w, lay.h, 8);
+                        ctx.fill();
+                        ctx.stroke();
+                        
+                        if (node.tagId === 4) { // Button text
+                            ctx.font = "bold 16px sans-serif";
+                            ctx.fillStyle = "#ffffff";
+                            ctx.textAlign = "center";
+                            ctx.textBaseline = "middle";
+                            ctx.fillText(node.text, lay.x + lay.w / 2, lay.y + lay.h / 2);
+                            ctx.textAlign = "start";
+                            ctx.textBaseline = "alphabetic";
+                        }
+                    }
+                }
+            }
+            
+            // Interaction
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                // Hit testing (backwards to hit top elements first, though here order doesn't matter much)
+                for (let i = nodesCount - 1; i >= 0; i--) {
+                    const node = nodes[i];
+                    if (node.flags & FLAG_CLICKABLE) {
+                        const lay = node.layout;
+                        // For texts, y is baseline, but for boxes y is top. We only have a button box here.
+                        if (mouseX >= lay.x && mouseX <= lay.x + lay.w &&
+                            mouseY >= lay.y && mouseY <= lay.y + lay.h) {
+                            
+                            console.log(`Button clicked (nodeId=${node.id}, text="${node.text}")`);
+                            alert(`Button clicked (nodeId=${node.id})`);
+                            break; // Stop at first hit
+                        }
+                    }
+                }
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                let isPointer = false;
+                
+                for (let i = nodesCount - 1; i >= 0; i--) {
+                    const node = nodes[i];
+                    if (node.flags & FLAG_CLICKABLE) {
+                        const lay = node.layout;
+                        if (mouseX >= lay.x && mouseX <= lay.x + lay.w &&
+                            mouseY >= lay.y && mouseY <= lay.y + lay.h) {
+                            isPointer = true;
+                            break;
+                        }
+                    }
+                }
+                
+                canvas.style.cursor = isPointer ? 'pointer' : 'default';
+            });
+            
+            console.log("BDT + Interaktion geladen.");
+            
+        } catch (e) {
+            console.error("Verification failed:", e);
+        }
+    }
+    
+    verifyBweb();
+    </script>
+</body>
+</html>

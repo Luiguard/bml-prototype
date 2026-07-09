@@ -1,0 +1,730 @@
+{
+  "files": {
+    "agb.html": {
+      "id": "vfs_000",
+      "type": "html",
+      "hash": "2131b2bd2b9ebb07379d26675c77dc12521a3683de4c09ccb4447b3236739e0c",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/agb.html"
+    },
+    "aura-shop.html": {
+      "id": "vfs_001",
+      "type": "html",
+      "hash": "4772e3e14060360299a755fdb08178e1cd9b0f712da8d3a155150997ca73f1d5",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/aura-shop.html"
+    },
+    "bweb-starter/dist/index.html": {
+      "id": "vfs_002",
+      "type": "html",
+      "hash": "d33afa9350830cf23cb49527d8f07ad7b2a11b9a8d666469d10f220161288684",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-starter/dist/index.html"
+    },
+    "bweb-starter/src/index.html": {
+      "id": "vfs_003",
+      "type": "html",
+      "hash": "c3288607906cb3f65d64cf82331ea8849c1817ccbac1454bf8ecf278bdf56b62",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/bweb-starter/src/index.html"
+    },
+    "cleaned_test2.html": {
+      "id": "vfs_004",
+      "type": "html",
+      "hash": "6c6490b139a95b2a74e44733d7d348970e2a14869cd180fe570d0d97ab98bd41",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/cleaned_test2.html"
+    },
+    "consulting.html": {
+      "id": "vfs_005",
+      "type": "html",
+      "hash": "5a98071a79992f0de4bd727434064da0630c27039d28b81672a66c3d0971c307",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/consulting.html"
+    },
+    "css/accessibility.css": {
+      "id": "vfs_006",
+      "type": "css",
+      "hash": "709b02178ce7a22c1f8387b234f74a6c0e264b02ff9f387295ba16e5943245e8",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/css/accessibility.css"
+    },
+    "css/responsive_auth.css": {
+      "id": "vfs_007",
+      "type": "css",
+      "hash": "0ab6b5b39b77b18f3a6ed65fecd169ad0941544813dfba3e71f1838ed050d27c",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/css/responsive_auth.css"
+    },
+    "css/style.v3.css": {
+      "id": "vfs_008",
+      "type": "css",
+      "hash": "5cbdf151bd875a831112656c79237267e4ce9e9cc1d17ac3f646206ac83544f6",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/css/style.v3.css"
+    },
+    "custom-rag/index.html": {
+      "id": "vfs_009",
+      "type": "html",
+      "hash": "60f2b6a0d86446b6de39a648fe9b0780fdc90f410cf87995f9e2f6da7522fd41",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/custom-rag/index.html"
+    },
+    "custom-rag/styles.css": {
+      "id": "vfs_010",
+      "type": "css",
+      "hash": "9a9df04d6ac5a82d92ce89b0dd1830bcfae0350a89b548bf1c538d918812d904",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/custom-rag/styles.css"
+    },
+    "customer_login.html": {
+      "id": "vfs_011",
+      "type": "html",
+      "hash": "379f07eca8f9cdf8d5ffbc49a6b920b52fdd6700a97b61d477f5d5f6072870c2",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/customer_login.html"
+    },
+    "customer_register.html": {
+      "id": "vfs_012",
+      "type": "html",
+      "hash": "d54ffc987fd9abfdcc1f15d400d34977480a62af9039085eda4612401c2657b4",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/customer_register.html"
+    },
+    "datenschutz.html": {
+      "id": "vfs_013",
+      "type": "html",
+      "hash": "b08403edc2cc3e19e82bfcc69127d1d77edf7d830b6dded82117c69b08283ecb",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/datenschutz.html"
+    },
+    "favicon.svg": {
+      "id": "bib_000",
+      "type": "image",
+      "hash": "aae5d0340c2fd8907852f2c9a6073acd9320ec47afedfb6ea69b487c5f955bae",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/favicon.svg"
+    },
+    "find_kr.js": {
+      "id": "vfs_014",
+      "type": "js",
+      "hash": "4c6ad5c1676e23b311b72cb895c38539628a2dd7136a321c88d025d19848cc8b",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/find_kr.js"
+    },
+    "find_kr_all.js": {
+      "id": "vfs_015",
+      "type": "js",
+      "hash": "073ec5597aac6e07dd5df57ed4ff01f71ad1858a8dda63e5eaf6bbdc525bbb45",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/find_kr_all.js"
+    },
+    "icon-192.png": {
+      "id": "bib_001",
+      "type": "image",
+      "hash": "6af0262367dde05fb1d8d5afbbea9c254ed3378815741d891e8f0f7a011a2436",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/icon-192.png"
+    },
+    "icon-512.png": {
+      "id": "bib_002",
+      "type": "image",
+      "hash": "0a0a5ec558395506f207e0c413ac91a02e5398dc00e9351c12da01a8d2405604",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/icon-512.png"
+    },
+    "images/20260108_114223-1-1024x1024.png": {
+      "id": "bib_003",
+      "type": "image",
+      "hash": "2a707d6a077e792230565595edd84f441087d0d7b07ca5a92279aaada986a0f9",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/20260108_114223-1-1024x1024.png"
+    },
+    "images/20260108_114357-1024x1024.png": {
+      "id": "bib_004",
+      "type": "image",
+      "hash": "3cc3fe38408c4a8ef985017d1eef410562cadad653b86befdc4413df477fbff4",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/20260108_114357-1024x1024.png"
+    },
+    "images/20260108_114459-1024x1024.jpg": {
+      "id": "bib_005",
+      "type": "image",
+      "hash": "fbc0180ee5d0e78ad70ef60ebd0795987b5331508a6f64b165b2021692cafdb1",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/20260108_114459-1024x1024.jpg"
+    },
+    "images/20260108_114459-1024x1024.png": {
+      "id": "bib_006",
+      "type": "image",
+      "hash": "fbc0180ee5d0e78ad70ef60ebd0795987b5331508a6f64b165b2021692cafdb1",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/20260108_114459-1024x1024.png"
+    },
+    "images/20260108_114529-1-1024x1024.jpg": {
+      "id": "bib_007",
+      "type": "image",
+      "hash": "181ed385d1e9e66dce6e458971961e87d72488778b418f2359faf60ece03178b",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/20260108_114529-1-1024x1024.jpg"
+    },
+    "images/Bild-17-1.jpg": {
+      "id": "bib_008",
+      "type": "image",
+      "hash": "d4ecd5583f4d4c5e3bd195618cfd2c3e8f93e5d91e961b880636862857263338",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild-17-1.jpg"
+    },
+    "images/Bild-6-2-1024x538.jpg": {
+      "id": "bib_009",
+      "type": "image",
+      "hash": "03c2a20e4c0b24fb8b2ad095ba6eb5363b7b26b18ffa8b6eb70cb8f7bb84f9c1",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild-6-2-1024x538.jpg"
+    },
+    "images/Bild-7.png": {
+      "id": "bib_010",
+      "type": "image",
+      "hash": "2aed7820f253fc5c39367d313588f9d7e8e47a0e95121a7ee036122070d1eedc",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild-7.png"
+    },
+    "images/Bild15__msi___png-1.png": {
+      "id": "bib_011",
+      "type": "image",
+      "hash": "5bdee491eb706146f1478cc041655e9a42c244a204f84a547218be2fcd6d6f21",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild15__msi___png-1.png"
+    },
+    "images/Bild15__msi___png-1.webp": {
+      "id": "bib_012",
+      "type": "image",
+      "hash": "be626f2421593a5e7d35c1214ffce892f2e0c7b36cdc023d2d6336647fef83e5",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild15__msi___png-1.webp"
+    },
+    "images/Bild22__msi___png.webp": {
+      "id": "bib_013",
+      "type": "image",
+      "hash": "9a46b836a63f878e2962f67e7a66340653ff3a1529473b45d97bc4b959a0e841",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild22__msi___png.webp"
+    },
+    "images/Bild4__msi___jpg.webp": {
+      "id": "bib_014",
+      "type": "image",
+      "hash": "419018d792c7faf1921639120a74b5c965c7d8d219f9f78a95bc3d8166b57027",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild4__msi___jpg.webp"
+    },
+    "images/Bild5__msi___jpg.webp": {
+      "id": "bib_015",
+      "type": "image",
+      "hash": "2454301d1ee1a0eb6ba0f6574bc7af58cbba10b8f030dd7a8be2cf8bf1fa3810",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild5__msi___jpg.webp"
+    },
+    "images/Bild5__msi___png-1.png": {
+      "id": "bib_016",
+      "type": "image",
+      "hash": "012acf09b77b6e0074f90fedb42b025636b43774be44a3e6e0b00b5d4851c7e4",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild5__msi___png-1.png"
+    },
+    "images/Bild5__msi___png-1.webp": {
+      "id": "bib_017",
+      "type": "image",
+      "hash": "4a4aac1479b7d11bba4e983df932cce593d9c5fbe03913c635a5306aa1b1f6d4",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild5__msi___png-1.webp"
+    },
+    "images/Bild62__msi___jpg.webp": {
+      "id": "bib_018",
+      "type": "image",
+      "hash": "46585e43f72cc953d2a50d2fcca0248dd6b3de44225751aec1d020e898272403",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild62__msi___jpg.webp"
+    },
+    "images/Bild92__msi___png.webp": {
+      "id": "bib_019",
+      "type": "image",
+      "hash": "c9e0c184d88462d1edbadeda3b245271a6592494d854afdd923403aafd14293a",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bild92__msi___png.webp"
+    },
+    "images/Bio_Reinigung_MediClean_Pro-1024x1024.png": {
+      "id": "bib_020",
+      "type": "image",
+      "hash": "4d7582847491a4354b4a708a7ab6f6db43404a069eb5269ca976819434297d8b",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bio_Reinigung_MediClean_Pro-1024x1024.png"
+    },
+    "images/Bio_Reinigung_MediClean_Pro-1024x1024.webp": {
+      "id": "bib_021",
+      "type": "image",
+      "hash": "ef20f01c9ac55aedbdec2967cbb58b05eb41072fccc45b46101959d147afe748",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Bio_Reinigung_MediClean_Pro-1024x1024.webp"
+    },
+    "images/Desk_Cleaning_Video_Generation.mp4": {
+      "id": "bvs_022",
+      "type": "video",
+      "hash": "7b7c490528152baa59b9c68bf25c0e9124bf3599c48ece824a5a43258bf4d326",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Desk_Cleaning_Video_Generation.mp4"
+    },
+    "images/Fensterreinigung_MediClean-Pro-1024x1024.png": {
+      "id": "bib_023",
+      "type": "image",
+      "hash": "53a4c578da5c8f96531205d063500ffffc411500e7f3b77339ca4d1e04ac3b48",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Fensterreinigung_MediClean-Pro-1024x1024.png"
+    },
+    "images/Fensterreinigung_MediClean-Pro-1024x1024.webp": {
+      "id": "bib_024",
+      "type": "image",
+      "hash": "3b34ec051fefd07b271a0c779e6bff69bdb2b01addaed5dd57cd20ebc2bd7442",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Fensterreinigung_MediClean-Pro-1024x1024.webp"
+    },
+    "images/Gemini_Generated_Image_8g5fs98g5fs98g5f.png": {
+      "id": "bib_025",
+      "type": "image",
+      "hash": "c8803f83d57fb1ce56a9a3dd4869ee11272b540db8b24fcac6e89e7d25060145",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Gemini_Generated_Image_8g5fs98g5fs98g5f.png"
+    },
+    "images/Gemini_Generated_Image_8g5fs98g5fs98g5f.webp": {
+      "id": "bib_026",
+      "type": "image",
+      "hash": "ce639797479e32d638c90f238b8b9f0c88079917470583529348a47ce8505bec",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Gemini_Generated_Image_8g5fs98g5fs98g5f.webp"
+    },
+    "images/Gemini_Generated_Image_mje5aomje5aomje5.png": {
+      "id": "bib_027",
+      "type": "image",
+      "hash": "7fc38364a44d11fef9ab4cef45d6b7071b9967bebe394adde4c1c75b9d1c12ae",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Gemini_Generated_Image_mje5aomje5aomje5.png"
+    },
+    "images/Gemini_Generated_Image_mje5aomje5aomje5.webp": {
+      "id": "bib_028",
+      "type": "image",
+      "hash": "b8a711f2edea67bc0ce03f4ec4730418d4503ab4bf6f4c109824f05769f2a342",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Gemini_Generated_Image_mje5aomje5aomje5.webp"
+    },
+    "images/Gemini_Generated_Image_z1aimjz1aimjz1ai.png": {
+      "id": "bib_029",
+      "type": "image",
+      "hash": "918b77a333e8da00c37175ebb13882894192e99a7438a30cca51461467e4c9ac",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Gemini_Generated_Image_z1aimjz1aimjz1ai.png"
+    },
+    "images/Gemini_Generated_Image_z1aimjz1aimjz1ai.webp": {
+      "id": "bib_030",
+      "type": "image",
+      "hash": "512d838b4eca815e21389eb1ffbc5bcab63335ccb274dffc141a3aaa5e0a6af8",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Gemini_Generated_Image_z1aimjz1aimjz1ai.webp"
+    },
+    "images/Gemini_Generated_Image_zco61pzco61pzco6.png": {
+      "id": "bib_031",
+      "type": "image",
+      "hash": "a3b658a5b298cd6df5a1da295e427c89adec04910e15fb5c29c4c56f08c91877",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Gemini_Generated_Image_zco61pzco61pzco6.png"
+    },
+    "images/Gemini_Generated_Image_zco61pzco61pzco6.webp": {
+      "id": "bib_032",
+      "type": "image",
+      "hash": "48a9fc0049af23535952c9d0ee3e388737f769c45ed2f4de72886f93aaf2ea59",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Gemini_Generated_Image_zco61pzco61pzco6.webp"
+    },
+    "images/IMG_4962-1.png": {
+      "id": "bib_033",
+      "type": "image",
+      "hash": "6eb94ffcdfef1334e2a1714a89b2f260836b9a2e93cca6c0d6a3f2a9a93c1d26",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/IMG_4962-1.png"
+    },
+    "images/Logp_PNG_T_G-1-1024x427.png": {
+      "id": "bib_034",
+      "type": "image",
+      "hash": "291deaebb63fb9a696e18ea33b2837341d2dc20b160c9e887b6aa48b5c54f7c3",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Logp_PNG_T_G-1-1024x427.png"
+    },
+    "images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png": {
+      "id": "bib_035",
+      "type": "image",
+      "hash": "5a0635cce42e76876a3cfbbbe197e61f933d72411c7b3a2068d8fabf7ce82f28",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Logp_PNG_T_G-1-scaled-re4kdagvxjw3jm126h9ba72rackqddmigpofo0piwc.png"
+    },
+    "images/MediClean-Pro-Hintergrund.png": {
+      "id": "bib_036",
+      "type": "image",
+      "hash": "4e2338101329ce1c53dc1b34854bd0e86cc42be750b8d8543f173b98ee0f3354",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/MediClean-Pro-Hintergrund.png"
+    },
+    "images/MediClean-Pro-Hintergrund.webp": {
+      "id": "bib_037",
+      "type": "image",
+      "hash": "b9bf603198537e355e23e627fef3ecfc2e131e255c3a59698443d2b5a4b03fb4",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/MediClean-Pro-Hintergrund.webp"
+    },
+    "images/Ordinationsreinigung_MediClean_Pro-1-1024x1024.png": {
+      "id": "bib_038",
+      "type": "image",
+      "hash": "a560a593cffcf9b3becd4282d10c855188ff53b09b02603c2f935c1db74e2f69",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Ordinationsreinigung_MediClean_Pro-1-1024x1024.png"
+    },
+    "images/Ordinationsreinigung_MediClean_Pro-1-1024x1024.webp": {
+      "id": "bib_039",
+      "type": "image",
+      "hash": "2156b302092fc6ffe0b4db081cd489fa46bb51e46e2cc417ebe331855a8d843d",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Ordinationsreinigung_MediClean_Pro-1-1024x1024.webp"
+    },
+    "images/Privathaushaltreinigung_MediClean_Pro-1024x1024.png": {
+      "id": "bib_040",
+      "type": "image",
+      "hash": "884b83fc08027143ea30cc24294bc0edc0f400ad4f5b01b7bb6a904cfe2bfdb6",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Privathaushaltreinigung_MediClean_Pro-1024x1024.png"
+    },
+    "images/Privathaushaltreinigung_MediClean_Pro-1024x1024.webp": {
+      "id": "bib_041",
+      "type": "image",
+      "hash": "627b6c8ad5973ba09cfcd1787f5a6953780a4ef96aa878d13cfb06a61bbe8cd9",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/Privathaushaltreinigung_MediClean_Pro-1024x1024.webp"
+    },
+    "images/boden-grundreinigung_495_large_U7atQJ__bt.jpg": {
+      "id": "bib_042",
+      "type": "image",
+      "hash": "6e43d5332e4c74c77ab9fcad71afdff837bedf921c57b05aa674948d4e08c766",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/boden-grundreinigung_495_large_U7atQJ__bt.jpg"
+    },
+    "images/datenschutz_consulting.png": {
+      "id": "bib_043",
+      "type": "image",
+      "hash": "d6911c09bdded49560204e9322212fe3d3eca83e337d8ffedb8c20f04ca8f8f0",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/datenschutz_consulting.png"
+    },
+    "images/datenschutz_consulting.webp": {
+      "id": "bib_044",
+      "type": "image",
+      "hash": "934ab7a023303dd0734c39e3b3237a83e1819a0034443dec28dfc7532507fd7a",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/datenschutz_consulting.webp"
+    },
+    "images/header__msi___jpg.webp": {
+      "id": "bib_045",
+      "type": "image",
+      "hash": "871866692cecceefa9b351b42149b2c39c45c49c4703a8129032b92bb7d77e85",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/header__msi___jpg.webp"
+    },
+    "images/large_6489a2b522333f8f318c6c0e_495b8c617b9f708bfff0d71ecde5574e6a09e1bf51f01ab147f37cdd97cc420c_6489aaeb-1024x768.jpg": {
+      "id": "bib_046",
+      "type": "image",
+      "hash": "da16ff7d0542b4299c33662b2d3e373d8e44658af0cce736b8b0aad805ccbd72",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/large_6489a2b522333f8f318c6c0e_495b8c617b9f708bfff0d71ecde5574e6a09e1bf51f01ab147f37cdd97cc420c_6489aaeb-1024x768.jpg"
+    },
+    "images/products/prod_1769148218837.png": {
+      "id": "bib_047",
+      "type": "image",
+      "hash": "291deaebb63fb9a696e18ea33b2837341d2dc20b160c9e887b6aa48b5c54f7c3",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/products/prod_1769148218837.png"
+    },
+    "images/quality_people_cleaning_team.png": {
+      "id": "bib_048",
+      "type": "image",
+      "hash": "e8fb0dce8397cfcb3701fed79fa23366997879eab35d14f3030c0fcfa17f66f9",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/quality_people_cleaning_team.png"
+    },
+    "images/quality_people_cleaning_team.webp": {
+      "id": "bib_049",
+      "type": "image",
+      "hash": "2c8bb92c131cad28107f2933de24882c8a5d1f7f9208501590cb117d3e0b9988",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/quality_people_cleaning_team.webp"
+    },
+    "images/shutterstock_1694654260_709035112103-1024x716.jpg": {
+      "id": "bib_050",
+      "type": "image",
+      "hash": "8737dda128915ff834f7e7c0f5835fa249df3de8008be17a030bf29248b427ee",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/images/shutterstock_1694654260_709035112103-1024x716.jpg"
+    },
+    "impressum.html": {
+      "id": "vfs_016",
+      "type": "html",
+      "hash": "d7d673eba0ababdba8f343e722214558169683b2516ca80dc91fa668349fafc9",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/impressum.html"
+    },
+    "index.html": {
+      "id": "vfs_017",
+      "type": "html",
+      "hash": "7ddfc9ae8a93962210cf0d794f42531d6ec42507d69849468cb4a7a8ef1fe059",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/index.html"
+    },
+    "js/accessibility.js": {
+      "id": "vfs_018",
+      "type": "js",
+      "hash": "76681acd00aba638e29d3de195291a678d8a0a46b0e28e1f938cb170230f95c8",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/js/accessibility.js"
+    },
+    "js/auth.js": {
+      "id": "vfs_019",
+      "type": "js",
+      "hash": "3fc0e91eca063ca0538711d110e187154d36a26f95e970ebf656e9510f66b3e9",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/js/auth.js"
+    },
+    "js/consent.js": {
+      "id": "vfs_020",
+      "type": "js",
+      "hash": "11fad8163ea4cd3150631682b116910fca5260bf0cf2d91ff51699cad65720af",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/js/consent.js"
+    },
+    "js/filesystem.js": {
+      "id": "vfs_021",
+      "type": "js",
+      "hash": "f2410186914c9c7a449a64adbfe65ec9126bb473907da8880474d2c0ece6f332",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/js/filesystem.js"
+    },
+    "js/pwa-handler.js": {
+      "id": "vfs_022",
+      "type": "js",
+      "hash": "82cb5fbdd6d209086a97d359d85ee4af0e6daa3343d4dd766211375e0e758945",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/js/pwa-handler.js"
+    },
+    "js/script.js": {
+      "id": "vfs_023",
+      "type": "js",
+      "hash": "8ba66b19be7b66b6f12c97fdc600de6afcadf770642afc2dc6d18498a2f719d8",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/js/script.js"
+    },
+    "js/security.js": {
+      "id": "vfs_024",
+      "type": "js",
+      "hash": "518c9b42f28776d9e685408d2662975e140cb06be9fe16c0736617fb46fef93d",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/js/security.js"
+    },
+    "js/toast.js": {
+      "id": "vfs_025",
+      "type": "js",
+      "hash": "48c10fca8845ccd3185c76f63820d7d01ef7cc602f0b479ccfbc62b9b7cf0dad",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/js/toast.js"
+    },
+    "login.html": {
+      "id": "vfs_026",
+      "type": "html",
+      "hash": "9ad8a9f73e0ffcf3592f91daba481bca762e6d55dc80e01aed97e3b3c27667af",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/login.html"
+    },
+    "nachhaltigkeit.html": {
+      "id": "vfs_027",
+      "type": "html",
+      "hash": "5379e87e0b759349b79bcf9291a5be264dc0f6468acf3fa6b7d2bdcfa2028ccd",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/nachhaltigkeit.html"
+    },
+    "omnia-vault/app.js": {
+      "id": "vfs_028",
+      "type": "js",
+      "hash": "7f60d5f24527ed4350be53c8d721126ff66d0293ce6d4cd49e7a55ca8d56fcf6",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/omnia-vault/app.js"
+    },
+    "omnia-vault/dashboard.html": {
+      "id": "vfs_029",
+      "type": "html",
+      "hash": "7065178d89e283c0b7942d6ad2528725dae28df1c3376a670fed68e73d6bfe9c",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/omnia-vault/dashboard.html"
+    },
+    "omnia-vault/delegate.html": {
+      "id": "vfs_030",
+      "type": "html",
+      "hash": "27a094dbc1d7bfd1308f95a187edd45872c8f1500265929b927fa1941e6f7d90",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/omnia-vault/delegate.html"
+    },
+    "omnia-vault/heir.html": {
+      "id": "vfs_031",
+      "type": "html",
+      "hash": "d797dcf4a6882d8c64e618651ecde3ec936b4b52bfc2017f9311b4e5ef5eb589",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/omnia-vault/heir.html"
+    },
+    "omnia-vault/index.html": {
+      "id": "vfs_032",
+      "type": "html",
+      "hash": "7acd7da7a0f5d67628d4be4d897995c6441a1c72f96c7d370a7976ee2638d040",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/omnia-vault/index.html"
+    },
+    "omnia-vault/login.html": {
+      "id": "vfs_033",
+      "type": "html",
+      "hash": "978a33e20c5087caaed67628d2b356f146f3db3a2620da8743bafcec70768f94",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/omnia-vault/login.html"
+    },
+    "omnia-vault/styles.css": {
+      "id": "vfs_034",
+      "type": "css",
+      "hash": "033fc86d5291cefd4b342107fee6f655c4866ebaccf8777bbb1fd68dba03a78c",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/omnia-vault/styles.css"
+    },
+    "patch.js": {
+      "id": "vfs_035",
+      "type": "js",
+      "hash": "d925b0dd50c2f6e68413d10c0ae3c31118c1c5d2f76da5ebf339b1186a18c2b6",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/patch.js"
+    },
+    "patch2.js": {
+      "id": "vfs_036",
+      "type": "js",
+      "hash": "6626733fe7d96ed26a040e2ec7d7bc21c6449500e5a88010f6de40c1516927f0",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/patch2.js"
+    },
+    "polyfill.html": {
+      "id": "vfs_037",
+      "type": "html",
+      "hash": "5d0ab7a61af9556d0942a550a0dfba89617836a476c4fd474ba93035b62cb2d4",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/polyfill.html"
+    },
+    "polyfill.js": {
+      "id": "vfs_038",
+      "type": "js",
+      "hash": "ec17aceb317d5c705254325e774e9da5efe80764947340a3010af5d4273e7710",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/polyfill.js"
+    },
+    "portal/customer_dashboard.html": {
+      "id": "vfs_039",
+      "type": "html",
+      "hash": "5469ce49da7033f2b1d385ff67b522a758c4292a69fd53e87abdd6c22684bc15",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/portal/customer_dashboard.html"
+    },
+    "portal/employee_dashboard.html": {
+      "id": "vfs_040",
+      "type": "html",
+      "hash": "914e899487a965edffe7f6e3903c3253b34178eefabad8e22c67c64d5ab8b2db",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/portal/employee_dashboard.html"
+    },
+    "run_benchmark.js": {
+      "id": "vfs_041",
+      "type": "js",
+      "hash": "24f57b9e4a3134f2a85c310e37a39ae79c6c1520ac997fcd621d8614288b592b",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/run_benchmark.js"
+    },
+    "scratch/new_client_side_convert.js": {
+      "id": "vfs_042",
+      "type": "js",
+      "hash": "bf961a47ddadb41d9449f916edc182ee2f48d46941dba7a7e2e48244782ab477",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/scratch/new_client_side_convert.js"
+    },
+    "service.html": {
+      "id": "vfs_043",
+      "type": "html",
+      "hash": "ebe688476279299363c6fc628a101535c40dac23bb005732ec1066c747a6974f",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/service.html"
+    },
+    "sitemap.html": {
+      "id": "vfs_044",
+      "type": "html",
+      "hash": "f9b96c0978c5641adf2debffe8db73fdd2c68b7af5c13cc466662817d2ec834e",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/sitemap.html"
+    },
+    "sw.js": {
+      "id": "vfs_045",
+      "type": "js",
+      "hash": "08dc89399b005432b315326fd720694f44eccf621585edc747a7622b98d5a379",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/sw.js"
+    },
+    "termin.html": {
+      "id": "vfs_046",
+      "type": "html",
+      "hash": "9df0071583c0399a71e5d452db4c0a620d82240dc702c2fe820c7b88d7cb0fac",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/termin.html"
+    },
+    "test-wrap.js": {
+      "id": "vfs_047",
+      "type": "js",
+      "hash": "99f99daf882d5eeee0c6369ab55f55424909044237fadfe92360ddfc4c5b326f",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test-wrap.js"
+    },
+    "test3.js": {
+      "id": "vfs_048",
+      "type": "js",
+      "hash": "80c8b765a143d4c11f9d2ddee912e6863fda49a98d29db313a655990a74daf17",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test3.js"
+    },
+    "test_blob_query.html": {
+      "id": "vfs_049",
+      "type": "html",
+      "hash": "f4812fce41566656d75b37aba5c7ee1c4b1d9bcec89f060cd822ec8f9f6a7ef4",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_blob_query.html"
+    },
+    "test_bweb_parser.js": {
+      "id": "vfs_050",
+      "type": "js",
+      "hash": "0e46d99bc7978584b85aec4c3245f359c4e2d85e7347d65a6227f459f7e0f67f",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_bweb_parser.js"
+    },
+    "test_clean_html.js": {
+      "id": "vfs_051",
+      "type": "js",
+      "hash": "6ab96e01ee4fe5d237175e9ff2806e451a0ce14782385f62d6f673fc16852982",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_clean_html.js"
+    },
+    "test_compiler.js": {
+      "id": "vfs_052",
+      "type": "js",
+      "hash": "2b43f016761ef5427ac7914fb0a7ec8b12baedd2e44a3585edd6930e07f5c1c8",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_compiler.js"
+    },
+    "test_compiler_blb.js": {
+      "id": "vfs_053",
+      "type": "js",
+      "hash": "97da6d5d3e710bf70f2a8a9b797a825281f778740abdcfa1e08f7d5120de20b3",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_compiler_blb.js"
+    },
+    "test_css_data_uri.js": {
+      "id": "vfs_054",
+      "type": "js",
+      "hash": "536a54a55335e2ab2767a56d24d774972ecea5298f603449a590b5239c82d46d",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_css_data_uri.js"
+    },
+    "test_css_deps.js": {
+      "id": "vfs_055",
+      "type": "js",
+      "hash": "c8963722a8dfabaca6f8d238884f5143761c21c38df8b3b6f72e2cc4ce7a204e",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_css_deps.js"
+    },
+    "test_fix.js": {
+      "id": "vfs_056",
+      "type": "js",
+      "hash": "97868abbdada459519c62edbe97496e3b31d567c4b8a16bf89919e77044c1ffc",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_fix.js"
+    },
+    "test_mime_css.js": {
+      "id": "vfs_057",
+      "type": "js",
+      "hash": "7e4391897cf204c8c41bbca2593ffa7eae415a24341064fd2159973278bb4183",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_mime_css.js"
+    },
+    "test_parse.js": {
+      "id": "vfs_058",
+      "type": "js",
+      "hash": "aadf44c6a8e17f85016a496f4a4994e29eee9dd2d0ff879f54a63615d748f8b2",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_parse.js"
+    },
+    "test_puppeteer.js": {
+      "id": "vfs_059",
+      "type": "js",
+      "hash": "2f808601fd8356e8ee97961c49a7fccb62abb0bbbc94e4d332a01f5bebef7c27",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_puppeteer.js"
+    },
+    "test_regex_css.js": {
+      "id": "vfs_060",
+      "type": "js",
+      "hash": "112c6c919664c48192e0857e442ddf3d875b90245b1459b39ab4e8cae49f434d",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/test_regex_css.js"
+    },
+    "ueber-uns.html": {
+      "id": "vfs_061",
+      "type": "html",
+      "hash": "5b99266e758f6a8e7fedf28295d139a53aef6d5f05c5048ad52ae128771f02fc",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/ueber-uns.html"
+    },
+    "uploads/inventory/inv_1770308991510.png": {
+      "id": "bib_051",
+      "type": "image",
+      "hash": "2a707d6a077e792230565595edd84f441087d0d7b07ca5a92279aaada986a0f9",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/uploads/inventory/inv_1770308991510.png"
+    },
+    "uploads/inventory/inv_1770309833493.png": {
+      "id": "bib_052",
+      "type": "image",
+      "hash": "2a707d6a077e792230565595edd84f441087d0d7b07ca5a92279aaada986a0f9",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/uploads/inventory/inv_1770309833493.png"
+    },
+    "uploads/inventory/inv_1770715227643.png": {
+      "id": "bib_053",
+      "type": "image",
+      "hash": "a3b658a5b298cd6df5a1da295e427c89adec04910e15fb5c29c4c56f08c91877",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/uploads/inventory/inv_1770715227643.png"
+    },
+    "uploads/inventory/inv_1770745671181.png": {
+      "id": "bib_054",
+      "type": "image",
+      "hash": "c8803f83d57fb1ce56a9a3dd4869ee11272b540db8b24fcac6e89e7d25060145",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/uploads/inventory/inv_1770745671181.png"
+    },
+    "uploads/inventory/inv_1770746102200.png": {
+      "id": "bib_055",
+      "type": "image",
+      "hash": "c8803f83d57fb1ce56a9a3dd4869ee11272b540db8b24fcac6e89e7d25060145",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/uploads/inventory/inv_1770746102200.png"
+    },
+    "uploads/inventory/inv_1770766148728.png": {
+      "id": "bib_056",
+      "type": "image",
+      "hash": "c8803f83d57fb1ce56a9a3dd4869ee11272b540db8b24fcac6e89e7d25060145",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/uploads/inventory/inv_1770766148728.png"
+    },
+    "uploads/inventory/inv_1770806825423.png": {
+      "id": "bib_057",
+      "type": "image",
+      "hash": "608c82f9318b0d8676dcfdcec1eb790c00ea6f5d3ff9a6773182ba9d68edb953",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/uploads/inventory/inv_1770806825423.png"
+    },
+    "uploads/inventory/inv_1770807587784_77xyy0ll3.png": {
+      "id": "bib_058",
+      "type": "image",
+      "hash": "c86b6f6acb7630edf0b8ac6c3f04867007536d56d73e2ea05458ac404d11eb51",
+      "absolutePath": "/home/benjamin/projects/mediclean-pro/uploads/inventory/inv_1770807587784_77xyy0ll3.png"
+    }
+  }
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 17: Edge Cases</title>
+    <style>
+        body { margin: 0; padding: 50px; font-family: sans-serif; background: #e0e0e0; }
+        
+        /* Negative Margin & Z-Index */
+        .box1 {
+            width: 200px; height: 100px; background: red; position: relative; z-index: 10;
+        }
+        .box2 {
+            width: 200px; height: 100px; background: blue; position: relative; z-index: 5;
+            margin-top: -50px; margin-left: 50px;
+        }
+
+        /* Opacity & Mix-Blend-Mode */
+        .container-blend {
+            margin-top: 50px;
+            width: 300px; height: 150px;
+            background: linear-gradient(to right, #f00, #00f);
+            position: relative;
+        }
+        .blend-box {
+            width: 100px; height: 100px; background: #0f0;
+            position: absolute; top: 25px; left: 50px;
+            mix-blend-mode: multiply;
+            opacity: 0.8;
+        }
+
+        /* Transforms */
+        .transform-box {
+            margin-top: 50px;
+            width: 150px; height: 50px;
+            background: purple; color: white;
+            text-align: center; line-height: 50px;
+            transform: rotate(15deg) scale(1.2) translateX(20px);
+        }
+
+        /* Iframe */
+        .iframe-container {
+            margin-top: 100px;
+            border: 5px solid black;
+            width: 400px;
+            height: 250px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Edge Cases: Z-Index, Margins, Blends</h1>
+
+    <div class="box1">Box 1 (z-index 10)</div>
+    <div class="box2">Box 2 (z-index 5, -50px margin)</div>
+
+    <div class="container-blend">
+        <div class="blend-box"></div>
+    </div>
+
+    <div class="transform-box">Transformed</div>
+
+    <div class="iframe-container">
+        <!-- We use an empty iframe for stable testing rather than loading a live site -->
+        <iframe src="data:text/html,<h1>Hello Iframe</h1>" width="100%" height="100%" style="border:none;"></iframe>
+    </div>
+</body>
+</html>

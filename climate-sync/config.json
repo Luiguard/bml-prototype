@@ -1,0 +1,202 @@
+{
+  "access_points": [],
+  "zones": [
+    {
+      "id": "schlafzimmer",
+      "name": "schlafzimmer",
+      "color": "#4fc3f7",
+      "polygon": [
+        [
+          509,
+          82
+        ],
+        [
+          506,
+          176
+        ],
+        [
+          920,
+          194
+        ],
+        [
+          899,
+          77
+        ],
+        [
+          511,
+          81
+        ],
+        [
+          511,
+          81
+        ]
+      ],
+      "actions": {
+        "climate_mode": "cool"
+      }
+    },
+    {
+      "id": "wohnzimmer",
+      "name": "wohnzimmer",
+      "color": "#4fc3f7",
+      "polygon": [
+        [
+          472,
+          88
+        ],
+        [
+          453,
+          325
+        ],
+        [
+          237,
+          331
+        ],
+        [
+          235,
+          442
+        ],
+        [
+          148,
+          444
+        ],
+        [
+          152,
+          93
+        ],
+        [
+          474,
+          86
+        ],
+        [
+          474,
+          86
+        ]
+      ],
+      "actions": {
+        "climate_mode": "cool"
+      }
+    },
+    {
+      "id": "balkon",
+      "name": "balkon",
+      "color": "#4fc3f7",
+      "polygon": [
+        [
+          12,
+          90
+        ],
+        [
+          8,
+          287
+        ],
+        [
+          124,
+          289
+        ],
+        [
+          137,
+          97
+        ],
+        [
+          11,
+          89
+        ],
+        [
+          11,
+          89
+        ]
+      ],
+      "actions": {
+        "climate_mode": "fan"
+      }
+    },
+    {
+      "id": "bad",
+      "name": "bad",
+      "color": "#4fc3f7",
+      "polygon": [
+        [
+          248,
+          344
+        ],
+        [
+          247,
+          435
+        ],
+        [
+          366,
+          435
+        ],
+        [
+          358,
+          341
+        ],
+        [
+          248,
+          341
+        ],
+        [
+          248,
+          341
+        ]
+      ],
+      "actions": {
+        "climate_mode": "cool"
+      }
+    },
+    {
+      "id": "vorzimmer",
+      "name": "vorzimmer",
+      "color": "#4fc3f7",
+      "polygon": [
+        [
+          375,
+          347
+        ],
+        [
+          376,
+          539
+        ],
+        [
+          469,
+          543
+        ],
+        [
+          462,
+          352
+        ],
+        [
+          376,
+          345
+        ],
+        [
+          376,
+          345
+        ]
+      ],
+      "actions": {
+        "climate_mode": "cool"
+      }
+    }
+  ],
+  "tuya": {
+    "device_id": "",
+    "ip": "",
+    "local_key": "",
+    "version": 3.3,
+    "mode_dp": 4,
+    "switch_dp": 1,
+    "mode_values": {
+      "cool": "cold",
+      "fan": "wind"
+    }
+  },
+  "tracking": {
+    "wifi_interface": "wlp0s20f3",
+    "scan_interval_s": 2,
+    "ema_alpha": 0.3,
+    "zone_switch_delay_s": 3,
+    "rssi_threshold_db": 8
+  }
+}

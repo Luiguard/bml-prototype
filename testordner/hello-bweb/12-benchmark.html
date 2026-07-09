@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Benchmark</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #fafafa; padding: 20px; }
+        .benchmark-header { text-align: center; margin-bottom: 30px; }
+        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin: 0 10px; }
+        .btn:hover { background: #0056b3; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; }
+        .card img { width: 50px; height: 50px; border-radius: 50%; background: #eee; }
+        .card h3 { margin: 10px 0 5px 0; font-size: 14px; }
+        .card p { margin: 0; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="benchmark-header">
+        <h1>HTML vs BWEB Benchmark</h1>
+        <p>This page contains a massive DOM structure to test performance.</p>
+        <button class="btn" onclick="measureDOM()">Measure Native HTML</button>
+        <button class="btn" onclick="window.location.href='bweb-engine.html'">View in BWEB</button>
+    </div>
+    
+    <div id="results" style="text-align: center; font-weight: bold; margin-bottom: 20px; color: green;"></div>
+
+    <div class="grid" id="grid">
+        <!-- Script will generate 1000 items -->
+    </div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        let htmlContent = '';
+        for (let i = 0; i < 1000; i++) {
+            htmlContent += `
+                <div class="card">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><rect width='50' height='50' fill='%23cccccc'/><text x='15' y='30' font-family='Arial' font-size='14' fill='white'>${i}</text></svg>" alt="Avatar">
+                    <h3>User ${i}</h3>
+                    <p>Performance Test Card</p>
+                    <button style="margin-top: 10px; padding: 5px; background: #eee; border: 1px solid #ccc; border-radius: 3px;">Follow</button>
+                </div>
+            `;
+        }
+        grid.innerHTML = htmlContent;
+
+        function measureDOM() {
+            const start = performance.now();
+            // Force reflow
+            document.body.offsetHeight;
+            const end = performance.now();
+            document.getElementById('results').innerText = `Native DOM Reflow/Layout took: ${(end - start).toFixed(2)} ms`;
+        }
+    </script>
+</body>
+</html>

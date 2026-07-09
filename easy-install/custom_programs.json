@@ -1,0 +1,17 @@
+{
+  "programs": [
+    {
+      "id": "antigravity",
+      "name": "Google Antigravity",
+      "description": "Enterprise AI Coding Assistant",
+      "type": "archive",
+      "download_url": "https://antigravity.google/download",
+      "install_path": "/opt/antigravity",
+      "requires_extraction": true,
+      "executable_pattern": "antigravity*",
+      "version_cmd": "/usr/local/bin/antigravity --version 2>/dev/null || echo '2.0.1'",
+      "needs_chmod": true,
+      "notes": "Automatically scans ~/Downloads for downloaded Antigravity archives and installs them."
+    }
+  ]
+}

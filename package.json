@@ -13,5 +13,8 @@
     "status": "systemctl status mediclean-server mediclean-tunnel mediclean-monitor"
   },
   "author": "Benjamin",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "jsdom": "^29.1.1"
+  }
 }

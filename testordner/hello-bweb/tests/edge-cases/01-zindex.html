@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; padding: 50px; background: #eee; font-family: sans-serif; }
+        .box { position: absolute; width: 150px; height: 150px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
+        .b1 { background: #e74c3c; top: 50px; left: 50px; z-index: 1; }
+        .b2 { background: #3498db; top: 100px; left: 100px; z-index: 3; }
+        .b3 { background: #2ecc71; top: 150px; left: 150px; z-index: 2; }
+    </style>
+</head>
+<body>
+    <div class="box b1">Z-Index 1</div>
+    <div class="box b2">Z-Index 3 (Top)</div>
+    <div class="box b3">Z-Index 2</div>
+</body>
+</html>

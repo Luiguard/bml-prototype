@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Step 3 Verifikation</title>
+    <style>
+        body { background: #f0f0f0; display: flex; justify-content: center; padding: 40px; }
+        canvas { background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <canvas id="bwebCanvas" width="800" height="800"></canvas>
+    
+    <script>
+    const TAG_MAP = { 1: 'h1', 2: 'p', 3: 'div' };
+
+    async function verifyBweb() {
+        try {
+            const res = await fetch('dist/hello.bweb');
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            const buffer = await res.arrayBuffer();
+            const view = new DataView(buffer);
+            
+            // Parse Header
+            let bmlOffset = 0;
+            const sectionCount = view.getUint8(5);
+            let headerPos = 6;
+            for (let i = 0; i < sectionCount; i++) {
+                if (view.getUint8(headerPos) === 1) {
+                    bmlOffset = view.getUint32(headerPos + 1);
+                }
+                headerPos += 9;
+            }
+            
+            // Parse BML
+            let pos = bmlOffset;
+            const nodeCount = view.getUint16(pos); pos += 2;
+            
+            const rawNodes = [];
+            for (let i = 0; i < nodeCount; i++) {
+                rawNodes.push({
+                    id: i,
+                    tagId: view.getUint8(pos),
+                    parentId: view.getUint16(pos + 1),
+                    firstChildId: view.getUint16(pos + 3),
+                    nextSiblingId: view.getUint16(pos + 5),
+                    textOffset: view.getUint32(pos + 7),
+                    textLength: view.getUint16(pos + 11)
+                });
+                pos += 13;
+            }
+            
+            const textPoolSize = view.getUint32(pos); pos += 4;
+            const textPoolBuffer = new Uint8Array(buffer, pos, textPoolSize);
+            const decoder = new TextDecoder('utf-8');
+            
+            function buildNode(id) {
+                if (id === 0xFFFF) return null;
+                const raw = rawNodes[id];
+                const node = { tag: TAG_MAP[raw.tagId] || `tag_${raw.tagId}` };
+                
+                if (raw.textLength > 0) {
+                    node.text = decoder.decode(textPoolBuffer.subarray(raw.textOffset, raw.textOffset + raw.textLength));
+                }
+                
+                const children = [];
+                let childId = raw.firstChildId;
+                while (childId !== 0xFFFF) {
+                    const childNode = buildNode(childId);
+                    if (childNode) children.push(childNode);
+                    childId = rawNodes[childId].nextSiblingId;
+                }
+                
+                if (children.length > 0) node.children = children;
+                return node;
+            }
+            
+            let root = null;
+            for (let i = 0; i < nodeCount; i++) {
+                if (rawNodes[i].parentId === 0xFFFF) {
+                    root = buildNode(i);
+                    break;
+                }
+            }
+            
+            renderTree(root);
+            
+        } catch (e) {
+            console.error("Verification failed:", e);
+        }
+    }
+    
+    function renderTree(rootNode) {
+        const canvas = document.getElementById('bwebCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        let currentY = 80;
+        
+        function renderNode(node, x) {
+            if (!node) return;
+            
+            if (node.tag === 'h1') {
+                ctx.font = "bold 36px sans-serif";
+                ctx.fillStyle = "#2c3e50";
+                ctx.fillText(node.text || '', x, currentY);
+                currentY += 60;
+            } 
+            else if (node.tag === 'p') {
+                ctx.font = "16px sans-serif";
+                ctx.fillStyle = "#555";
+                ctx.fillText(node.text || '', x, currentY);
+                currentY += 40;
+            } 
+            else if (node.tag === 'div') {
+                const isCard = node.children && node.children.some(c => c.tag === 'p');
+                
+                if (isCard) {
+                    const boxY = currentY - 20; // Top padding offset
+                    
+                    // Draw Box
+                    ctx.fillStyle = "#ffffff";
+                    ctx.strokeStyle = "#e0e0e0";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.roundRect(x, boxY, 600, 80, 8);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    currentY += 30; // Move into box
+                    
+                    for (const child of (node.children || [])) {
+                        renderNode(child, x + 20); // Indent text inside box
+                    }
+                    
+                    currentY = boxY + 80 + 30; // Move past box and add bottom margin
+                } else {
+                    for (const child of (node.children || [])) {
+                        renderNode(child, x);
+                    }
+                }
+            }
+        }
+        
+        renderNode(rootNode, 100);
+    }
+    
+    verifyBweb();
+    </script>
+</body>
+</html>

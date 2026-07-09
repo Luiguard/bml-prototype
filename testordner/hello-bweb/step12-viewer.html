@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BWEB Step 12 Verifikation</title>
+    <style>
+        body { margin: 0; background: #e0e0e0; display: flex; justify-content: center; padding: 40px; }
+        canvas { background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: default; }
+    </style>
+</head>
+<body>
+    <canvas id="bwebCanvas" width="800" height="800"></canvas>
+    
+    <script>
+    let bwebNodes = [];
+    let bwebNodesCount = 0;
+    
+    const state = {
+        activeTab: 'tab1',
+        modalOpen: false,
+        clicks: 0
+    };
+
+    function updateLogic() {
+        for (let i = 0; i < bwebNodesCount; i++) {
+            const node = bwebNodes[i];
+            if (node.meta) {
+                if (node.meta['data-id'] === 'tab1') {
+                    node.meta.opacity = state.activeTab === 'tab1' ? 1 : 0;
+                    node.meta.pointerEvents = state.activeTab === 'tab1' ? 'auto' : 'none';
+                }
+                if (node.meta['data-id'] === 'tab2') {
+                    node.meta.opacity = state.activeTab === 'tab2' ? 1 : 0;
+                    node.meta.pointerEvents = state.activeTab === 'tab2' ? 'auto' : 'none';
+                }
+                if (node.meta['data-id'] === 'modalOverlay') {
+                    node.meta.opacity = state.modalOpen ? 1 : 0;
+                    node.meta.pointerEvents = state.modalOpen ? 'auto' : 'none';
+                }
+                if (node.meta['data-id'] === 'counter') {
+                    let childId = node.firstChildId;
+                    while (childId !== 0xFFFF) {
+                        if (bwebNodes[childId].layout && bwebNodes[childId].layout.isText) {
+                            bwebNodes[childId].text = state.clicks.toString();
+                        }
+                        childId = bwebNodes[childId].nextSiblingId;
+                    }
+                }
+            }
+        }
+    }
+
+    function dispatch(action, target) {
+        if (action === 'switchTab') {
+            state.activeTab = target;
+        } else if (action === 'openModal') {
+            state.modalOpen = true;
+        } else if (action === 'closeModal') {
+            state.modalOpen = false;
+        } else if (action === 'increment') {
+            state.clicks++;
+        }
+        updateLogic();
+        drawTree();
+    }
+
+    function isNodeVisible(nodeId) {
+        let current = bwebNodes[nodeId];
+        while (current) {
+            if (current.meta && current.meta.opacity === 0) return false;
+            if (current.meta && current.meta.pointerEvents === 'none') return false;
+            if (current.parentId === 0xFFFF) break;
+            current = bwebNodes[current.parentId];
+        }
+        return true;
+    }
+
+    function initEvents() {
+        const canvas = document.getElementById('bwebCanvas');
+        
+        // Custom Hover & Cursor Logic
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            let hitNode = null;
+            for (let i = bwebNodesCount - 1; i >= 0; i--) {
+                const node = bwebNodes[i];
+                const lay = node.layout;
+                
+                if (!isNodeVisible(i)) continue;
+                
+                if (x >= lay.x && x <= lay.x + lay.w && y >= lay.y && y <= lay.y + lay.h) {
+                    if (node.meta && node.meta['data-action']) {
+                        hitNode = node;
+                        break;
+                    }
+                }
+            }
+            canvas.style.cursor = hitNode ? 'pointer' : 'default';
+        });
+
+        // Hit Testing & Event Routing
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            let hitNode = null;
+            for (let i = bwebNodesCount - 1; i >= 0; i--) {
+                const node = bwebNodes[i];
+                const lay = node.layout;
+                
+                if (!isNodeVisible(i)) continue;
+                
+                if (x >= lay.x && x <= lay.x + lay.w && y >= lay.y && y <= lay.y + lay.h) {
+                    if (node.meta && node.meta['data-action']) {
+                        hitNode = node;
+                        break;
+                    }
+                }
+            }
+            
+            if (hitNode) {
+                const action = hitNode.meta['data-action'];
+                const target = hitNode.meta['data-target'];
+                dispatch(action, target);
+            }
+        });
+    }
+
+    function drawNode(ctx, nodeId) {
+        if (nodeId === 0xFFFF) return;
+        const node = bwebNodes[nodeId];
+        const lay = node.layout;
+        
+        let opacity = 1;
+        if (node.meta && node.meta.opacity !== undefined) {
+            opacity = node.meta.opacity;
+        }
+        
+        if (opacity === 0) return; // Skip rendering hidden nodes (and their children conceptually, but here we just return)
+        
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        
+        // Draw background
+        if (lay.bgA > 0 && node.tagId !== 6 && node.tagId !== 7) {
+            ctx.fillStyle = `rgba(${lay.bgR}, ${lay.bgG}, ${lay.bgB}, ${lay.bgA / 255})`;
+            if (lay.radius > 0) {
+                ctx.beginPath();
+                ctx.roundRect(lay.x, lay.y, lay.w, lay.h, lay.radius);
+                ctx.fill();
+            } else {
+                ctx.fillRect(lay.x, lay.y, lay.w, lay.h);
+            }
+        }
+        
+        // Draw text
+        if (lay.isText && node.text) {
+            ctx.fillStyle = `rgb(${lay.fgR}, ${lay.fgG}, ${lay.fgB})`;
+            ctx.font = `${node.tagId === 1 || node.tagId === 5 ? 'bold ' : ''}${lay.size}px sans-serif`;
+            ctx.textBaseline = "top";
+            ctx.fillText(node.text, lay.x, lay.y);
+        }
+
+        ctx.restore();
+
+        let child = node.firstChildId;
+        while (child !== 0xFFFF) {
+            drawNode(ctx, child);
+            child = bwebNodes[child].nextSiblingId;
+        }
+    }
+
+    function drawTree() {
+        const canvas = document.getElementById('bwebCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let i = 0; i < bwebNodesCount; i++) {
+            if (bwebNodes[i].parentId === 0xFFFF) {
+                drawNode(ctx, i);
+                break;
+            }
+        }
+    }
+    
+    function animate() {
+        if (bwebNodesCount > 0) drawTree();
+        requestAnimationFrame(animate);
+    }
+
+    async function verifyBweb() {
+        try {
+            const res = await fetch('dist/hello.bweb');
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            const buffer = await res.arrayBuffer();
+            const view = new DataView(buffer);
+            
+            let bdtOffset = 0, bmlOffset = 0, blbOffset = 0, bmsOffset = 0;
+            const sectionCount = view.getUint8(5);
+            let headerPos = 6;
+            for (let i = 0; i < sectionCount; i++) {
+                const type = view.getUint8(headerPos);
+                if (type === 0) bdtOffset = view.getUint32(headerPos + 1);
+                if (type === 1) bmlOffset = view.getUint32(headerPos + 1);
+                if (type === 2) blbOffset = view.getUint32(headerPos + 1);
+                if (type === 6) bmsOffset = view.getUint32(headerPos + 1);
+                headerPos += 9;
+            }
+            
+            bwebNodesCount = view.getUint16(bdtOffset);
+            bwebNodes = Array(bwebNodesCount);
+            let bdtPos = bdtOffset + 2;
+            for (let i = 0; i < bwebNodesCount; i++) {
+                bwebNodes[i] = {
+                    id: view.getUint16(bdtPos), parentId: view.getUint16(bdtPos + 2),
+                    firstChildId: view.getUint16(bdtPos + 4), nextSiblingId: view.getUint16(bdtPos + 6),
+                    flags: view.getUint8(bdtPos + 8), tagId: 0, text: '', layout: null, meta: null
+                };
+                bdtPos += 9;
+            }
+            
+            let bmlPos = bmlOffset + 2; 
+            for (let i = 0; i < bwebNodesCount; i++) {
+                bwebNodes[i].tagId = view.getUint8(bmlPos);
+                bwebNodes[i].textOffset = view.getUint32(bmlPos + 1);
+                bwebNodes[i].textLength = view.getUint16(bmlPos + 5);
+                bmlPos += 7;
+            }
+            const textPoolSize = view.getUint32(bmlPos); bmlPos += 4;
+            const textPoolBuffer = new Uint8Array(buffer, bmlPos, textPoolSize);
+            const decoder = new TextDecoder('utf-8');
+            for (let i = 0; i < bwebNodesCount; i++) {
+                if (bwebNodes[i].textLength > 0) {
+                    bwebNodes[i].text = decoder.decode(textPoolBuffer.subarray(bwebNodes[i].textOffset, bwebNodes[i].textOffset + bwebNodes[i].textLength));
+                }
+            }
+            
+            let blbPos = blbOffset + 2; 
+            for (let i = 0; i < bwebNodesCount; i++) {
+                bwebNodes[i].layout = {
+                    x: view.getFloat32(blbPos), y: view.getFloat32(blbPos + 4),
+                    w: view.getFloat32(blbPos + 8), h: view.getFloat32(blbPos + 12),
+                    size: view.getUint8(blbPos + 16),
+                    fgR: view.getUint8(blbPos + 17), fgG: view.getUint8(blbPos + 18), fgB: view.getUint8(blbPos + 19),
+                    bgR: view.getUint8(blbPos + 20), bgG: view.getUint8(blbPos + 21), bgB: view.getUint8(blbPos + 22), bgA: view.getUint8(blbPos + 23),
+                    radius: view.getUint16(blbPos + 24),
+                    isText: view.getUint8(blbPos + 26) === 1
+                };
+                blbPos += 28;
+            }
+            
+            // 6. Load BMS (Metadata & Events)
+            if (bmsOffset > 0) {
+                const bmsCount = view.getUint16(bmsOffset);
+                let pos = bmsOffset + 2;
+                const metaEntries = [];
+                for (let i = 0; i < bmsCount; i++) {
+                    const id = view.getUint16(pos);
+                    const start = view.getUint32(pos + 2);
+                    const length = view.getUint32(pos + 6);
+                    pos += 10;
+                    metaEntries.push({id, start, length});
+                }
+                const metaPoolSize = view.getUint32(pos); pos += 4;
+                const poolBuf = new Uint8Array(buffer, pos, metaPoolSize);
+                for (const entry of metaEntries) {
+                    const str = decoder.decode(poolBuf.subarray(entry.start, entry.start + entry.length));
+                    try { bwebNodes[entry.id].meta = JSON.parse(str); } catch(e) {}
+                }
+            }
+
+            initEvents();
+            updateLogic(); // Initial state sync
+            requestAnimationFrame(animate);
+            
+        } catch (e) {
+            console.error("Verification failed:", e);
+        }
+    }
+    
+    verifyBweb();
+    </script>
+</body>
+</html>

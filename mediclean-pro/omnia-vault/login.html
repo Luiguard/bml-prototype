@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNIA | Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { gold: '#D4AF37', obsidian: '#050505' },
+                    fontFamily: { serif: ['Cinzel', 'serif'], sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; color: #fff; }
+        .hero-bg {
+            background-image: url('https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2500&auto=format&fit=crop');
+            background-position: center; background-size: cover;
+        }
+        .glass-panel {
+            background: rgba(5, 5, 5, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .tab-active { color: #D4AF37; border-bottom: 2px solid #D4AF37; }
+        .tab-inactive { color: #666; border-bottom: 2px solid transparent; }
+        .tab-active:hover, .tab-inactive:hover { color: #D4AF37; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.8s ease-out; }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+        crossorigin="anonymous"></script>
+
+    
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/omnia-vault/login.html">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Offizielle Seite: OMNIA | Access. Erfahren Sie mehr auf https://mediclean-pro.at.">
+    <meta property="og:title" content="OMNIA | Access">
+    <meta property="og:url" content="https://mediclean-pro.at/omnia-vault/login.html">
+    <meta property="og:type" content="website">
+</head>
+<body class="font-sans antialiased overflow-hidden flex items-center justify-center min-h-screen">
+    
+    <div class="absolute inset-0 hero-bg scale-105 opacity-20 grayscale"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/80 to-transparent"></div>
+
+    <div class="relative z-10 w-full max-w-md px-6 fade-in">
+        <div class="glass-panel rounded-2xl p-10 md:p-12 shadow-2xl">
+            <div class="text-center mb-8">
+                <h1 class="font-serif text-4xl tracking-[0.3em] mb-2 text-white">OMNIA</h1>
+                <p class="text-xs uppercase tracking-widest text-gold/60">Private Vault</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex justify-center gap-8 mb-8">
+                <button id="tab-login" class="tab-active pb-2 text-sm uppercase tracking-widest transition-all cursor-pointer" onclick="showTab('login')">Login</button>
+                <button id="tab-register" class="tab-inactive pb-2 text-sm uppercase tracking-widest transition-all cursor-pointer" onclick="showTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="form-login" class="space-y-6" onsubmit="handleLogin(event)">
+                <div class="space-y-2">
+                    <label class="text-[0.65rem] uppercase tracking-widest text-gray-500">Vault ID</label>
+                    <div class="relative">
+                        <i data-lucide="key" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+                        <input type="text" id="login-vault-id" required placeholder="your-vault-id" class="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:bg-white/10 transition-all">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[0.65rem] uppercase tracking-widest text-gray-500">Passkey</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+                        <input type="password" id="login-passkey" required placeholder="••••••••••••" class="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:bg-white/10 transition-all">
+                    </div>
+                </div>
+                <div id="login-error" class="text-red-400 text-xs text-center hidden"></div>
+                <button type="submit" id="login-btn" class="w-full mt-4 bg-transparent border border-gold/50 text-gold hover:bg-gold hover:text-obsidian py-4 rounded-lg text-xs uppercase tracking-widest transition-all duration-300 flex justify-center items-center gap-2">
+                    Access Vault <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="form-register" class="space-y-6 hidden" onsubmit="handleRegister(event)">
+                <div class="space-y-2">
+                    <label class="text-[0.65rem] uppercase tracking-widest text-gray-500">Display Name</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+                        <input type="text" id="reg-name" required placeholder="e.g. A. Rothschild" class="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:bg-white/10 transition-all">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[0.65rem] uppercase tracking-widest text-gray-500">Create Passkey</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+                        <input type="password" id="reg-passkey" required minlength="6" placeholder="Min. 6 characters" class="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-12 pr-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:bg-white/10 transition-all">
+                    </div>
+                </div>
+                <div id="reg-error" class="text-red-400 text-xs text-center hidden"></div>
+                <div id="reg-success" class="text-emerald-400 text-sm text-center hidden p-4 border border-emerald-500/20 rounded-lg bg-emerald-500/5"></div>
+                <button type="submit" id="reg-btn" class="w-full mt-4 bg-transparent border border-gold/50 text-gold hover:bg-gold hover:text-obsidian py-4 rounded-lg text-xs uppercase tracking-widest transition-all duration-300 flex justify-center items-center gap-2">
+                    Create Vault <i data-lucide="plus" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-8 text-center">
+            <p class="text-[0.65rem] uppercase tracking-widest text-gray-600">
+                <a href="index.html" class="text-gold/60 hover:text-gold hover:underline">← Back to Home</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function showTab(tab) {
+            document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+            document.getElementById('tab-login').className = tab === 'login' ? 'tab-active pb-2 text-sm uppercase tracking-widest transition-all cursor-pointer' : 'tab-inactive pb-2 text-sm uppercase tracking-widest transition-all cursor-pointer';
+            document.getElementById('tab-register').className = tab === 'register' ? 'tab-active pb-2 text-sm uppercase tracking-widest transition-all cursor-pointer' : 'tab-inactive pb-2 text-sm uppercase tracking-widest transition-all cursor-pointer';
+            // Clear errors
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('reg-error').classList.add('hidden');
+            document.getElementById('reg-success').classList.add('hidden');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const errEl = document.getElementById('login-error');
+            errEl.classList.add('hidden');
+            const btn = document.getElementById('login-btn');
+            btn.innerHTML = '<span class="spinner inline-block w-4 h-4 border-2 border-gold border-t-transparent rounded-full"></span> Authenticating...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/vault/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        vaultId: document.getElementById('login-vault-id').value,
+                        passkey: document.getElementById('login-passkey').value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Store session in sessionStorage (not localStorage, for security)
+                    sessionStorage.setItem('vault_session', JSON.stringify(data));
+                    window.location.href = 'dashboard.html';
+                } else {
+                    errEl.textContent = data.message || 'Login failed';
+                    errEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errEl.textContent = 'Connection error. Please try again.';
+                errEl.classList.remove('hidden');
+            }
+            btn.innerHTML = 'Access Vault <i data-lucide="arrow-right" class="w-4 h-4"></i>';
+            btn.disabled = false;
+            lucide.createIcons();
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const errEl = document.getElementById('reg-error');
+            const successEl = document.getElementById('reg-success');
+            errEl.classList.add('hidden');
+            successEl.classList.add('hidden');
+            const btn = document.getElementById('reg-btn');
+            btn.innerHTML = '<span class="spinner inline-block w-4 h-4 border-2 border-gold border-t-transparent rounded-full"></span> Creating Vault...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/vault/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        passkey: document.getElementById('reg-passkey').value,
+                        displayName: document.getElementById('reg-name').value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    successEl.innerHTML = `
+                        <p class="mb-2">✓ Vault created successfully!</p>
+                        <p class="text-xs text-gray-400 mb-2">Your unique Vault ID:</p>
+                        <p class="text-2xl font-mono tracking-[0.2em] text-gold">${data.vaultId}</p>
+                        <p class="text-xs text-gray-500 mt-3">⚠ Save this ID! You need it to log in.</p>
+                    `;
+                    successEl.classList.remove('hidden');
+                    btn.classList.add('hidden');
+                    // Pre-fill login form
+                    document.getElementById('login-vault-id').value = data.vaultId;
+                    setTimeout(() => showTab('login'), 6000);
+                } else {
+                    errEl.textContent = data.message || 'Registration failed';
+                    errEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errEl.textContent = 'Connection error. Please try again.';
+                errEl.classList.remove('hidden');
+            }
+            btn.innerHTML = 'Create Vault <i data-lucide="plus" class="w-4 h-4"></i>';
+            btn.disabled = false;
+            btn.classList.remove('hidden');
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Pro | Live Session</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #050505;
+            color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { width: 100%; max-width: 600px; padding: 2rem; }
+        .card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        h1 { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 1.8rem; }
+        h2 { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-size: 1.2rem; }
+        .subtitle { color: #9ca3af; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5; }
+        .hidden { display: none !important; }
+        input {
+            width: 100%; padding: 0.8rem 1rem;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px; color: white; font-size: 1rem; outline: none;
+            margin-bottom: 1rem;
+        }
+        input:focus { border-color: #ec4899; }
+        button {
+            width: 100%; padding: 1rem; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        .btn-primary { background: #ec4899; color: white; }
+        .btn-primary:hover { background: #db2777; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+        /* Session UI */
+        .session-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .participants {
+            display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem;
+        }
+        .participant {
+            text-align: center; padding: 1.5rem 2rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; flex: 1; position: relative;
+        }
+        .participant.speaking { border-color: #10b981; box-shadow: 0 0 20px rgba(16,185,129,0.15); }
+        .avatar {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            display: grid; place-items: center; margin: 0 auto 0.75rem;
+            font-size: 1.5rem; font-weight: 700;
+        }
+        .participant-name { font-weight: 500; font-size: 0.95rem; }
+        .participant-role { font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; }
+
+        /* Recording controls */
+        .controls {
+            display: flex; gap: 1rem; justify-content: center;
+            flex-wrap: wrap; margin-bottom: 1.5rem;
+        }
+        .controls button { width: auto; padding: 0.8rem 1.5rem; border-radius: 12px; }
+        .rec-indicator {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            color: #ef4444; font-weight: 600; font-size: 0.9rem;
+        }
+        .rec-dot {
+            width: 10px; height: 10px; background: #ef4444;
+            border-radius: 50%; animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .timer { font-size: 1.8rem; font-weight: 600; text-align: center; margin-bottom: 1.5rem; font-variant-numeric: tabular-nums; }
+
+        /* Link copy */
+        .link-box {
+            display: flex; gap: 0.5rem; margin-top: 1rem;
+        }
+        .link-box input { flex: 1; margin-bottom: 0; font-size: 0.85rem; }
+        .link-box button { width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; }
+
+        /* Status */
+        .status {
+            text-align: center; padding: 1rem; border-radius: 8px;
+            margin-bottom: 1rem; font-size: 0.9rem;
+        }
+        .status.waiting { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
+        .status.connected { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+        .status.error { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+
+        /* Waveform */
+        .waveform {
+            display: flex; align-items: center; justify-content: center;
+            gap: 3px; height: 40px; margin-bottom: 1rem;
+        }
+        .wave-bar {
+            width: 4px; background: #ec4899; border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+    </style>
+        crossorigin="anonymous"></script>
+
+    
+    
+    <!-- Bulletproof SEO Tags -->
+    <link rel="canonical" href="https://mediclean-pro.at/podcast-pro/session.html">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Offizielle Seite: Podcast Pro | Live Session. Erfahren Sie mehr auf https://mediclean-pro.at/podcast-pro.">
+    <meta property="og:title" content="Podcast Pro | Live Session">
+    <meta property="og:url" content="https://mediclean-pro.at/podcast-pro/session.html">
+    <meta property="og:type" content="website">
+    <!-- Google Funding Choices -->
+</head>
+<body>
+    <div class="container">
+        <!-- Join View -->
+        <div id="join-view">
+            <div class="card">
+                <h1><i data-lucide="mic"></i> Podcast Session</h1>
+                <p class="subtitle">Tritt einer Live-Podcast-Session bei oder erstelle eine neue.</p>
+                <input type="text" id="session-name" placeholder="Dein Name" required>
+                <input type="text" id="session-room" placeholder="Session-ID (z.B. mein-podcast)" required>
+                <button class="btn-primary" id="join-btn" onclick="joinSession()">
+                    <i data-lucide="log-in"></i> Session beitreten
+                </button>
+            </div>
+        </div>
+
+        <!-- Session View -->
+        <div id="session-view" class="hidden">
+            <div class="card">
+                <div class="session-header">
+                    <h2><i data-lucide="radio"></i> <span id="room-title">—</span></h2>
+                    <div class="rec-indicator hidden" id="rec-indicator">
+                        <div class="rec-dot"></div> REC
+                    </div>
+                </div>
+
+                <div id="status-bar" class="status waiting">Warte auf Gesprächspartner...</div>
+
+                <div class="participants" id="participants">
+                    <!-- Filled by JS -->
+                </div>
+
+                <div class="waveform" id="waveform">
+                    <!-- Filled by JS -->
+                </div>
+
+                <div class="timer" id="timer">00:00</div>
+
+                <div class="controls">
+                    <button class="btn-primary" id="rec-btn" onclick="toggleRecording()">
+                        <i data-lucide="circle"></i> Aufnahme starten
+                    </button>
+                    <button class="btn-outline" id="mute-btn" onclick="toggleMute()">
+                        <i data-lucide="mic"></i> Mute
+                    </button>
+                    <button class="btn-danger" onclick="leaveSession()">
+                        <i data-lucide="phone-off"></i> Verlassen
+                    </button>
+                </div>
+
+                <div class="link-box">
+                    <input type="text" id="invite-link" readonly>
+                    <button class="btn-outline" onclick="copyLink()">
+                        <i data-lucide="copy"></i>
+                    </button>
+                </div>
+
+                <audio id="remote-audio" autoplay></audio>
+            </div>
+
+            <!-- Download after recording -->
+            <div class="card hidden" id="download-card">
+                <h2><i data-lucide="download"></i> Aufnahme fertig!</h2>
+                <p class="subtitle">Deine Podcast-Aufnahme ist bereit.</p>
+                <audio id="playback" controls style="width: 100%; margin-bottom: 1rem;"></audio>
+                <button class="btn-primary" id="download-btn" onclick="downloadRecording()">
+                    <i data-lucide="download"></i> Aufnahme herunterladen (.webm)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Config
+        let WS_URL;
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            WS_URL = `ws://${location.hostname}:8002`;
+        } else {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            WS_URL = `${proto}//${location.host}/ws-telemeet`;
+        }
+
+        const ICE_CONFIG = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // State
+        let ws = null;
+        let pc = null;
+        let localStream = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecording = false;
+        let isMuted = false;
+        let timerInterval = null;
+        let recordingStart = 0;
+        let myName = '';
+        let roomId = '';
+        let participants = new Set();
+        let analyser = null;
+        let animFrame = null;
+
+        // Pre-fill room from URL hash
+        const hashRoom = location.hash.substring(1);
+        if (hashRoom) {
+            document.getElementById('session-room').value = hashRoom;
+        }
+
+        // Create waveform bars
+        const waveEl = document.getElementById('waveform');
+        for (let i = 0; i < 24; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'wave-bar';
+            bar.style.height = '4px';
+            waveEl.appendChild(bar);
+        }
+
+        async function joinSession() {
+            myName = document.getElementById('session-name').value.trim();
+            roomId = document.getElementById('session-room').value.trim().toLowerCase().replace(/\s+/g, '-');
+            if (!myName || !roomId) return alert('Bitte Name und Session-ID eingeben.');
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            } catch (e) {
+                return alert('Mikrofon-Zugriff verweigert.');
+            }
+
+            // Setup audio analyser for waveform
+            const audioCtx = new AudioContext();
+            const source = audioCtx.createMediaStreamSource(localStream);
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 64;
+            source.connect(analyser);
+            animateWaveform();
+
+            // Show session view
+            document.getElementById('join-view').classList.add('hidden');
+            document.getElementById('session-view').classList.remove('hidden');
+            document.getElementById('room-title').textContent = roomId;
+
+            // Set invite link
+            const link = `${location.origin}${location.pathname}#${roomId}`;
+            document.getElementById('invite-link').value = link;
+
+            // Add self to participants
+            participants.add(myName);
+            updateParticipantsUI();
+
+            // Connect WebSocket
+            connectWS();
+        }
+
+        function connectWS() {
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                // Both participants join as host to skip waiting room
+                ws.send(JSON.stringify({
+                    action: 'join',
+                    room_id: roomId,
+                    username: myName,
+                    is_host: true,
+                    pin: ''
+                }));
+            };
+
+            ws.onmessage = async (e) => {
+                const data = JSON.parse(e.data);
+                console.log('WS message:', data);
+
+                switch (data.action) {
+                    case 'user-joined':
+                        participants.add(data.username);
+                        updateParticipantsUI();
+                        updateStatus('connected', `${data.username} ist beigetreten!`);
+                        // We are the existing user, create offer for the newcomer
+                        await initPeerConnection(true);
+                        break;
+
+                    case 'user-left':
+                        participants.delete(data.username);
+                        updateParticipantsUI();
+                        updateStatus('waiting', 'Gesprächspartner hat die Session verlassen.');
+                        if (pc) { pc.close(); pc = null; }
+                        break;
+
+                    case 'room-info':
+                        // We just joined - if there are existing users, wait for their offer
+                        if (data.users && data.users.length > 0) {
+                            data.users.forEach(u => participants.add(u.username));
+                            updateParticipantsUI();
+                            updateStatus('connected', 'Partner gefunden, verbinde Audio...');
+                            // Prepare our peer connection but don't create offer
+                            // The existing user will send us an offer via 'user-joined'
+                            await initPeerConnection(false);
+                        }
+                        break;
+
+                    case 'pending-user':
+                        ws.send(JSON.stringify({
+                            action: 'admit-user',
+                            target: data.username
+                        }));
+                        break;
+
+                    case 'waiting-room':
+                        updateStatus('waiting', 'Warte auf Zulassung durch den Host...');
+                        break;
+
+                    case 'admitted':
+                        updateStatus('connected', 'Zugelassen! Verbinde...');
+                        break;
+
+                    case 'offer':
+                        console.log('Received offer');
+                        if (!pc) await initPeerConnection(false);
+                        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        ws.send(JSON.stringify({
+                            action: 'answer',
+                            sender: myName,
+                            answer: pc.localDescription
+                        }));
+                        break;
+
+                    case 'answer':
+                        console.log('Received answer');
+                        if (pc) await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+                        break;
+
+                    case 'ice-candidate':
+                        if (pc && data.candidate) {
+                            try {
+                                await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+                            } catch (e) {
+                                console.warn('ICE candidate error:', e);
+                            }
+                        }
+                        break;
+
+                    case 'recording-start':
+                        if (!isRecording) startRecording(data.timestamp);
+                        break;
+
+                    case 'recording-stop':
+                        if (isRecording) stopRecording();
+                        break;
+
+                    case 'error':
+                        updateStatus('error', data.message || 'Fehler');
+                        break;
+                }
+            };
+
+            ws.onclose = () => {
+                updateStatus('error', 'Verbindung zum Server verloren.');
+            };
+
+            ws.onerror = (err) => {
+                console.error('WS error:', err);
+            };
+        }
+
+        async function initPeerConnection(createOffer) {
+            if (pc) { pc.close(); pc = null; }
+            
+            pc = new RTCPeerConnection(ICE_CONFIG);
+
+            localStream.getTracks().forEach(track => {
+                pc.addTrack(track, localStream);
+            });
+
+            pc.onicecandidate = (e) => {
+                if (e.candidate && ws?.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        action: 'ice-candidate',
+                        sender: myName,
+                        candidate: e.candidate
+                    }));
+                }
+            };
+
+            pc.ontrack = (e) => {
+                console.log('Got remote track!');
+                document.getElementById('remote-audio').srcObject = e.streams[0];
+                updateStatus('connected', '🎙️ Audio verbunden – bereit zum Aufnehmen!');
+            };
+
+            pc.onconnectionstatechange = () => {
+                console.log('Connection state:', pc.connectionState);
+                if (pc.connectionState === 'connected') {
+                    updateStatus('connected', '🎙️ Audio verbunden – ihr könnt euch jetzt unterhalten!');
+                } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                    updateStatus('error', 'Audio-Verbindung unterbrochen.');
+                }
+            };
+
+            if (createOffer) {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                ws.send(JSON.stringify({
+                    action: 'offer',
+                    sender: myName,
+                    offer: pc.localDescription
+                }));
+                console.log('Sent offer');
+            }
+        }
+
+        function toggleRecording() {
+            if (!isRecording) {
+                const ts = Date.now();
+                startRecording(ts);
+                // Notify partner
+                if (ws?.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ action: 'recording-start', sender: myName, timestamp: ts }));
+                }
+            } else {
+                stopRecording();
+                // Notify partner
+                if (ws?.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ action: 'recording-stop', sender: myName }));
+                }
+            }
+        }
+
+        function startRecording(timestamp) {
+            const btn = document.getElementById('rec-btn');
+            const indicator = document.getElementById('rec-indicator');
+
+            // Mix local + remote into one stream for recording
+            const audioCtx = new AudioContext();
+            const dest = audioCtx.createMediaStreamDestination();
+
+            // Local mic
+            const localSource = audioCtx.createMediaStreamSource(localStream);
+            localSource.connect(dest);
+
+            // Remote audio (if available)
+            const remoteAudio = document.getElementById('remote-audio');
+            if (remoteAudio.srcObject) {
+                const remoteSource = audioCtx.createMediaStreamSource(remoteAudio.srcObject);
+                remoteSource.connect(dest);
+            }
+
+            recordedChunks = [];
+            mediaRecorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm;codecs=opus' });
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                document.getElementById('playback').src = url;
+                document.getElementById('download-card').classList.remove('hidden');
+                document.getElementById('download-btn').onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `podcast_${roomId}_${Date.now()}.webm`;
+                    a.click();
+                };
+            };
+
+            mediaRecorder.start(1000);
+            isRecording = true;
+            recordingStart = timestamp || Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            btn.innerHTML = '<i data-lucide="square"></i> Aufnahme stoppen';
+            btn.className = 'btn-danger';
+            indicator.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function stopRecording() {
+            const btn = document.getElementById('rec-btn');
+            const indicator = document.getElementById('rec-indicator');
+
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+            isRecording = false;
+            clearInterval(timerInterval);
+            btn.innerHTML = '<i data-lucide="circle"></i> Neue Aufnahme';
+            btn.className = 'btn-primary';
+            indicator.classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+            const btn = document.getElementById('mute-btn');
+            btn.innerHTML = isMuted
+                ? '<i data-lucide="mic-off"></i> Unmute'
+                : '<i data-lucide="mic"></i> Mute';
+            lucide.createIcons();
+        }
+
+        function leaveSession() {
+            if (isRecording) toggleRecording();
+            if (pc) { pc.close(); pc = null; }
+            if (ws) { ws.close(); ws = null; }
+            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            cancelAnimationFrame(animFrame);
+
+            if (document.getElementById('download-card').classList.contains('hidden')) {
+                // No recording → go back to join
+                document.getElementById('session-view').classList.add('hidden');
+                document.getElementById('join-view').classList.remove('hidden');
+            }
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - recordingStart) / 1000);
+            const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const s = String(elapsed % 60).padStart(2, '0');
+            document.getElementById('timer').textContent = `${m}:${s}`;
+        }
+
+        function updateStatus(type, msg) {
+            const el = document.getElementById('status-bar');
+            el.className = `status ${type}`;
+            el.textContent = msg;
+        }
+
+        function updateParticipantsUI() {
+            const el = document.getElementById('participants');
+            el.innerHTML = Array.from(participants).map((name, i) => `
+                <div class="participant" id="p-${i}">
+                    <div class="avatar">${name.charAt(0).toUpperCase()}</div>
+                    <div class="participant-name">${name}</div>
+                    <div class="participant-role">${i === 0 ? 'Host' : 'Gast'}</div>
+                </div>
+            `).join('');
+        }
+
+        function animateWaveform() {
+            const bars = document.querySelectorAll('.wave-bar');
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            function draw() {
+                animFrame = requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                bars.forEach((bar, i) => {
+                    const val = dataArray[i % dataArray.length] || 0;
+                    const h = Math.max(4, (val / 255) * 40);
+                    bar.style.height = `${h}px`;
+                });
+            }
+            draw();
+        }
+
+        function copyLink() {
+            const input = document.getElementById('invite-link');
+            navigator.clipboard.writeText(input.value).then(() => {
+                const btn = input.nextElementSibling;
+                btn.innerHTML = '<i data-lucide="check"></i>';
+                lucide.createIcons();
+                setTimeout(() => { btn.innerHTML = '<i data-lucide="copy"></i>'; lucide.createIcons(); }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
