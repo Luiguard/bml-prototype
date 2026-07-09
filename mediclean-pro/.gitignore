@@ -1,1 +1,4 @@
 bml-prototype
+local-coder-vscode/
+*.env
+.env
